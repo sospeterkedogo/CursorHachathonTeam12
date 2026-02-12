@@ -14,10 +14,12 @@ type Scan = {
 };
 
 type Props = {
+  initialTotalScore: number;
   initialScans: Scan[];
 };
 
-export default function EcoVerifyClient({ initialScans }: Props) {
+export default function EcoVerifyClient({ initialTotalScore, initialScans }: Props) {
+  const [globalScore, setGlobalScore] = useState(initialTotalScore);
   const [scans, setScans] = useState<Scan[]>(initialScans);
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -59,7 +61,9 @@ export default function EcoVerifyClient({ initialScans }: Props) {
 
       if (!res.ok) {
         const error = await res.json().catch(() => ({}));
-        throw new Error(error?.error || "Verification failed");
+        const message =
+          error?.details || error?.error || "Verification failed";
+        throw new Error(message);
       }
 
       const data = await res.json();
@@ -70,11 +74,13 @@ export default function EcoVerifyClient({ initialScans }: Props) {
       setAudioUrl(data.audioUrl || null);
 
       if (data.verified) {
+        const addedScore = typeof data.score === "number" ? data.score : 0;
+        setGlobalScore((prev) => prev + addedScore);
         // Add to live feed
         const newScan: Scan = {
           image: imageBase64,
           actionType: data.actionType || "eco-action",
-          score: data.score || 0,
+          score: addedScore,
           timestamp: data.timestamp || new Date().toISOString()
         };
         setScans((prev) => [newScan, ...prev].slice(0, 10));
@@ -110,33 +116,57 @@ export default function EcoVerifyClient({ initialScans }: Props) {
   };
 
   return (
-    <section className="space-y-10">
+    <section className="space-y-6 sm:space-y-8">
+      {/* Hero + Global Impact Score */}
+      <header className="flex flex-col gap-4 rounded-2xl border border-emerald-500/30 bg-gradient-to-r from-emerald-900/60 via-emerald-800/60 to-slate-900/80 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5 eco-glow">
+        <div className="flex items-center gap-3">
+          <div className="rounded-xl bg-emerald-500/10 p-2.5">
+            <Leaf className="h-6 w-6 text-emerald-400 sm:h-7 sm:w-7" />
+          </div>
+          <div>
+            <p className="text-xs uppercase tracking-[0.2em] text-emerald-300/70">Eco-Verify</p>
+            <h1 className="text-lg font-semibold text-emerald-50 sm:text-xl">
+              Gamified Sustainability Scanner
+            </h1>
+          </div>
+        </div>
+        <div className="rounded-xl bg-black/40 px-4 py-2.5 text-right shadow-inner shadow-emerald-500/30 sm:px-5 sm:py-3">
+          <p className="text-[10px] font-medium uppercase tracking-[0.15em] text-emerald-300/70 sm:text-xs">
+            Global Impact Score
+          </p>
+          <p className="mt-0.5 text-2xl font-bold tabular-nums text-emerald-400 sm:text-3xl">
+            {globalScore}
+          </p>
+          <p className="text-[10px] text-emerald-200/70 sm:text-xs">Sum of all verified eco-actions</p>
+        </div>
+      </header>
+
       {/* Action Area */}
-      <div className="relative overflow-hidden rounded-3xl border border-emerald-500/30 bg-gradient-to-br from-emerald-900/50 via-slate-950 to-black p-6 scan-gradient">
+      <div className="relative overflow-hidden rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-900/50 via-slate-950 to-black p-4 sm:p-6 scan-gradient">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_20%,rgba(74,222,128,0.22),transparent_55%),radial-gradient(circle_at_90%_80%,rgba(45,212,191,0.2),transparent_55%)]" />
-        <div className="relative z-10 flex flex-col items-center gap-6 md:flex-row md:items-start">
-          <div className="flex-1 space-y-3">
-            <h2 className="flex items-center gap-2 text-xl font-semibold text-emerald-50 md:text-2xl">
-              <Leaf className="h-5 w-5 text-emerald-400" />
+        <div className="relative z-10 flex flex-col items-center gap-4 sm:flex-row sm:items-start sm:gap-6">
+          <div className="flex-1 space-y-2 sm:space-y-3">
+            <h2 className="flex items-center gap-2 text-base font-semibold text-emerald-50 sm:text-lg">
+              <Leaf className="h-4 w-4 text-emerald-400 sm:h-5 sm:w-5" />
               Snap your eco-action
             </h2>
-            <p className="max-w-xl text-sm text-emerald-100/80 md:text-base">
+            <p className="text-sm text-emerald-100/80 sm:text-base">
               Capture recycling, switching off lights, using reusables, and more. Eco-Verify will
               scan your photo, validate the action, award you a score, and cheer you on with
               audio feedback.
             </p>
           </div>
-          <div className="flex flex-col items-center gap-3">
+          <div className="flex flex-col items-center gap-2 sm:gap-3">
             <button
               onClick={triggerFileInput}
               disabled={loading}
-              className="relative inline-flex items-center justify-center rounded-full border border-emerald-400/70 bg-emerald-500/90 px-10 py-4 text-lg font-semibold text-emerald-950 shadow-xl shadow-emerald-500/50 transition hover:scale-[1.03] hover:bg-emerald-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 disabled:cursor-not-allowed disabled:opacity-70"
+              className="relative inline-flex items-center justify-center rounded-full border border-emerald-400/70 bg-emerald-500/90 px-8 py-3 text-base font-semibold text-emerald-950 shadow-xl shadow-emerald-500/50 transition hover:scale-[1.03] hover:bg-emerald-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 disabled:cursor-not-allowed disabled:opacity-70 sm:px-10 sm:py-4 sm:text-lg"
             >
               <span className="absolute inset-0 -z-10 animate-ping-fast rounded-full bg-emerald-400/40 blur-xl" />
-              <Camera className="mr-2 h-6 w-6" />
+              <Camera className="mr-2 h-5 w-5 sm:h-6 sm:w-6" />
               {loading ? "Scanning..." : "Verify Action"}
             </button>
-            <p className="text-xs text-emerald-100/80">
+            <p className="text-[10px] text-emerald-100/80 sm:text-xs">
               Works with camera or gallery photos.
             </p>
           </div>
@@ -173,7 +203,7 @@ export default function EcoVerifyClient({ initialScans }: Props) {
       {/* Feedback */}
       {(feedback || verified !== null) && (
         <div
-          className={`rounded-3xl border p-4 md:p-5 ${
+          className={`rounded-2xl border p-4 sm:p-5 ${
             verified
               ? "border-emerald-400/60 bg-emerald-900/40"
               : "border-red-400/60 bg-red-900/40"
@@ -212,20 +242,20 @@ export default function EcoVerifyClient({ initialScans }: Props) {
           </p>
         </div>
         {scans.length === 0 ? (
-          <p className="rounded-2xl border border-emerald-500/20 bg-slate-950/60 p-4 text-sm text-emerald-100/80">
+          <p className="rounded-xl border border-emerald-500/20 bg-slate-950/60 p-4 text-sm text-emerald-100/80">
             No verified actions yet. Be the first to earn points for the planet.
           </p>
         ) : (
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3 sm:grid-cols-3">
             {scans.map((scan, idx) => (
               <div
                 key={scan.timestamp + idx}
-                className="group relative overflow-hidden rounded-2xl border border-emerald-500/30 bg-black/40"
+                className="group relative overflow-hidden rounded-xl border border-emerald-500/30 bg-black/40"
               >
                 <img
                   src={`data:image/jpeg;base64,${scan.image}`}
                   alt={scan.actionType}
-                  className="h-28 w-full object-cover transition duration-300 group-hover:scale-105 md:h-32"
+                  className="aspect-square w-full object-cover transition duration-300 group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                 <div className="absolute inset-x-2 bottom-2 flex items-center justify-between gap-2 text-xs">
