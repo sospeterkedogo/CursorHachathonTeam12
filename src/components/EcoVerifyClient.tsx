@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { Camera, Loader2, Leaf } from "lucide-react";
 import dynamic from "next/dynamic";
+import { getUserId } from "@/lib/userId";
 
 const confettiPromise = import("canvas-confetti").then((m) => m.default);
 
@@ -80,10 +81,11 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans }: Pro
 
       let data;
       try {
+        const userId = getUserId();
         const res = await fetch("/api/verify", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ image: imageBase64 }),
+          body: JSON.stringify({ image: imageBase64, userId }),
           signal: controller.signal
         });
 

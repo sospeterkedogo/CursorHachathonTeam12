@@ -169,6 +169,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const imageBase64 = body?.image as string | undefined;
+    const userId = body?.userId as string | undefined;
 
     if (!imageBase64) {
       return NextResponse.json({ error: "Missing image" }, { status: 400 });
@@ -187,6 +188,7 @@ export async function POST(req: NextRequest) {
         const db = await getDb();
         const scans = db.collection("scans");
         await scans.insertOne({
+          userId: userId || "anonymous",
           image: imageBase64,
           verified: vision.verified,
           score: vision.score ?? null,
