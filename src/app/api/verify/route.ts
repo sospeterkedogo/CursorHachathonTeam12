@@ -183,22 +183,20 @@ export async function POST(req: NextRequest) {
 
     // Step C: Database (Background / Best effort)
     const timestamp = new Date();
-    (async () => {
-      try {
-        const db = await getDb();
-        const scans = db.collection("scans");
-        await scans.insertOne({
-          userId: userId || "anonymous",
-          image: imageBase64,
-          verified: vision.verified,
-          score: vision.score ?? null,
-          actionType: vision.actionType ?? null,
-          timestamp
-        });
-      } catch (dbError) {
-        console.error("Failed to persist scan:", dbError);
-      }
-    })();
+    try {
+      const db = await getDb();
+      const scans = db.collection("scans");
+      await scans.insertOne({
+        userId: userId || "anonymous",
+        image: imageBase64,
+        verified: vision.verified,
+        score: vision.score ?? null,
+        actionType: vision.actionType ?? null,
+        timestamp
+      });
+    } catch (dbError) {
+      console.error("Failed to persist scan:", dbError);
+    }
 
     return NextResponse.json({
       verified: vision.verified,

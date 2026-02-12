@@ -49,21 +49,21 @@ export default function PersonalScore() {
 
   // Shared header component - DRY principle
   const Header = () => (
-    <p className="text-xs uppercase tracking-[0.2em] text-emerald-300/70 mb-3">
-      Your Impact
-    </p>
+    <div className="flex items-center gap-2 mb-4 opacity-80">
+      <div className="w-1 h-4 bg-[var(--primary)] rounded-full" />
+      <p className="text-xs uppercase tracking-widest text-neutral-400 font-bold">
+        Your Impact
+      </p>
+    </div>
   );
-
-  // Apple-inspired card: clarity + depth
-  const containerClass = "apple-card p-4 md:p-5";
 
   if (loading) {
     return (
-      <div className={containerClass}>
-        <Header />
-        <div className="space-y-2">
-          <div className="h-8 bg-emerald-500/10 rounded-lg animate-pulse" />
-          <div className="h-4 bg-emerald-500/5 rounded animate-pulse" />
+      <div className="glass-panel p-6 animate-pulse">
+        <div className="h-4 w-24 bg-white/10 rounded mb-6" />
+        <div className="space-y-3">
+          <div className="h-20 bg-white/5 rounded-xl" />
+          <div className="h-20 bg-white/5 rounded-xl" />
         </div>
       </div>
     );
@@ -71,59 +71,59 @@ export default function PersonalScore() {
 
   if (error || !stats) {
     return (
-      <div className={containerClass}>
+      <div className="glass-panel p-6 text-center">
         <Header />
-        <p className="text-sm text-emerald-100/60">
-          Start verifying actions to see your stats!
+        <p className="text-sm text-neutral-500 py-4">
+          Start verifying actions to unlock your personal stats.
         </p>
       </div>
     );
   }
 
   return (
-    <div className={containerClass}>
+    <div className="glass-panel p-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-6">
         <Header />
         {stats.currentStreak > 0 && (
-          <div className="rounded-full bg-emerald-500/20 px-2 py-1">
-            <span className="text-xs font-semibold text-emerald-300">
-              {stats.currentStreak} day{stats.currentStreak !== 1 ? 's' : ''} streak
+          <div className="flex items-center gap-1.5 bg-orange-500/10 text-orange-400 px-3 py-1 rounded-full border border-orange-500/20">
+            <span className="text-xs font-bold">
+              {stats.currentStreak} Day Streak 🔥
             </span>
           </div>
         )}
       </div>
 
       {/* Main Score */}
-      <div className="mb-4">
-        <div className="flex items-baseline gap-2">
-          <p className="text-3xl font-bold tabular-nums text-emerald-400 md:text-4xl">
-            {stats.totalScore}
-          </p>
-          <p className="text-xs text-emerald-200/70">points</p>
+      <div className="mb-8">
+        <div className="flex items-baseline gap-1">
+          <span className="text-4xl font-bold text-[var(--foreground)] tabular-nums tracking-tight">
+            {stats.totalScore.toLocaleString()}
+          </span>
+          <span className="text-sm text-neutral-500 font-medium">points</span>
         </div>
-        <p className="text-xs text-emerald-100/60 mt-1">
-          {stats.totalActions} verified action{stats.totalActions !== 1 ? 's' : ''}
+        <p className="text-sm text-neutral-400 mt-1">
+          Across {stats.totalActions} verified action{stats.totalActions !== 1 ? 's' : ''}
         </p>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 gap-3 mt-4">
+      <div className="grid grid-cols-2 gap-3">
         {/* Average Score */}
-        <div className="rounded-[var(--apple-radius-md)] bg-black/25 p-3">
-          <p className="text-[10px] uppercase tracking-[0.1em] text-emerald-200/70 mb-1">
-            Average
+        <div className="bg-white/5 rounded-xl p-4 border border-white/5">
+          <p className="text-[10px] uppercase tracking-wider text-neutral-500 font-bold mb-1">
+            Avg Score
           </p>
-          <p className="text-lg font-semibold text-emerald-300 tabular-nums">
+          <p className="text-xl font-semibold text-[var(--foreground)] tabular-nums">
             {stats.averageScore}
           </p>
         </div>
 
-        <div className="rounded-[var(--apple-radius-md)] bg-black/25 p-3">
-          <p className="text-[10px] uppercase tracking-[0.1em] text-emerald-200/70 mb-1">
+        <div className="bg-white/5 rounded-xl p-4 border border-white/5">
+          <p className="text-[10px] uppercase tracking-wider text-neutral-500 font-bold mb-1">
             This Week
           </p>
-          <p className="text-lg font-semibold text-emerald-300">
+          <p className="text-xl font-semibold text-[var(--foreground)]">
             {stats.recentActions}
           </p>
         </div>
@@ -131,11 +131,13 @@ export default function PersonalScore() {
 
       {/* Most Common Action */}
       {stats.mostCommonAction !== "none" && (
-        <div className="mt-3 pt-3 border-t border-emerald-500/20">
-          <p className="text-xs text-emerald-200/70 mb-1">Favorite Action</p>
-          <p className="text-sm font-medium text-emerald-300 capitalize">
-            {stats.mostCommonAction.replace(/-/g, ' ')}
-          </p>
+        <div className="mt-4 pt-4 border-t border-white/10">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-neutral-500">Favorite Action</span>
+            <span className="text-sm font-medium text-[var(--primary)] capitalize">
+              {stats.mostCommonAction.replace(/-/g, ' ')}
+            </span>
+          </div>
         </div>
       )}
     </div>

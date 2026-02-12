@@ -45,7 +45,7 @@ export default async function Page() {
   const { totalScore, lastTen } = await getInitialData();
 
   return (
-    <main className="flex min-h-screen flex-col items-center bg-black px-3 py-6 sm:px-4 sm:py-8">
+    <main className="flex min-h-screen flex-col items-center px-3 py-6 sm:px-4 sm:py-8">
       <section className="w-full max-w-[468px] sm:max-w-[630px] space-y-6 sm:space-y-8">
         <EcoVerifyClient
           initialTotalScore={totalScore}

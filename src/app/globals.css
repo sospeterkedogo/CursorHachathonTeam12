@@ -2,26 +2,95 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  /* Light Mode */
+  --background: #ffffff;
+  --foreground: #0f172a;
+
+  --card-bg: rgba(255, 255, 255, 0.7);
+  --card-border: rgba(203, 213, 225, 0.4);
+
+  --primary: #16a34a;
+  /* Darker Green for light mode text contrast */
+  --primary-dark: #15803d;
+
+  --glass-bg: rgba(255, 255, 255, 0.4);
+  --glass-border: rgba(226, 232, 240, 0.6);
+
+  --apple-radius-lg: 20px;
+  --apple-radius-md: 14px;
+}
+
+.dark {
+  /* Dark Mode */
+  --background: #000000;
+  --foreground: #ededed;
+
+  --card-bg: rgba(28, 28, 30, 0.65);
+  --card-border: rgba(255, 255, 255, 0.1);
+
+  --primary: #34c759;
+  /* Apple Green */
+  --primary-dark: #28a745;
+
+  --glass-bg: rgba(255, 255, 255, 0.08);
+  --glass-border: rgba(255, 255, 255, 0.12);
+}
+
 body {
-  @apply bg-black text-emerald-50;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-inter), sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
-.eco-glow {
-  box-shadow:
-    0 0 40px rgba(16, 185, 129, 0.4),
-    0 0 80px rgba(22, 163, 74, 0.3);
+/* Utilities */
+.apple-card {
+  background: var(--card-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--card-border);
+  border-radius: var(--apple-radius-lg);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
 }
 
-.scan-gradient {
-  background: radial-gradient(circle at 20% 20%, rgba(16, 185, 129, 0.35), transparent 60%),
-    radial-gradient(circle at 80% 80%, rgba(34, 197, 94, 0.3), transparent 55%);
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--apple-radius-md);
 }
 
-.animate-ping-fast {
-  animation: ping 1.2s cubic-bezier(0, 0, 0.2, 1) infinite;
+.primary-btn {
+  background: var(--primary);
+  color: #000;
+  font-weight: 600;
+  transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
-.animate-spin-slow {
-  animation: spin 2.4s linear infinite;
+.primary-btn:hover {
+  transform: scale(1.02);
+  filter: brightness(1.1);
 }
 
+.primary-btn:active {
+  transform: scale(0.96);
+}
+
+/* Clean scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}

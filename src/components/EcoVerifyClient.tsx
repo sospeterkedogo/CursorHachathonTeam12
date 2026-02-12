@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { Camera, Loader2, Leaf } from "lucide-react";
 import dynamic from "next/dynamic";
 import { getUserId } from "@/lib/userId";
+import { ThemeToggle } from "./ThemeToggle";
 
 const confettiPromise = import("canvas-confetti").then((m) => m.default);
 
@@ -206,178 +207,155 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans }: Pro
     }, 200);
   };
 
+  // --- UI Components ---
+
+  const Header = () => (
+    <header className="flex items-center justify-between mb-8">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight mb-1">Eco-Verify</h1>
+        <p className="text-sm text-neutral-500">Capture actions, earn impact.</p>
+      </div>
+      <div className="flex items-center gap-3">
+        <ThemeToggle />
+        <div className="glass-panel px-4 py-2 flex flex-col items-end">
+          <span className="text-[10px] uppercase tracking-wider text-neutral-500 font-semibold">Total Impact</span>
+          <span className="text-xl font-bold text-[var(--primary)] tabular-nums">{globalScore}</span>
+        </div>
+      </div>
+    </header>
+  );
+
   return (
-    <section className="space-y-6 sm:space-y-8">
-      {/* Hero + Global Impact Score */}
-      <header className="flex flex-col gap-4 rounded-2xl border border-emerald-500/30 bg-gradient-to-r from-emerald-900/60 via-emerald-800/60 to-slate-900/80 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5 eco-glow">
-        <div className="flex items-center gap-3">
-          <div className="rounded-xl bg-emerald-500/10 p-2.5">
-            <Leaf className="h-6 w-6 text-emerald-400 sm:h-7 sm:w-7" />
-          </div>
-          <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-emerald-300/70">Eco-Verify</p>
-            <h1 className="text-lg font-semibold text-emerald-50 sm:text-xl">
-              Gamified Sustainability Scanner
-            </h1>
-          </div>
-        </div>
-        <div className="rounded-xl bg-black/40 px-4 py-2.5 text-right shadow-inner shadow-emerald-500/30 sm:px-5 sm:py-3">
-          <p className="text-[10px] font-medium uppercase tracking-[0.15em] text-emerald-300/70 sm:text-xs">
-            Global Impact Score
-          </p>
-          <p className="mt-0.5 text-2xl font-bold tabular-nums text-emerald-400 sm:text-3xl">
-            {globalScore}
-          </p>
-          <p className="text-[10px] text-emerald-200/70 sm:text-xs">Sum of all verified eco-actions</p>
-        </div>
-      </header>
+    <div className="w-full max-w-md mx-auto pb-24">
+      <Header />
 
-      {/* Action Area */}
-      <div className="relative overflow-hidden rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-900/50 via-slate-950 to-black p-4 sm:p-6 scan-gradient">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_20%,rgba(74,222,128,0.22),transparent_55%),radial-gradient(circle_at_90%_80%,rgba(45,212,191,0.2),transparent_55%)]" />
-        <div className="relative z-10 flex flex-col items-center gap-4 sm:flex-row sm:items-start sm:gap-6">
-          <div className="flex-1 space-y-2 sm:space-y-3">
-            <h2 className="flex items-center gap-2 text-base font-semibold text-emerald-50 sm:text-lg">
-              <Leaf className="h-4 w-4 text-emerald-400 sm:h-5 sm:w-5" />
-              Snap your eco-action
-            </h2>
-            <p className="text-sm text-emerald-100/80 sm:text-base">
-              Capture recycling, switching off lights, using reusables, and more. Eco-Verify will
-              scan your photo, validate the action, award you a score, and cheer you on with
-              audio feedback.
-            </p>
-          </div>
-          <div className="flex flex-col items-center gap-2 sm:gap-3">
-            <button
-              onClick={triggerFileInput}
-              disabled={loading}
-              className="relative inline-flex items-center justify-center rounded-full border border-emerald-400/70 bg-emerald-500/90 px-8 py-3 text-base font-semibold text-emerald-950 shadow-xl shadow-emerald-500/50 transition hover:scale-[1.03] hover:bg-emerald-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 disabled:cursor-not-allowed disabled:opacity-70 sm:px-10 sm:py-4 sm:text-lg"
-            >
-              <span className="absolute inset-0 -z-10 animate-ping-fast rounded-full bg-emerald-400/40 blur-xl" />
-              <Camera className="mr-2 h-5 w-5 sm:h-6 sm:w-6" />
-              {loading ? "Scanning..." : "Verify Action"}
-            </button>
-            <p className="text-[10px] text-emerald-100/80 sm:text-xs">
-              Works with camera or gallery photos.
-            </p>
-          </div>
-        </div>
+      {/* Main Action Card */}
+      <div className="apple-card relative overflow-hidden mb-8 group">
+        <div className="p-6 flex flex-col items-center justify-center min-h-[320px] relative z-10 text-center">
 
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          className="hidden"
-          onChange={handleFileChange}
-        />
-
-        {/* Loading overlay with scanning animation */}
-        {loading && (
-          <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/70 backdrop-blur">
-            <div className="flex flex-col items-center gap-4">
-              <div className="relative h-24 w-24">
-                <div className="absolute inset-0 rounded-full border-4 border-emerald-500/20" />
-                <div className="absolute inset-2 animate-spin-slow rounded-full border-4 border-t-emerald-400 border-l-emerald-500/60 border-r-transparent border-b-transparent" />
-                <div className="absolute inset-6 animate-pulse rounded-full bg-emerald-500/25 blur-md" />
-                <Loader2 className="absolute inset-0 m-auto h-8 w-8 animate-spin text-emerald-200" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-xs font-bold text-emerald-100">{progress}%</span>
-                </div>
-              </div>
-              <p className="text-sm font-medium text-emerald-50">Analyzing your eco-action...</p>
-              <p className="text-xs text-emerald-200/80">
-                Vision → Score → Voice — hang tight.
-              </p>
+          <div className="mb-6 relative">
+            <div className="w-20 h-20 rounded-full bg-[var(--glass-bg)] flex items-center justify-center border border-[var(--glass-border)] mb-4 mx-auto">
+              <Leaf className="w-8 h-8 text-[var(--primary)]" />
             </div>
+            <h2 className="text-xl font-semibold mb-2">Verify Action</h2>
+            <p className="text-sm text-neutral-400 max-w-[240px] mx-auto leading-relaxed">
+              Take a photo of your eco-friendly habit to verify and earn points.
+            </p>
+          </div>
+
+          <button
+            onClick={triggerFileInput}
+            disabled={loading}
+            className="primary-btn rounded-full px-8 py-4 flex items-center gap-3 text-lg shadow-lg shadow-emerald-900/20"
+          >
+            <Camera className="w-5 h-5" />
+            {loading ? "Scanning..." : "Open Camera"}
+          </button>
+
+          <p className="mt-4 text-xs text-neutral-600">Supports Camera & Gallery</p>
+        </div>
+
+        {/* Loading Overlay */}
+        {loading && (
+          <div className="absolute inset-0 z-20 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center text-center p-6 transition-all duration-500">
+            <div className="relative w-24 h-24 mb-6">
+              <svg className="w-full h-full" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="4" />
+                <circle cx="50" cy="50" r="45" fill="none" stroke="var(--primary)" strokeWidth="4" strokeDasharray="283" strokeDashoffset={283 - (283 * progress) / 100} transform="rotate(-90 50 50)" className="transition-all duration-300 ease-out" />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-lg font-bold text-white tabular-nums">{Math.round(progress)}%</span>
+              </div>
+            </div>
+            <h3 className="text-lg font-medium text-white mb-1">Analyzing...</h3>
+            <p className="text-sm text-neutral-400">Verifying your eco-action</p>
           </div>
         )}
       </div>
 
-      {/* Feedback */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={handleFileChange}
+      />
+
+      {/* Feedback Toast / Card */}
       {(feedback || verified !== null) && (
-        <div
-          className={`rounded-2xl border p-4 sm:p-5 ${verified
-            ? "border-emerald-400/60 bg-emerald-900/40"
-            : "border-red-400/60 bg-red-900/40"
-            }`}
-        >
-          <div className="flex items-center justify-between gap-3">
-            <div className="space-y-2">
-              <p className="text-xs uppercase tracking-[0.2em] text-emerald-100/80">
-                {verified ? "Verified eco-action" : "Not quite eco-action"}
-              </p>
-              {feedback && <p className="text-sm md:text-base">{feedback}</p>}
+        <div className={`apple-card p-5 mb-8 flex flex-col gap-3 transition-all duration-300 ${verified ? 'border-emerald-500/30 bg-emerald-950/20' : 'border-red-500/30 bg-red-950/20'}`}>
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-3">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${verified ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`}>
+                {verified ? <Leaf className="w-4 h-4" /> : <div className="w-4 h-4 rounded-sm border-2 border-current" />}
+              </div>
+              <div>
+                <p className={`text-sm font-semibold ${verified ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {verified ? "Verified!" : "Could not verify"}
+                </p>
+                {feedback && <p className="text-sm text-neutral-300 leading-snug mt-1">{feedback}</p>}
+              </div>
             </div>
             {verified && typeof score === "number" && (
-              <div className="flex flex-col items-end rounded-2xl bg-black/40 px-4 py-2 text-right">
-                <span className="text-xs text-emerald-200/80">Score</span>
-                <span className="text-2xl font-bold text-emerald-400">{score}</span>
+              <div className="flex flex-col items-center bg-white/5 rounded-lg px-3 py-1.5 border border-white/5">
+                <span className="text-[10px] uppercase text-neutral-500 font-bold">Score</span>
+                <span className="text-xl font-bold text-emerald-400 tabular-nums">+{score}</span>
               </div>
             )}
           </div>
           {audioUrl && (
-            <div className="mt-3">
-              <audio ref={audioRef} src={audioUrl} controls className="w-full" />
+            <div className="mt-2 bg-black/20 rounded-lg p-2">
+              <audio ref={audioRef} src={audioUrl} controls className="w-full h-8 opacity-80 hover:opacity-100 transition-opacity" />
             </div>
           )}
         </div>
       )}
 
-      {/* Dev Tools for Verification Testing */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="mt-4 border-t border-emerald-500/20 pt-4">
-          <p className="mb-2 text-xs text-emerald-500/50">Dev Tools: Test Scenarios</p>
-          <div className="flex gap-3">
-            <button onClick={simulateSuccess} className="px-3 py-1 text-xs bg-emerald-500/20 text-emerald-200 rounded hover:bg-emerald-500/30">
-              Test Success
-            </button>
-            <button onClick={simulateFailure} className="px-3 py-1 text-xs bg-red-500/20 text-red-200 rounded hover:bg-red-500/30">
-              Test Failure
-            </button>
-          </div>
+      {/* Recent Feed */}
+      <section>
+        <div className="flex items-center justify-between mb-4 px-1">
+          <h3 className="text-sm font-semibold text-neutral-400 uppercase tracking-wider">Recent Activity</h3>
         </div>
-      )}
 
-      {/* Live Feed */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-200/80">
-            Live Eco-Action Feed
-          </h3>
-          <p className="text-xs text-emerald-200/70">
-            Showing the last {Math.min(scans.length, 10)} verified actions
-          </p>
-        </div>
         {scans.length === 0 ? (
-          <p className="rounded-xl border border-emerald-500/20 bg-slate-950/60 p-4 text-sm text-emerald-100/80">
-            No verified actions yet. Be the first to earn points for the planet.
-          </p>
+          <div className="glass-panel p-8 text-center">
+            <p className="text-neutral-500 text-sm">No scans yet. Be the first!</p>
+          </div>
         ) : (
-          <div className="grid grid-cols-2 gap-2 sm:gap-3 sm:grid-cols-3">
+          <div className="flex flex-col gap-3">
             {scans.map((scan, idx) => (
-              <div
-                key={scan.timestamp + idx}
-                className="group relative overflow-hidden rounded-xl border border-emerald-500/30 bg-black/40"
-              >
-                <img
-                  src={`data:image/jpeg;base64,${scan.image}`}
-                  alt={scan.actionType}
-                  className="aspect-square w-full object-cover transition duration-300 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                <div className="absolute inset-x-2 bottom-2 flex items-center justify-between gap-2 text-xs">
-                  <span className="truncate text-emerald-50">{scan.actionType}</span>
-                  <span className="rounded-full bg-emerald-500/80 px-2 py-0.5 text-[10px] font-semibold text-emerald-950">
-                    +{scan.score}
-                  </span>
+              <div key={idx} className="glass-panel p-3 flex items-center gap-4 hover:bg-white/5 transition-colors">
+                <div className="relative w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-neutral-800">
+                  <img src={`data:image/jpeg;base64,${scan.image}`} alt="Scan" className="w-full h-full object-cover" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium truncate capitalize">{scan.actionType.replace(/-/g, ' ')}</p>
+                  <p className="text-xs text-neutral-500">{new Date(scan.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                </div>
+                <div className="bg-[var(--primary)]/10 text-[var(--primary)] px-3 py-1 rounded-full text-xs font-bold tabular-nums border border-[var(--primary)]/20">
+                  +{scan.score}
                 </div>
               </div>
             ))}
           </div>
         )}
-      </div>
-    </section>
+      </section>
+
+      {/* Dev Tools */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="mt-12 pt-6 border-t border-white/5 opacity-50 hover:opacity-100 transition-opacity">
+          <p className="mb-3 text-[10px] uppercase tracking-widest text-neutral-600 font-bold text-center">Developer Controls</p>
+          <div className="flex justify-center gap-2">
+            <button onClick={simulateSuccess} className="px-4 py-2 text-xs bg-emerald-900/30 text-emerald-400 border border-emerald-900/50 rounded-lg hover:bg-emerald-900/50">
+              Simulate Success
+            </button>
+            <button onClick={simulateFailure} className="px-4 py-2 text-xs bg-red-900/30 text-red-400 border border-red-900/50 rounded-lg hover:bg-red-900/50">
+              Simulate Failure
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
-
