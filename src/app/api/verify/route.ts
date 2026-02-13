@@ -165,6 +165,51 @@ async function callMiniMaxT2A(text: string): Promise<string | null> {
   }
 }
 
+async function callMiniMaxVoucherGen(actionType: string, score: number): Promise<{ title: string, description: string, code: string } | null> {
+  const apiKey = process.env.MINIMAX_API_KEY;
+  if (!apiKey) return null;
+
+  try {
+    const prompt = `Generate a reward voucher for a user who just verified an eco-action: "${actionType}" and earned ${score} points. 
+    Return strictly JSON with keys: 
+    - title (short, catchy, e.g. "Green Coffee Discount")
+    - description (1 sentence, e.g. "Get 10% off at participating eco-cafes.")
+    - code (8-char alphanumeric code, unrelated to action, e.g. ECO-8X92)`;
+
+    const response = await fetchWithTimeout("https://api.minimax.io/v1/text/chatcompletion_v2", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: "abab6.5s-chat",
+        messages: [
+          { role: "system", content: "You are a reward system generator." },
+          { role: "user", content: prompt }
+        ]
+      }),
+      timeout: 10000
+    });
+
+    if (!response.ok) return null;
+
+    const json = await response.json();
+    const content = json.choices?.[0]?.message?.content || "";
+
+    // Simple JSON extraction
+    const match = content.match(/\{[\s\S]*\}/);
+    if (match) {
+      return JSON.parse(match[0]);
+    }
+    return null;
+
+  } catch (error) {
+    console.error("Voucher Gen Error:", error);
+    return null;
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -183,12 +228,19 @@ export async function POST(req: NextRequest) {
     // Step B: Voice (Timeout handled inside, returns null on fail)
     const audioUrl = await callMiniMaxT2A(vision.message);
 
-    // Step C: Database (Background / Best effort)
+    // Step C: Voucher (Background / Best effort)
+    let voucher = null;
+    if (vision.verified) {
+      voucher = await callMiniMaxVoucherGen(vision.actionType || "eco-action", vision.score || 10);
+    }
+
+    // Step D: Database (Background / Best effort)
     const timestamp = new Date();
     try {
       const db = await getDb();
       const scans = db.collection("scans");
       const users = db.collection("users");
+      const vouchers = db.collection("vouchers");
 
       const score = typeof vision.score === 'number' ? vision.score : 0;
 
@@ -205,14 +257,13 @@ export async function POST(req: NextRequest) {
       });
 
       // 2. Update User Total Score
-      if (userId && vision.verified && score > 0) {
+      if (userId && score > 0) {
         await users.updateOne(
           { userId },
           {
             $inc: { totalScore: score },
             $set: {
               lastActive: timestamp,
-              // If provided (e.g. they updated profile just now), update specific fields
               ...(username ? { username } : {}),
               ...(avatar ? { avatar } : {})
             },
@@ -223,9 +274,19 @@ export async function POST(req: NextRequest) {
           },
           { upsert: true }
         );
+
+        // 3. Save Voucher if generated
+        if (voucher) {
+          await vouchers.insertOne({
+            userId,
+            ...voucher,
+            createdAt: timestamp,
+            expiry: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
+          });
+        }
       }
     } catch (dbError) {
-      console.error("Failed to persist scan/user:", dbError);
+      console.error("Failed to persist scan/user/voucher:", dbError);
     }
 
     return NextResponse.json({
@@ -234,6 +295,7 @@ export async function POST(req: NextRequest) {
       actionType: vision.actionType ?? null,
       message: vision.message,
       audioUrl,
+      voucher, // Return voucher to client
       timestamp
     });
 

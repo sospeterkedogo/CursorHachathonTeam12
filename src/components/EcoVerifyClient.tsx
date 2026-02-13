@@ -1,12 +1,13 @@
 'use client';
 
 import { useRef, useState, useEffect } from "react";
-import { Camera, Loader2, Leaf, Trophy, User } from "lucide-react";
+import { Camera, Loader2, Leaf, Trophy, User, Ticket } from "lucide-react";
 import dynamic from "next/dynamic";
 import { getUserId } from "@/lib/userId";
 import { ThemeToggle } from "./ThemeToggle";
 import Onboarding from "./Onboarding";
 import Leaderboard from "./Leaderboard";
+import VoucherList from "./VoucherList";
 
 const confettiPromise = import("canvas-confetti").then((m) => m.default);
 
@@ -37,6 +38,15 @@ type LeaderboardEntry = {
   totalScore: number;
 };
 
+type Voucher = {
+  _id: string;
+  code: string;
+  title: string;
+  description: string;
+  expiry: string;
+  createdAt: string;
+};
+
 type Props = {
   initialTotalScore: number;
   initialScans: Scan[];
@@ -46,10 +56,12 @@ type Props = {
 const AVATARS = ["🐼", "🦊", "🦁", "🐰", "🐸", "🐯", "🐨", "🐙", "🦄", "🐲"];
 
 export default function EcoVerifyClient({ initialTotalScore, initialScans, initialLeaderboard }: Props) {
-  const [activeTab, setActiveTab] = useState<"verify" | "leaderboard">("verify");
+  const [activeTab, setActiveTab] = useState<"verify" | "leaderboard" | "vouchers">("verify");
   const [globalScore, setGlobalScore] = useState(initialTotalScore);
   const [scans, setScans] = useState<Scan[]>(initialScans);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>(initialLeaderboard);
+  const [vouchers, setVouchers] = useState<Voucher[]>([]);
+  const [loadingVouchers, setLoadingVouchers] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -57,6 +69,7 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
   const [verified, setVerified] = useState<boolean | null>(null);
   const [score, setScore] = useState<number | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [earnedVoucher, setEarnedVoucher] = useState<Voucher | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(true);
 
   // User Profile State
@@ -78,6 +91,22 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
       setSelectedAvatar(savedAvatar);
     }
   }, []);
+
+  const fetchVouchers = async () => {
+    setLoadingVouchers(true);
+    try {
+      const userId = getUserId();
+      const res = await fetch(`/api/vouchers?userId=${userId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setVouchers(data.vouchers || []);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingVouchers(false);
+    }
+  };
 
   const saveProfile = async () => {
     if (!inputUsername.trim()) return;
@@ -144,6 +173,7 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
       setVerified(null);
       setScore(null);
       setAudioUrl(null);
+      setEarnedVoucher(null);
 
       progressInterval = setInterval(() => {
         setProgress((prev) => {
@@ -190,6 +220,7 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
       setScore(typeof data.score === "number" ? data.score : null);
       setFeedback(ensureString(data.message));
       setAudioUrl(data.audioUrl || null);
+      setEarnedVoucher(data.voucher || null);
 
       if (data.verified) {
         const addedScore = typeof data.score === "number" ? data.score : 0;
@@ -219,6 +250,10 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
 
         if (!userProfile) {
           setTimeout(() => setShowProfileModal(true), 1500);
+        }
+
+        if (data.voucher) {
+          fetchVouchers();
         }
 
         // Always refresh leaderboard to show updated score
@@ -290,24 +325,46 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
   };
 
   const Header = () => (
-    <header className="flex items-center justify-between mb-6">
-      <div className="flex items-center gap-2" onClick={() => setShowProfileModal(true)}>
-        <div className="w-10 h-10 rounded-full bg-neutral-800 border border-white/10 flex items-center justify-center text-xl cursor-pointer hover:border-emerald-500/50 transition-colors">
-          {userProfile?.avatar || <User className="w-5 h-5 text-neutral-500" />}
+    <header className="flex items-center justify-between mb-8 pt-2">
+      {/* Left: Logo */}
+      <div className="flex items-center gap-2">
+        <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
+          <Leaf className="w-6 h-6 text-emerald-500" />
         </div>
         <div>
-          <h1 className="text-xl font-bold tracking-tight leading-none cursor-pointer hover:text-emerald-400 transition-colors">
-            {userProfile?.username || "Guest"}
-          </h1>
-          <p className="text-xs text-neutral-500">Tap to edit profile</p>
+          <h1 className="text-xl font-bold tracking-tight leading-none text-emerald-500/80">EcoVerify</h1>
+          <p className="text-[10px] text-emerald-500/80 font-medium tracking-wider uppercase">Saver Mode</p>
         </div>
       </div>
 
+      {/* Right: Score & Profile */}
       <div className="flex items-center gap-3">
         <ThemeToggle />
-        <div className="glass-panel px-4 py-2 flex flex-col items-end">
-          <span className="text-[10px] uppercase tracking-wider text-neutral-500 font-semibold">Total Impact</span>
-          <span className="text-xl font-bold text-[var(--primary)] tabular-nums">{globalScore}</span>
+
+        {/* Appealing Score Display */}
+        <div className="hidden sm:flex flex-col items-end mr-2">
+          <span className="text-[10px] uppercase tracking-wider text-neutral-500 font-bold">Global Impact</span>
+          <div className="flex items-center gap-1.5">
+            <Trophy className="w-4 h-4 text-amber-500" />
+            <span className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-emerald-200 tabular-nums">
+              {globalScore.toLocaleString()}
+            </span>
+          </div>
+        </div>
+
+        {/* Mobile condensed score (if screen is small) */}
+        <div className="sm:hidden flex items-center gap-1 bg-emerald-950/30 border border-emerald-500/20 px-3 py-1.5 rounded-full">
+          <Trophy className="w-3.5 h-3.5 text-amber-500" />
+          <span className="text-sm font-bold text-emerald-100">{globalScore}</span>
+        </div>
+
+        {/* Profile Icon */}
+        <div
+          onClick={() => setShowProfileModal(true)}
+          className="w-10 h-10 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-xl cursor-pointer hover:border-emerald-500/50 hover:bg-emerald-500/20 transition-all relative group"
+        >
+          {userProfile?.avatar || <User className="w-5 h-5 text-neutral-500" />}
+          <div className="absolute inset-0 rounded-full ring-2 ring-emerald-500/0 group-hover:ring-emerald-500/20 transition-all" />
         </div>
       </div>
     </header>
@@ -319,7 +376,7 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
       <Header />
 
       {/* Tabs */}
-      <div className="grid grid-cols-2 gap-2 p-1 bg-white/5 dark:bg-black/20 rounded-xl mb-6 backdrop-blur-sm">
+      <div className="grid grid-cols-3 gap-2 p-1 bg-white/5 dark:bg-black/20 rounded-xl mb-6 backdrop-blur-sm">
         <button
           onClick={() => setActiveTab("verify")}
           className={`flex items-center justify-center gap-2 py-2.5 text-sm font-semibold rounded-lg transition-all ${activeTab === "verify" ? "bg-emerald-600 text-white shadow-lg" : "text-neutral-500 hover:text-neutral-300 hover:bg-white/5"}`}
@@ -337,10 +394,22 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
           <Trophy className="w-4 h-4" />
           Leaderboard
         </button>
+        <button
+          onClick={() => {
+            setActiveTab("vouchers");
+            fetchVouchers();
+          }}
+          className={`flex items-center justify-center gap-2 py-2.5 text-sm font-semibold rounded-lg transition-all ${activeTab === "vouchers" ? "bg-purple-600 text-white shadow-lg" : "text-neutral-500 hover:text-neutral-300 hover:bg-white/5"}`}
+        >
+          <Ticket className="w-4 h-4" />
+          Vouchers
+        </button>
       </div>
 
       {activeTab === "leaderboard" ? (
         <Leaderboard entries={leaderboard} currentUserId={getUserId()} />
+      ) : activeTab === "vouchers" ? (
+        <VoucherList vouchers={vouchers} loading={loadingVouchers} />
       ) : (
         <>
           {/* Main Action Card */}
@@ -425,6 +494,25 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
                   </div>
                 )}
               </div>
+
+              {/* Earned Voucher Display */}
+              {earnedVoucher && (
+                <div className="mt-3 bg-purple-900/20 border border-purple-500/30 rounded-xl p-4 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 p-2 opacity-10">
+                    <Ticket className="w-16 h-16 rotate-12 text-purple-400" />
+                  </div>
+                  <p className="text-xs uppercase tracking-widest text-purple-400 font-bold mb-1">Reward Unlocked!</p>
+                  <h4 className="text-lg font-bold text-white mb-1">{earnedVoucher.title}</h4>
+                  <p className="text-xs text-neutral-400 mb-3">{earnedVoucher.description}</p>
+                  <div className="flex items-center justify-between bg-black/40 rounded px-3 py-2 border border-purple-500/20">
+                    <code className="font-mono text-purple-300 font-bold">{earnedVoucher.code}</code>
+                    <button onClick={() => setActiveTab("vouchers")} className="text-[10px] bg-purple-600 hover:bg-purple-500 text-white px-2 py-1 rounded transition-colors">
+                      View Wallet
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {audioUrl && (
                 <div className="mt-2 bg-black/20 rounded-lg p-2">
                   <audio ref={audioRef} src={audioUrl} controls className="w-full h-8 opacity-80 hover:opacity-100 transition-opacity" />
@@ -450,10 +538,10 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
                     <div className="relative w-12 h-12 flex-shrink-0">
                       {/* User Avatar or Placeholder Image */}
                       <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white/10 bg-neutral-800 flex items-center justify-center text-xl relative z-10">
-                        {scan.avatar || "👤"}
+                        <img src={`data:image/jpeg;base64,${scan.image}`} alt="opt" className="w-full h-full object-cover" />
                       </div>
-                      <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-emerald-900 border border-black flex items-center justify-center z-20 overflow-hidden">
-                        <img src={`data:image/jpeg;base64,${scan.image}`} alt="opt" className="w-full h-full object-cover opacity-80" />
+                      <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-emerald-900 border border-black flex items-center justify-center z-20 overflow-hidden text-xs">
+                        {scan.avatar || "👤"}
                       </div>
                     </div>
                     <div className="flex-1 min-w-0 ml-1">
@@ -568,6 +656,18 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
           </div>
         </div>
       )}
+
+      {/* Footer */}
+      <footer className="mt-16 py-8 text-center border-t border-white/5">
+        <div className="flex items-center justify-center gap-2 mb-2 opacity-60">
+          <Leaf className="w-4 h-4 text-emerald-500" />
+          <span className="text-sm font-semibold text-neutral-400">EcoVerify</span>
+        </div>
+        <p className="text-xs text-neutral-600">
+          © 2026 EcoVerify. Built for the Planet. <br />
+          Made by <a href="https://me.devpete.co.uk" target="_blank" rel="noopener noreferrer" className="text-emerald-600/80 hover:text-emerald-500 hover:underline transition-all">Pete</a> and <a href="https://github.com/pavan2005" target="_blank" rel="noopener noreferrer" className="text-emerald-600/80 hover:text-emerald-500 hover:underline transition-all">Pavan</a>
+        </p>
+      </footer>
     </div>
   );
 }

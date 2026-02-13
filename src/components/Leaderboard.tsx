@@ -51,16 +51,16 @@ export default function Leaderboard({ entries, currentUserId }: Props) {
                         <div
                             key={user.userId}
                             className={`flex items-center gap-4 p-3 rounded-xl transition-all ${isCurrentUser
-                                    ? "bg-emerald-500/10 border border-emerald-500/30"
-                                    : "bg-white/5 border border-white/5 hover:bg-white/10"
+                                ? "bg-emerald-500/10 border border-emerald-500/30"
+                                : "bg-white/5 border border-white/5 hover:bg-white/10"
                                 }`}
                         >
                             <div className="flex-shrink-0 w-8 flex items-center justify-center">
                                 {rankIcon}
                             </div>
 
-                            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center text-lg overflow-hidden border border-white/10">
-                                {user.avatar || <User className="w-5 h-5 text-neutral-500" />}
+                            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center text-lg overflow-hidden border border-emerald-500/20">
+                                {user.avatar || <User className="w-5 h-5 text-emerald-500" />}
                             </div>
 
                             <div className="flex-1 min-w-0">
