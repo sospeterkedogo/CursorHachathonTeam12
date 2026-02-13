@@ -57,7 +57,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
 
     return (
         <div
-            className={`fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md transition-opacity duration-500 ${isExiting ? "opacity-0 pointer-events-none" : "opacity-100"}`}
+            className={`fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md transition-opacity duration-500 ${isExiting ? "opacity-0 pointer-events-none" : "opacity-100"}`}
         >
             <div className="w-full max-w-md p-6">
                 <div className="relative overflow-hidden bg-white/95 dark:bg-neutral-900/90 border border-neutral-200 dark:border-white/10 rounded-3xl shadow-2xl p-8 min-h-[480px] flex flex-col">
@@ -107,7 +107,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                         {/* Action Button */}
                         <button
                             onClick={handleNext}
-                            className="w-full py-4 rounded-xl bg-neutral-900 text-white dark:bg-white dark:text-black font-bold text-lg flex items-center justify-center gap-2 hover:bg-neutral-800 dark:hover:bg-neutral-200 active:scale-[0.98] transition-all"
+                            className="w-full py-4 rounded-xl bg-emerald-600 text-white font-bold text-lg flex items-center justify-center gap-2 hover:bg-emerald-500 active:scale-[0.98] transition-all shadow-lg shadow-emerald-900/20"
                         >
                             {currentSlide === SLIDES.length - 1 ? (
                                 <>

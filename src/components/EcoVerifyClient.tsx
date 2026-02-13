@@ -429,13 +429,12 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
               <button
                 onClick={triggerFileInput}
                 disabled={loading}
-                className="primary-btn rounded-full px-8 py-4 flex items-center gap-3 text-lg shadow-lg shadow-emerald-900/20"
+                className="primary-btn rounded-full px-8 py-4 flex items-center gap-3 text-lg shadow-lg shadow-emerald-900/20 hover:bg-emerald-600 hover:text-white transition-all"
               >
                 <Camera className="w-5 h-5" />
-                {loading ? "Scanning..." : "Open Camera"}
+                {loading ? "Scanning..." : "Open Camera / Upload Image"}
               </button>
 
-              <p className="mt-4 text-xs text-neutral-600">Supports Camera & Gallery</p>
             </div>
 
             {/* Loading Overlay */}
