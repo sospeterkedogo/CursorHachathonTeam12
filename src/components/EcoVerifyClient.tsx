@@ -1,7 +1,21 @@
 'use client';
 
 import { useRef, useState, useEffect } from "react";
-import { Camera, Loader2, Leaf, Trophy, User, Ticket } from "lucide-react";
+import {
+  Camera,
+  Leaf,
+  Trophy,
+  Ticket,
+  User,
+  Settings,
+  ChevronRight,
+  Sparkles,
+  ArrowRight,
+  ShieldCheck,
+  Zap,
+  Star,
+  Loader2
+} from "lucide-react";
 import dynamic from "next/dynamic";
 import { getUserId } from "@/lib/userId";
 import { ThemeToggle } from "./ThemeToggle";
@@ -45,23 +59,30 @@ type Voucher = {
   description: string;
   expiry: string;
   createdAt: string;
+  used?: boolean;
 };
 
 type Props = {
   initialTotalScore: number;
   initialScans: Scan[];
   initialLeaderboard: LeaderboardEntry[];
+  itemOne: number;
+  itemTwo: number;
 };
 
 const AVATARS = ["🐼", "🦊", "🦁", "🐰", "🐸", "🐯", "🐨", "🐙", "🦄", "🐲"];
 
-export default function EcoVerifyClient({ initialTotalScore, initialScans, initialLeaderboard }: Props) {
+export default function EcoVerifyClient({ initialTotalScore, initialScans, initialLeaderboard, itemOne, itemTwo }: Props) {
   const [activeTab, setActiveTab] = useState<"verify" | "leaderboard" | "vouchers">("verify");
   const [globalScore, setGlobalScore] = useState(initialTotalScore);
   const [scans, setScans] = useState<Scan[]>(initialScans);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>(initialLeaderboard);
   const [vouchers, setVouchers] = useState<Voucher[]>([]);
   const [loadingVouchers, setLoadingVouchers] = useState(false);
+
+  // Global Stats State
+  const [globalVerifiedUsers, setGlobalVerifiedUsers] = useState(itemOne);
+  const [globalVouchersCount, setGlobalVouchersCount] = useState(itemTwo);
 
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -71,6 +92,10 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [earnedVoucher, setEarnedVoucher] = useState<Voucher | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(true);
+
+  // ... existing code ...
+
+
 
   // User Profile State
   const [userProfile, setUserProfile] = useState<{ username: string; avatar: string } | null>(null);
@@ -92,6 +117,38 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
     }
   }, []);
 
+  // Username Availability Check
+  const [isCheckingUsername, setIsCheckingUsername] = useState(false);
+  const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const checkUsername = async () => {
+      if (!inputUsername.trim() || inputUsername === userProfile?.username) {
+        setUsernameAvailable(null);
+        return;
+      }
+
+      setIsCheckingUsername(true);
+      try {
+        const res = await fetch(`/api/user?username=${encodeURIComponent(inputUsername)}`);
+        const data = await res.json();
+        setUsernameAvailable(data.available);
+      } catch (error) {
+        console.error("Failed to check username:", error);
+        setUsernameAvailable(null);
+      } finally {
+        setIsCheckingUsername(false);
+      }
+    };
+
+    const timeoutId = setTimeout(checkUsername, 500); // 500ms debounce
+    return () => clearTimeout(timeoutId);
+  }, [inputUsername, userProfile?.username]);
+
+  // Rank State
+  const [userRank, setUserRank] = useState<number | null>(null);
+  const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
+
   const fetchVouchers = async () => {
     setLoadingVouchers(true);
     try {
@@ -105,6 +162,49 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
       console.error(err);
     } finally {
       setLoadingVouchers(false);
+    }
+  };
+
+  const handleActivateVoucher = async (id: string) => {
+    try {
+      // Call persistent API
+      const res = await fetch("/api/vouchers/redeem", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ voucherId: id })
+      });
+
+      if (res.ok) {
+        // Update local state to show "Activated" immediately and persistently
+        setVouchers(prev => prev.map(v => v._id === id ? { ...v, used: true } : v));
+      } else {
+        console.error("Redemption failed on server");
+      }
+    } catch (err) {
+      console.error("Redemption API error:", err);
+    }
+  };
+
+  const fetchLeaderboardAndStats = async () => {
+    setLoadingLeaderboard(true);
+    try {
+      const userId = getUserId();
+      // Pass userId to get personalized rank
+      const res = await fetch(`/api/leaderboard?userId=${userId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setLeaderboard(data.leaderboard);
+        if (typeof data.totalVerifiedUsers === 'number') setGlobalVerifiedUsers(data.totalVerifiedUsers);
+        if (typeof data.totalVouchers === 'number') setGlobalVouchersCount(data.totalVouchers);
+        // Set Rank
+        if (typeof data.userRank === 'number') setUserRank(data.userRank);
+      } else {
+        console.error("Failed to fetch stats: HTTP", res.status);
+      }
+    } catch (e) {
+      console.error("Failed to fetch leaderboard/stats", e);
+    } finally {
+      setLoadingLeaderboard(false);
     }
   };
 
@@ -220,11 +320,16 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
       setScore(typeof data.score === "number" ? data.score : null);
       setFeedback(ensureString(data.message));
       setAudioUrl(data.audioUrl || null);
-      setEarnedVoucher(data.voucher || null);
 
-      if (data.verified) {
+      if (data.verified || (typeof data.score === "number" && data.score > 0)) {
         const addedScore = typeof data.score === "number" ? data.score : 0;
         setGlobalScore((prev) => prev + addedScore);
+
+        // Instant Voucher UI
+        if (data.voucher) {
+          setEarnedVoucher(data.voucher);
+          fetchVouchers(); // Refresh in background
+        }
 
         const newScan: Scan = {
           image: imageBase64,
@@ -235,6 +340,9 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
           avatar: userProfile?.avatar
         };
         setScans((prev) => [newScan, ...prev].slice(0, 10));
+
+        // Refresh global stats & Leaderboard
+        await fetchLeaderboardAndStats();
 
         try {
           const confetti = await confettiPromise;
@@ -251,23 +359,19 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
         if (!userProfile) {
           setTimeout(() => setShowProfileModal(true), 1500);
         }
+      }
 
-        if (data.voucher) {
-          fetchVouchers();
-        }
+      // Always refresh leaderboard to show updated score
+      fetch("/api/leaderboard")
+        .then(r => r.json())
+        .then(d => {
+          if (d.leaderboard) setLeaderboard(d.leaderboard);
+        })
+        .catch(console.error);
 
-        // Always refresh leaderboard to show updated score
-        fetch("/api/leaderboard")
-          .then(r => r.json())
-          .then(d => {
-            if (d.leaderboard) setLeaderboard(d.leaderboard);
-          })
-          .catch(console.error);
-
-        if (data.audioUrl && audioRef.current) {
-          audioRef.current.currentTime = 0;
-          audioRef.current.play().catch(() => { });
-        }
+      if (data.audioUrl && audioRef.current) {
+        audioRef.current.currentTime = 0;
+        audioRef.current.play().catch(() => { });
       }
     } catch (err: any) {
       console.error(err);
@@ -280,27 +384,70 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
     }
   };
 
-  const simulateSuccess = () => {
+  const simulateSuccess = async () => {
     setLoading(true);
     setProgress(0);
     setFeedback(null);
     setVerified(null);
+    setScore(null);
 
+    // Simulate progress for UI effect
     let p = 0;
     const interval = setInterval(() => {
-      p += 20;
-      if (p > 100) p = 100;
+      p += 10;
+      if (p > 90) p = 90; // Hold at 90 until API returns
       setProgress(p);
-      if (p >= 100) {
-        clearInterval(interval);
-        setLoading(false);
+    }, 100);
+
+    try {
+      const userId = getUserId();
+      const savedName = localStorage.getItem("eco_username");
+      const savedAvatar = localStorage.getItem("eco_avatar");
+
+      const res = await fetch("/api/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          simulated: true,
+          userId,
+          username: savedName,
+          avatar: savedAvatar
+        })
+      });
+
+      const data = await res.json();
+
+      clearInterval(interval);
+      setProgress(100);
+      setLoading(false);
+
+      if (data.verified) {
         setVerified(true);
-        setScore(85);
-        setFeedback("Simulated Success: Great job recycling!");
-        setGlobalScore(s => s + 85);
+        setScore(data.score);
+        setFeedback(data.message);
+        setGlobalScore(s => s + (data.score || 0));
+
+        // Refresh vouchers if one was awarded
+        if (data.voucher) {
+          setEarnedVoucher(data.voucher);
+          await fetchVouchers(); // Refresh list and wait
+        }
+
+        // Refresh global stats & Leaderboard
+        await fetchLeaderboardAndStats();
+
+        // Trigger confetti
         confettiPromise.then(c => c({ particleCount: 100, spread: 70, origin: { y: 0.6 } }));
+      } else {
+        setVerified(false);
+        setFeedback(data.message || "Simulation failed.");
       }
-    }, 200);
+    } catch (err) {
+      clearInterval(interval);
+      setLoading(false);
+      setVerified(false);
+      setFeedback("Simulation error: Could not connect to server.");
+    }
   };
 
   const simulateFailure = () => {
@@ -325,46 +472,61 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
   };
 
   const Header = () => (
-    <header className="flex items-center justify-between mb-8 pt-2">
+    <header className="flex items-center justify-between mb-10 pt-4 px-1">
       {/* Left: Logo */}
-      <div className="flex items-center gap-2">
-        <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
-          <Leaf className="w-6 h-6 text-emerald-500" />
+      <div className="flex items-center gap-3 group cursor-default">
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-400/20 to-emerald-600/5 flex items-center justify-center border border-emerald-500/20 shadow-inner group-hover:scale-105 transition-transform duration-300">
+          <Leaf className="w-7 h-7 text-emerald-500 drop-shadow-[0_0_8px_rgba(16,185,129,0.4)]" />
         </div>
-        <div>
-          <h1 className="text-xl font-bold tracking-tight leading-none text-emerald-500/80">EcoVerify</h1>
-          <p className="text-[10px] text-emerald-500/80 font-medium tracking-wider uppercase">Saver Mode</p>
+        <div className="flex flex-col">
+          <h1 className="text-2xl font-black tracking-tight leading-none bg-clip-text text-transparent bg-gradient-to-r from-emerald-500 to-emerald-400">
+            EcoVerify
+          </h1>
+          <div className="flex items-center gap-1.5 mt-0.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <p className="text-[10px] text-emerald-500/60 font-bold tracking-widest uppercase">Saver Mode</p>
+          </div>
         </div>
       </div>
 
       {/* Right: Score & Profile */}
-      <div className="flex items-center gap-3">
-        <ThemeToggle />
-
+      <div className="flex items-center gap-4">
         {/* Appealing Score Display */}
-        <div className="hidden sm:flex flex-col items-end mr-2">
-          <span className="text-[10px] uppercase tracking-wider text-neutral-500 font-bold">Global Impact</span>
-          <div className="flex items-center gap-1.5">
-            <Trophy className="w-4 h-4 text-amber-500" />
-            <span className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-emerald-200 tabular-nums">
-              {globalScore.toLocaleString()}
-            </span>
+        <div className="hidden sm:flex flex-col items-center">
+          <span className="text-[10px] uppercase tracking-widest text-neutral-500/60 font-black mb-1">Global Impact</span>
+          <div className="flex items-center gap-2 bg-white/5 dark:bg-emerald-500/5 px-3 py-1.5 rounded-xl border border-white/10 dark:border-emerald-500/10 shadow-sm transition-all hover:bg-white/10">
+            <div className="flex items-center gap-1.5">
+              <Trophy className="w-4 h-4 text-amber-500 animate-bounce-slow" />
+              <span className="text-lg font-black text-emerald-500 tabular-nums">
+                {globalScore.toLocaleString()}
+              </span>
+            </div>
+            {/* User Rank Display */}
+            {userRank && (
+              <div className="flex items-center gap-1 pl-2 ml-2 border-l border-white/10">
+                <span className="text-[10px] text-neutral-500 font-bold uppercase">#</span>
+                <span className="text-base font-black text-neutral-300">{userRank}</span>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Mobile condensed score (if screen is small) */}
-        <div className="sm:hidden flex items-center gap-1 bg-emerald-950/30 border border-emerald-500/20 px-3 py-1.5 rounded-full">
-          <Trophy className="w-3.5 h-3.5 text-amber-500" />
-          <span className="text-sm font-bold text-emerald-100">{globalScore}</span>
+        {/* Mobile condensed score */}
+        <div className="sm:hidden flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-3 py-2 rounded-xl">
+          <Trophy className="w-4 h-4 text-amber-500" />
+          <span className="text-sm font-black text-emerald-100">{globalScore}</span>
         </div>
+
+        <ThemeToggle />
 
         {/* Profile Icon */}
         <div
           onClick={() => setShowProfileModal(true)}
-          className="w-10 h-10 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-xl cursor-pointer hover:border-emerald-500/50 hover:bg-emerald-500/20 transition-all relative group"
+          className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-2xl cursor-pointer hover:border-emerald-500/50 hover:bg-emerald-500/20 transition-all relative group shadow-lg overflow-hidden"
         >
-          {userProfile?.avatar || <User className="w-5 h-5 text-neutral-500" />}
-          <div className="absolute inset-0 rounded-full ring-2 ring-emerald-500/0 group-hover:ring-emerald-500/20 transition-all" />
+          {userProfile?.avatar || <User className="w-6 h-6 text-emerald-500/50" />}
+          <div className="absolute inset-0 bg-gradient-to-t from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 border-2 border-white dark:border-black rounded-full" />
         </div>
       </div>
     </header>
@@ -372,7 +534,7 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
 
   return (
     <div className="w-full max-w-md mx-auto pb-24">
-      {showOnboarding && <Onboarding onComplete={() => setShowOnboarding(false)} />}
+      {showOnboarding && <Onboarding onComplete={() => setShowOnboarding(false)} totalVerifiedUsers={globalVerifiedUsers} totalVouchers={globalVouchersCount} />}
       <Header />
 
       {/* Tabs */}
@@ -382,12 +544,12 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
           className={`flex items-center justify-center gap-2 py-2.5 text-sm font-semibold rounded-lg transition-all ${activeTab === "verify" ? "bg-emerald-600 text-white shadow-lg" : "text-neutral-500 hover:text-neutral-300 hover:bg-white/5"}`}
         >
           <Camera className="w-4 h-4" />
-          Verify
+          Home
         </button>
         <button
           onClick={() => {
             setActiveTab("leaderboard");
-            fetch("/api/leaderboard").then(r => r.json()).then(d => setLeaderboard(d.leaderboard)).catch(() => { });
+            fetchLeaderboardAndStats();
           }}
           className={`flex items-center justify-center gap-2 py-2.5 text-sm font-semibold rounded-lg transition-all ${activeTab === "leaderboard" ? "bg-amber-600 text-white shadow-lg" : "text-neutral-500 hover:text-neutral-300 hover:bg-white/5"}`}
         >
@@ -399,17 +561,46 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
             setActiveTab("vouchers");
             fetchVouchers();
           }}
-          className={`flex items-center justify-center gap-2 py-2.5 text-sm font-semibold rounded-lg transition-all ${activeTab === "vouchers" ? "bg-purple-600 text-white shadow-lg" : "text-neutral-500 hover:text-neutral-300 hover:bg-white/5"}`}
+          className={`flex items-center justify-center gap-2 py-2.5 text-sm font-semibold rounded-lg transition-all relative ${activeTab === "vouchers" ? "bg-purple-600 text-white shadow-lg" : "text-neutral-500 hover:text-neutral-300 hover:bg-white/5"}`}
         >
           <Ticket className="w-4 h-4" />
           Vouchers
+          {loadingVouchers ? (
+            <span className="absolute -top-1 -right-1 bg-purple-500 text-white p-1 rounded-full border border-black shadow animate-spin">
+              <Loader2 className="w-2.5 h-2.5" />
+            </span>
+          ) : vouchers.filter(v => !v.used).length > 0 && (
+            <span className="absolute -top-1 -right-1 bg-purple-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-black shadow">
+              {vouchers.filter(v => !v.used).length}
+            </span>
+          )}
         </button>
       </div>
 
+      {/* Global Stats (Subtle) */}
+      <div className="flex justify-center mb-6">
+        {globalVouchersCount > 1 && (
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/5 border border-emerald-500/10">
+            <Ticket className="w-3.5 h-3.5 text-emerald-500/60" />
+            <span className="text-xs font-medium text-emerald-600/60 dark:text-emerald-400/60">
+              <span className="font-bold">{globalVouchersCount.toLocaleString()}</span> vouchers awarded globally
+            </span>
+          </div>
+        )}
+      </div>
+
       {activeTab === "leaderboard" ? (
-        <Leaderboard entries={leaderboard} currentUserId={getUserId()} />
+        <Leaderboard
+          entries={leaderboard}
+          currentUserId={getUserId()}
+          loading={loadingLeaderboard}
+        />
       ) : activeTab === "vouchers" ? (
-        <VoucherList vouchers={vouchers} loading={loadingVouchers} />
+        <VoucherList
+          vouchers={vouchers}
+          loading={loadingVouchers}
+          onActivate={handleActivateVoucher}
+        />
       ) : (
         <>
           {/* Main Action Card */}
@@ -432,7 +623,7 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
                 className="primary-btn rounded-full px-8 py-4 flex items-center gap-3 text-lg shadow-lg shadow-emerald-900/20 hover:bg-emerald-600 hover:text-white transition-all"
               >
                 <Camera className="w-5 h-5" />
-                {loading ? "Scanning..." : "Open Camera / Upload Image"}
+                {loading ? "Scanning..." : "Verify"}
               </button>
 
             </div>
@@ -531,9 +722,9 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
                 <p className="text-neutral-500 text-sm">No scans yet. Be the first!</p>
               </div>
             ) : (
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                 {scans.map((scan, idx) => (
-                  <div key={idx} className="glass-panel p-3 flex items-center gap-4 hover:bg-white/5 transition-colors">
+                  <div key={idx} className="glass-panel p-3 flex items-center gap-4 hover:bg-white/5 transition-colors flex-shrink-0">
                     <div className="relative w-12 h-12 flex-shrink-0">
                       {/* User Avatar or Placeholder Image */}
                       <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white/10 bg-neutral-800 flex items-center justify-center text-xl relative z-10">
@@ -601,16 +792,31 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
                   <button
                     onClick={generateRandomName}
                     className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 text-neutral-400"
-                    title="Randomize"
                   >
                     🎲
                   </button>
+                </div>
+                {/* Availability Feedback */}
+                <div className="h-4 mt-1 pl-1">
+                  {isCheckingUsername ? (
+                    <span className="text-xs text-neutral-500 flex items-center gap-1">
+                      <Loader2 className="w-3 h-3 animate-spin" /> Checking...
+                    </span>
+                  ) : usernameAvailable === true ? (
+                    <span className="text-xs text-emerald-400 flex items-center gap-1">
+                      ✓ Username available
+                    </span>
+                  ) : usernameAvailable === false ? (
+                    <span className="text-xs text-red-400 flex items-center gap-1">
+                      ✕ Username taken
+                    </span>
+                  ) : null}
                 </div>
               </div>
 
               <button
                 onClick={saveProfile}
-                disabled={!inputUsername.trim()}
+                disabled={!inputUsername.trim() || usernameAvailable === false || isCheckingUsername}
                 className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Save Profile

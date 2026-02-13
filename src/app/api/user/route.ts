@@ -33,3 +33,25 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }
+
+export async function GET(req: NextRequest) {
+    try {
+        const { searchParams } = new URL(req.url);
+        const username = searchParams.get('username');
+
+        if (!username) {
+            return NextResponse.json({ error: "Missing username" }, { status: 400 });
+        }
+
+        const db = await getDb();
+        const users = db.collection("users");
+
+        console.log(`Checking availability for: ${username}`);
+        const existingUser = await users.findOne({ username: { $regex: new RegExp(`^${username}$`, 'i') } });
+
+        return NextResponse.json({ available: !existingUser });
+    } catch (error) {
+        console.error("Error checking username:", error);
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    }
+}

@@ -3,7 +3,7 @@ import { getDb } from "@/lib/mongodb";
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(req: any) {
     try {
         const db = await getDb();
         const users = db.collection("users");
@@ -17,7 +17,25 @@ export async function GET() {
             .limit(50)
             .toArray();
 
-        return NextResponse.json({ leaderboard });
+        const totalVerifiedUsers = await users.countDocuments({ totalScore: { $gt: 0 } });
+        const totalVouchers = await db.collection("vouchers").countDocuments({});
+
+        // Calculate User Rank if userId provided
+        let userRank = null;
+        let userData = null;
+        const { searchParams } = new URL(req.url); // Fix: Get URL from request
+        const userId = searchParams.get('userId');
+
+        if (userId) {
+            userData = await users.findOne({ userId });
+            if (userData && userData.totalScore > 0) {
+                // Rank is number of people with higher score + 1
+                const higherScores = await users.countDocuments({ totalScore: { $gt: userData.totalScore } });
+                userRank = higherScores + 1;
+            }
+        }
+
+        return NextResponse.json({ leaderboard, totalVerifiedUsers, totalVouchers, userRank, userData });
     } catch (error) {
         console.error("Error fetching leaderboard:", error);
         return NextResponse.json({ leaderboard: [] }, { status: 500 });

@@ -31,6 +31,9 @@ async function getInitialData() {
       .limit(10)
       .toArray();
 
+    const totalVerifiedUsers = await db.collection("users").countDocuments({ totalScore: { $gt: 0 } });
+    const totalVouchers = await db.collection("vouchers").countDocuments({});
+
     return {
       totalScore,
       lastTen: lastTen.map((s) => ({
@@ -41,7 +44,9 @@ async function getInitialData() {
         username: s.username,
         avatar: s.avatar
       })),
-      leaderboard
+      leaderboard,
+      totalVerifiedUsers,
+      totalVouchers
     };
   } catch (error) {
     console.error("Error fetching initial data:", error);
@@ -49,13 +54,15 @@ async function getInitialData() {
     return {
       totalScore: 0,
       lastTen: [],
-      leaderboard: []
+      leaderboard: [],
+      totalVerifiedUsers: 0,
+      totalVouchers: 0
     };
   }
 }
 
 export default async function Page() {
-  const { totalScore, lastTen, leaderboard } = await getInitialData();
+  const { totalScore, lastTen, leaderboard, totalVerifiedUsers, totalVouchers } = await getInitialData();
 
   return (
     <main className="flex min-h-screen flex-col items-center px-3 py-6 sm:px-4 sm:py-8">
@@ -64,6 +71,8 @@ export default async function Page() {
           initialTotalScore={totalScore}
           initialScans={lastTen}
           initialLeaderboard={leaderboard as any[]}
+          itemOne={totalVerifiedUsers}
+          itemTwo={totalVouchers}
         />
       </section>
     </main>

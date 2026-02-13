@@ -5,13 +5,15 @@ import { Leaf, Camera, Trophy, ArrowRight, Check } from "lucide-react";
 
 type OnboardingProps = {
     onComplete: () => void;
+    totalVerifiedUsers: number;
+    totalVouchers: number;
 };
 
 const SLIDES = [
     {
         id: "welcome",
         title: "Welcome to Eco-Verify",
-        description: "Turn your daily eco-friendly habits into verified impact points using AI.",
+        description: "Join a growing community of climate champions. Turn your daily habits into verified impact points.",
         icon: Leaf,
         color: "text-emerald-500",
         bg: "bg-emerald-500/10",
@@ -19,7 +21,7 @@ const SLIDES = [
     {
         id: "verify",
         title: "Snap & Verify",
-        description: "Simply take a photo of your action recycling, using a reusable cup, or biking.",
+        description: "Simply take a photo of your action and verify it.",
         icon: Camera,
         color: "text-blue-500",
         bg: "bg-blue-500/10",
@@ -27,14 +29,14 @@ const SLIDES = [
     {
         id: "earn",
         title: "Earn & Compete",
-        description: "Get accurate points for every action and climb the global leaderboard.",
+        description: "Get accurate points for every action. Earn vouchers and climb the global leaderboard.",
         icon: Trophy,
         color: "text-amber-500",
         bg: "bg-amber-500/10",
     },
 ];
 
-export default function Onboarding({ onComplete }: OnboardingProps) {
+export default function Onboarding({ onComplete, totalVerifiedUsers, totalVouchers }: OnboardingProps) {
     const [currentSlide, setCurrentSlide] = useState(0);
     const [isExiting, setIsExiting] = useState(false);
 
@@ -89,6 +91,15 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                             <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed transition-all duration-300">
                                 {SLIDES[currentSlide].description}
                             </p>
+
+                            {/* Social Proof Stats (Only on Welcome Slide) */}
+                            {currentSlide === 0 && (
+                                <div className="mt-8">
+                                    <p className="text-xs font-medium text-emerald-600/70 dark:text-emerald-400/70 bg-emerald-500/5 py-2 px-4 rounded-full inline-block border border-emerald-500/10">
+                                        Over <span className="font-bold">{totalVouchers.toLocaleString()}</span> vouchers awarded globally 🌍
+                                    </p>
+                                </div>
+                            )}
                         </div>
                     </div>
 

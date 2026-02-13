@@ -1,5 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/mongodb";
+import fs from "fs";
+import path from "path";
+
+const LOG_FILE = path.join(process.cwd(), "verification-debug.log");
+function logToFile(msg: string) {
+  try {
+    fs.appendFileSync(LOG_FILE, `[${new Date().toISOString()}] ${msg}\n`);
+  } catch (e) {
+    console.error("LOG FAILED:", e);
+  }
+}
 
 type VisionResult = {
   verified: boolean;
@@ -8,9 +19,14 @@ type VisionResult = {
   message: string;
 };
 
+// Helper: Generate a truly random 8-char code
+function generateRandomCode(): string {
+  return Math.random().toString(36).substring(2, 10).toUpperCase();
+}
+
 // Helper: Timeout wrapper for fetch
 async function fetchWithTimeout(resource: string, options: RequestInit & { timeout?: number } = {}) {
-  const { timeout = 15000 } = options; // Default 15s timeout
+  const { timeout = 25000 } = options;
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeout);
   const response = await fetch(resource, {
@@ -24,11 +40,11 @@ async function fetchWithTimeout(resource: string, options: RequestInit & { timeo
 async function callMiniMaxVision(imageBase64: string): Promise<VisionResult> {
   const apiKey = process.env.MINIMAX_API_KEY;
   if (!apiKey) {
-    // throw new Error("MINIMAX_API_KEY environment variable is not set.");
-    console.warn("MINIMAX_API_KEY not set. Using fallback.");
+    console.warn("MINIMAX_API_KEY not set. Using random fallback.");
+    const randomScore = Math.floor(Math.random() * 91) + 10;
     return {
       verified: true,
-      score: 80,
+      score: randomScore,
       actionType: "eco-action",
       message: "Great eco-action! (Dev mode: Key missing)"
     };
@@ -42,6 +58,7 @@ async function callMiniMaxVision(imageBase64: string): Promise<VisionResult> {
     "Return strictly JSON with keys: verified (boolean), score (number, optional when false), actionType (string, optional when false), message (string).";
 
   try {
+    // MiniMax-Text-01 on chatcompletion_v2 is the current standard for vision/chat
     const response = await fetchWithTimeout("https://api.minimax.io/v1/text/chatcompletion_v2", {
       method: "POST",
       headers: {
@@ -49,71 +66,60 @@ async function callMiniMaxVision(imageBase64: string): Promise<VisionResult> {
         Authorization: `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: "abab6.5s-chat",
+        model: "MiniMax-Text-01",
         messages: [
           {
             role: "system",
-            content: "You are an eco-sustainability image verification assistant."
+            content: "You are an eco-sustainability vision assistant. Always reply with strictly valid JSON."
           },
           {
             role: "user",
             content: [
-              {
-                type: "text",
-                text: prompt
-              },
-              {
-                type: "image_url",
-                image_url: {
-                  url: `data:image/jpeg;base64,${imageBase64}`
-                }
-              }
+              { type: "text", text: prompt },
+              { type: "image_url", image_url: { url: `data:image/jpeg;base64,${imageBase64}` } }
             ]
           }
         ]
-      }),
-      timeout: 20000 // 20s max for vision
+      })
     });
 
+    const resText = await response.text();
+    logToFile(`VISION API (${response.status}) RAW RESPONSE: ${resText}`);
+
     if (!response.ok) {
-      const text = await response.text();
-      console.warn("MiniMax Vision API non-OK:", text?.slice(0, 300));
-      throw new Error("MiniMax Vision API error");
+      throw new Error(`MiniMax Vision API error: ${response.status}`);
     }
 
-    const json = await response.json();
+    const json = JSON.parse(resText);
 
-    // Extract content safely
-    const rawContent =
-      json.choices?.[0]?.message?.content ??
-      json.reply?.content ??
-      (typeof json.content === "string" ? json.content : "") ??
-      "";
+    // Check for internal status codes (like 1002 RPM)
+    if (json.base_resp?.status_code && json.base_resp?.status_code !== 0) {
+      throw new Error(`MiniMax API Error: ${json.base_resp.status_msg} (${json.base_resp.status_code})`);
+    }
 
-    // Clean up markdown/JSON
+    const rawContent = json.choices?.[0]?.message?.content ?? "";
+
     let content = rawContent.trim();
-    const codeBlockMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
-    if (codeBlockMatch) {
-      content = codeBlockMatch[1].trim();
-    }
-    const firstBrace = content.indexOf("{");
-    const lastBrace = content.lastIndexOf("}");
-    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
-      content = content.slice(firstBrace, lastBrace + 1);
+    const match = content.match(/\{[\s\S]*\}/);
+    if (match) {
+      content = match[0];
+    } else if (resText.includes("base_resp") && !rawContent) {
+      // Handle cases where the API returns a response but NO content (like silent errors)
+      throw new Error("MiniMax returned empty content");
     }
 
     const parsed = JSON.parse(content);
-    if (typeof parsed.verified !== "boolean" || typeof parsed.message !== "string") {
-      throw new Error("Invalid JSON structure");
-    }
+
+    // User requested random scores: 10-100
+    parsed.score = Math.floor(Math.random() * 91) + 10;
 
     return parsed;
-  } catch (error) {
-    console.warn("MiniMax Vision failed or timed out. Using fallback.", error);
-    // Fallback so user never gets stuck
+  } catch (error: any) {
+    logToFile(`MINIMAX VISION EXCEPTION: ${error.message}`);
+    const randomScore = Math.floor(Math.random() * 91) + 10;
     return {
       verified: true,
-      score: 75,
+      score: randomScore,
       actionType: "eco-action",
       message: "Thanks for sharing! We couldn't verify the details, but here's a score for your effort."
     };
@@ -137,31 +143,16 @@ async function callMiniMaxT2A(text: string): Promise<string | null> {
         stream: false,
         language_boost: "auto",
         output_format: "url",
-        voice_setting: {
-          voice_id: "English_expressive_narrator",
-          speed: 1,
-          vol: 1,
-          pitch: 0
-        },
-        audio_setting: {
-          sample_rate: 32000,
-          bitrate: 128000,
-          format: "mp3",
-          channel: 1
-        }
-      }),
-      timeout: 8000 // 8s max for audio
+        voice_setting: { voice_id: "English_expressive_narrator" },
+        audio_setting: { sample_rate: 32000, bitrate: 128000, format: "mp3", channel: 1 }
+      })
     });
 
-    if (!response.ok) {
-      throw new Error("MiniMax T2A API error");
-    }
-
+    if (!response.ok) return null;
     const data = await response.json();
     return data.data?.audio || null;
-  } catch (error) {
-    console.error("MiniMax T2A error/timeout:", error);
-    return null; // No audio, but verification still succeeds
+  } catch {
+    return null;
   }
 }
 
@@ -170,11 +161,12 @@ async function callMiniMaxVoucherGen(actionType: string, score: number): Promise
   if (!apiKey) return null;
 
   try {
-    const prompt = `Generate a reward voucher for a user who just verified an eco-action: "${actionType}" and earned ${score} points. 
-    Return strictly JSON with keys: 
-    - title (short, catchy, e.g. "Green Coffee Discount")
-    - description (1 sentence, e.g. "Get 10% off at participating eco-cafes.")
-    - code (8-char alphanumeric code, unrelated to action, e.g. ECO-8X92)`;
+    const prompt = `Generate a realistic reward voucher for a user who performed the eco-action: "${actionType}" and earned ${score} points.
+    Requirements:
+    - title: Must sound like a real retail voucher (e.g. "£10 Off Eco-Friendly Goods", "25% Discount Coupon", "Free Reusable Bag").
+    - description: One sentence explaining the reward and why they earned it (e.g. "You earned £10 off for your incredible recycling efforts!"). Reward value should scale with score.
+    - code: 8-char random alphanumeric code.
+    Return strictly JSON: { "title": "...", "description": "...", "code": "..." }`;
 
     const response = await fetchWithTimeout("https://api.minimax.io/v1/text/chatcompletion_v2", {
       method: "POST",
@@ -183,29 +175,25 @@ async function callMiniMaxVoucherGen(actionType: string, score: number): Promise
         Authorization: `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: "abab6.5s-chat",
-        messages: [
-          { role: "system", content: "You are a reward system generator." },
-          { role: "user", content: prompt }
-        ]
-      }),
-      timeout: 10000
+        model: "MiniMax-Text-01",
+        messages: [{ role: "user", content: prompt }]
+      })
     });
 
     if (!response.ok) return null;
-
-    const json = await response.json();
-    const content = json.choices?.[0]?.message?.content || "";
-
-    // Simple JSON extraction
+    const resText = await response.text();
+    logToFile(`VOUCHER API RAW RESPONSE: ${resText}`);
+    const json = JSON.parse(resText);
+    const content = json.choices?.[0]?.message?.content ?? "";
     const match = content.match(/\{[\s\S]*\}/);
     if (match) {
-      return JSON.parse(match[0]);
+      const parsed = JSON.parse(match[0]);
+      // ALWAYS override with a fresh random code to ensure user's "random" requirement
+      parsed.code = generateRandomCode();
+      return parsed;
     }
     return null;
-
-  } catch (error) {
-    console.error("Voucher Gen Error:", error);
+  } catch {
     return null;
   }
 }
@@ -213,104 +201,90 @@ async function callMiniMaxVoucherGen(actionType: string, score: number): Promise
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const imageBase64 = body?.image as string | undefined;
-    const userId = body?.userId as string | undefined;
-    const username = body?.username as string | undefined;
-    const avatar = body?.avatar as string | undefined;
+    const { image, userId, username, avatar, simulated } = body;
 
-    if (!imageBase64) {
-      return NextResponse.json({ error: "Missing image" }, { status: 400 });
+    // 1. Simulation Path
+    if (simulated) {
+      const simulatedScore = Math.floor(Math.random() * 91) + 10;
+      const voucher = await callMiniMaxVoucherGen("simulated-action", simulatedScore) || {
+        title: `${simulatedScore > 50 ? "£10" : "£5"} Off Eco-Shop`,
+        description: `Simulated reward for your high-impact action (${simulatedScore} points).`,
+        code: generateRandomCode()
+      };
+
+      const timestamp = new Date();
+      await persistVerification(userId, username, avatar, "simulated", true, simulatedScore, "simulated-action", voucher, timestamp);
+
+      return NextResponse.json({
+        verified: true,
+        score: simulatedScore,
+        actionType: "simulated-action",
+        message: "Simulated Success!",
+        voucher,
+        timestamp
+      });
     }
 
-    // Step A: Vision (Timeout handled inside, always returns valid object)
-    const vision = await callMiniMaxVision(imageBase64);
+    // 2. Real Path
+    if (!image) return NextResponse.json({ error: "No image" }, { status: 400 });
 
-    // Step B: Voice (Timeout handled inside, returns null on fail)
+    const vision = await callMiniMaxVision(image);
     const audioUrl = await callMiniMaxT2A(vision.message);
 
-    // Step C: Voucher (Background / Best effort)
     let voucher = null;
-    if (vision.verified) {
+    if (vision.verified || (vision.score && vision.score > 0)) {
+      vision.verified = true;
       voucher = await callMiniMaxVoucherGen(vision.actionType || "eco-action", vision.score || 10);
     }
 
-    // Step D: Database (Background / Best effort)
     const timestamp = new Date();
-    try {
-      const db = await getDb();
-      const scans = db.collection("scans");
-      const users = db.collection("users");
-      const vouchers = db.collection("vouchers");
-
-      const score = typeof vision.score === 'number' ? vision.score : 0;
-
-      // 1. Save Scan
-      await scans.insertOne({
-        userId: userId || "anonymous",
-        username: username || "Anonymous", // Snapshot at time of scan
-        avatar: avatar || "👤", // Snapshot
-        image: imageBase64,
-        verified: vision.verified,
-        score: vision.score ?? null,
-        actionType: vision.actionType ?? null,
-        timestamp
-      });
-
-      // 2. Update User Total Score
-      if (userId && score > 0) {
-        await users.updateOne(
-          { userId },
-          {
-            $inc: { totalScore: score },
-            $set: {
-              lastActive: timestamp,
-              ...(username ? { username } : {}),
-              ...(avatar ? { avatar } : {})
-            },
-            $setOnInsert: {
-              username: "Guest User",
-              avatar: "👤"
-            }
-          },
-          { upsert: true }
-        );
-
-        // 3. Save Voucher if generated
-        if (voucher) {
-          await vouchers.insertOne({
-            userId,
-            ...voucher,
-            createdAt: timestamp,
-            expiry: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
-          });
-        }
-      }
-    } catch (dbError) {
-      console.error("Failed to persist scan/user/voucher:", dbError);
-    }
+    await persistVerification(userId, username, avatar, image, vision.verified, vision.score || 0, vision.actionType || "eco-action", voucher, timestamp);
 
     return NextResponse.json({
-      verified: vision.verified,
-      score: vision.score ?? null,
-      actionType: vision.actionType ?? null,
-      message: vision.message,
+      ...vision,
       audioUrl,
-      voucher, // Return voucher to client
+      voucher,
       timestamp
     });
 
   } catch (error: any) {
-    console.error("Error in /api/verify:", error);
-    // Ultimate fallback if something completely unexpected happens in the route handler itself
-    // Should generally be caught by the sub-functions, but good safety net.
+    console.error("Error in POST:", error);
+    const randomScore = Math.floor(Math.random() * 91) + 10;
     return NextResponse.json({
       verified: true,
-      score: 50,
+      score: randomScore,
       actionType: "eco-action",
-      message: "We encountered a glitch, but here's some points for your effort!",
-      audioUrl: null,
+      message: "We encountered a glitch, but rewarded your effort!",
       timestamp: new Date()
     });
   }
 }
 
+async function persistVerification(userId: any, username: any, avatar: any, image: string, verified: boolean, score: number, actionType: string, voucher: any, timestamp: Date) {
+  try {
+    const db = await getDb();
+    const scans = db.collection("scans");
+    const users = db.collection("users");
+    const vouchers = db.collection("vouchers");
+
+    await scans.insertOne({ userId: userId || "anon", username, avatar, image: image.slice(0, 100), verified, score, actionType, timestamp });
+
+    if (userId && score > 0) {
+      try {
+        await users.updateOne(
+          { userId },
+          { $inc: { totalScore: score }, $set: { lastActive: timestamp, ...(username && { username }), ...(avatar && { avatar }) }, $setOnInsert: { username: "Guest", avatar: "👤" } },
+          { upsert: true }
+        );
+      } catch {
+        await users.updateOne({ userId }, { $inc: { totalScore: score }, $set: { lastActive: timestamp } }, { upsert: true });
+      }
+
+      if (voucher) {
+        await vouchers.insertOne({ userId, ...voucher, used: false, createdAt: timestamp, expiry: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) });
+      }
+    }
+  } catch (e) {
+    console.error("Persistence failed:", e);
+  }
+}

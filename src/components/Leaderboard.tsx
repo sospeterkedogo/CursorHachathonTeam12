@@ -1,6 +1,6 @@
 "use client";
 
-import { Trophy, Medal, User } from "lucide-react";
+import { Trophy, Medal, User, Loader2 } from "lucide-react";
 
 type LeaderboardEntry = {
     rank?: number;
@@ -13,9 +13,19 @@ type LeaderboardEntry = {
 type Props = {
     entries: LeaderboardEntry[];
     currentUserId: string | null;
+    loading?: boolean;
 };
 
-export default function Leaderboard({ entries, currentUserId }: Props) {
+export default function Leaderboard({ entries, currentUserId, loading }: Props) {
+    if (loading) {
+        return (
+            <div className="flex flex-col items-center justify-center py-12 text-neutral-500">
+                <Loader2 className="w-12 h-12 mb-4 animate-spin text-amber-500/50" />
+                <p>Scaling the heights...</p>
+                <p className="text-sm">Fetching global rankings</p>
+            </div>
+        );
+    }
     // If no entries, show empty state
     if (entries.length === 0) {
         return (
@@ -36,7 +46,7 @@ export default function Leaderboard({ entries, currentUserId }: Props) {
                 </h2>
             </div>
 
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar divide-y divide-neutral-200/10 dark:divide-white/5">
                 {entries.map((user, index) => {
                     const rank = index + 1;
                     const isCurrentUser = user.userId === currentUserId;
@@ -50,9 +60,9 @@ export default function Leaderboard({ entries, currentUserId }: Props) {
                     return (
                         <div
                             key={user.userId}
-                            className={`flex items-center gap-4 p-3 rounded-xl transition-all ${isCurrentUser
-                                ? "bg-emerald-500/10 border border-emerald-500/30"
-                                : "bg-white/5 border border-white/5 hover:bg-white/10"
+                            className={`flex items-center gap-4 p-3 transition-all ${isCurrentUser
+                                ? "bg-emerald-500/10 border-l-4 border-emerald-500"
+                                : "hover:bg-white/5"
                                 }`}
                         >
                             <div className="flex-shrink-0 w-8 flex items-center justify-center">
