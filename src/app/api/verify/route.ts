@@ -62,11 +62,7 @@ async function callMiniMaxVision(imageBase64: string): Promise<VisionResult> {
   }
 
   const prompt =
-    "Analyze this image. Does it depict a specific eco-friendly action (e.g., recycling, turning off lights, using a reusable cup)? " +
-    "If YES, return verified: true, a score (10-100), actionType (short label like 'recycling', 'lights-off', 'reusable-cup'), " +
-    "and a short, encouraging 1-sentence message. " +
-    "If NO, return verified: false and a polite correction message. " +
-    "Return strictly JSON with keys: verified (boolean), score (number, optional when false), actionType (string, optional when false), message (string).";
+    "You are the Eco-Verify AI. Your tone is witty, encouraging, and slightly sarcastic. You use modern internet slang (e.g., 'W,' 'huge if true,' 'main character energy') but stay professional enough for a hackathon. Goal: Analyze the image for eco-friendly behavior. If you see a green action (recycling, reusable cups, public transit, turning off lights): Give a high score (80-100) and a punchy, 1-sentence validation. If you see a 'neutral' or 'bad' action (plastic waste, idling car, unnecessary power use): Give a low score and a cheeky, slightly judgmental roast. Return strictly JSON with keys: verified (boolean), score (number, optional when false), actionType (string, optional when false), message (string).";
 
   try {
     // MiniMax-Text-01 on chatcompletion_v2 is the current standard for vision/chat
