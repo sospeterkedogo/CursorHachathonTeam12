@@ -170,6 +170,8 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const imageBase64 = body?.image as string | undefined;
     const userId = body?.userId as string | undefined;
+    const username = body?.username as string | undefined;
+    const avatar = body?.avatar as string | undefined;
 
     if (!imageBase64) {
       return NextResponse.json({ error: "Missing image" }, { status: 400 });
@@ -186,16 +188,44 @@ export async function POST(req: NextRequest) {
     try {
       const db = await getDb();
       const scans = db.collection("scans");
+      const users = db.collection("users");
+
+      const score = typeof vision.score === 'number' ? vision.score : 0;
+
+      // 1. Save Scan
       await scans.insertOne({
         userId: userId || "anonymous",
+        username: username || "Anonymous", // Snapshot at time of scan
+        avatar: avatar || "👤", // Snapshot
         image: imageBase64,
         verified: vision.verified,
         score: vision.score ?? null,
         actionType: vision.actionType ?? null,
         timestamp
       });
+
+      // 2. Update User Total Score
+      if (userId && vision.verified && score > 0) {
+        await users.updateOne(
+          { userId },
+          {
+            $inc: { totalScore: score },
+            $set: {
+              lastActive: timestamp,
+              // If provided (e.g. they updated profile just now), update specific fields
+              ...(username ? { username } : {}),
+              ...(avatar ? { avatar } : {})
+            },
+            $setOnInsert: {
+              username: "Guest User",
+              avatar: "👤"
+            }
+          },
+          { upsert: true }
+        );
+      }
     } catch (dbError) {
-      console.error("Failed to persist scan:", dbError);
+      console.error("Failed to persist scan/user:", dbError);
     }
 
     return NextResponse.json({
