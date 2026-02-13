@@ -5,6 +5,7 @@ import { Camera, Loader2, Leaf } from "lucide-react";
 import dynamic from "next/dynamic";
 import { getUserId } from "@/lib/userId";
 import { ThemeToggle } from "./ThemeToggle";
+import Onboarding from "./Onboarding";
 
 const confettiPromise = import("canvas-confetti").then((m) => m.default);
 
@@ -40,6 +41,7 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans }: Pro
   const [verified, setVerified] = useState<boolean | null>(null);
   const [score, setScore] = useState<number | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [showOnboarding, setShowOnboarding] = useState(true);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -227,6 +229,7 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans }: Pro
 
   return (
     <div className="w-full max-w-md mx-auto pb-24">
+      {showOnboarding && <Onboarding onComplete={() => setShowOnboarding(false)} />}
       <Header />
 
       {/* Main Action Card */}
