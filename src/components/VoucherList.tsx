@@ -3,23 +3,9 @@
 import { useState } from "react";
 import { Ticket, Clock, Calendar, Loader2 } from "lucide-react";
 
-type Voucher = {
-    _id: string;
-    code: string;
-    title: string;
-    description: string;
-    expiry: string;
-    createdAt: string;
-    used?: boolean;
-};
+import { VoucherListProps } from "@/types";
 
-type Props = {
-    vouchers: Voucher[];
-    loading?: boolean;
-    onActivate?: (id: string) => void;
-};
-
-export default function VoucherList({ vouchers, loading, onActivate }: Props) {
+export default function VoucherList({ vouchers, loading, onActivate }: VoucherListProps) {
     if (loading) {
         return (
             <div className="flex flex-col items-center justify-center py-12 text-neutral-500">

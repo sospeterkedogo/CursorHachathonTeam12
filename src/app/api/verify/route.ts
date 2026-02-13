@@ -14,14 +14,9 @@ function logToFile(msg: string) {
   }
 }
 
-type VisionResult = {
-  verified: boolean;
-  score?: number;
-  actionType?: string;
-  message: string;
-};
 
-// Helper: Generate a truly random 8-char code
+import { VisionResult } from "@/types";
+
 function generateRandomCode(): string {
   return Math.random().toString(36).substring(2, 10).toUpperCase();
 }
@@ -36,7 +31,6 @@ const VerifySchema = z.object({
   honeypot: z.string().optional(), // Bot detection
 });
 
-// Helper: Timeout wrapper for fetch
 async function fetchWithTimeout(resource: string, options: RequestInit & { timeout?: number } = {}) {
   const { timeout = 25000 } = options;
   const controller = new AbortController();
@@ -66,7 +60,7 @@ async function callMiniMaxVision(imageBase64: string): Promise<VisionResult> {
     "You are the Eco-Verify AI. Your tone is witty, encouraging, and slightly sarcastic. You use modern internet slang (e.g., 'W,' 'huge if true,' 'main character energy') but stay professional enough for a hackathon. Goal: Analyze the image for eco-friendly behavior. If you see a green action (recycling, reusable cups, public transit, turning off lights): Give a high score (80-100) and a punchy, 1-sentence validation. If you see a 'neutral' or 'bad' action (plastic waste, idling car, unnecessary power use): Give a low score and a cheeky, slightly judgmental roast. Return strictly JSON with keys: verified (boolean), score (number, optional when false), actionType (string, optional when false), message (string).";
 
   try {
-    // MiniMax-Text-01 on chatcompletion_v2 is the current standard for vision/chat
+    // We use the v2 endpoint for standardized vision/chat capabilities.
     const response = await fetchWithTimeout("https://api.minimax.io/v1/text/chatcompletion_v2", {
       method: "POST",
       headers: {
@@ -100,7 +94,7 @@ async function callMiniMaxVision(imageBase64: string): Promise<VisionResult> {
 
     const json = JSON.parse(resText);
 
-    // Check for internal status codes (like 1002 RPM)
+    // Some API errors return 200 OK but contain internal error codes (e.g., rate limits).
     if (json.base_resp?.status_code && json.base_resp?.status_code !== 0) {
       throw new Error(`MiniMax API Error: ${json.base_resp.status_msg} (${json.base_resp.status_code})`);
     }
@@ -118,8 +112,7 @@ async function callMiniMaxVision(imageBase64: string): Promise<VisionResult> {
 
     const parsed = JSON.parse(content);
 
-    // ONLY override if the AI didn't provide a score or if we want to force randomness (as per previous requirement)
-    // However, if verified is false, we should probably set score to 0.
+    // Enforce 0 score for non-verified actions while providing fallbacks for missing AI scores.
     if (parsed.verified === false) {
       parsed.score = 0;
     } else if (typeof parsed.score !== "number") {
@@ -215,7 +208,6 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    // 0. Validation & Bot Check
     const result = VerifySchema.safeParse(body);
     if (!result.success) {
       return NextResponse.json({ error: "Invalid request data", details: result.error.format() }, { status: 400 });
@@ -228,7 +220,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Cloudflare thinks you are a robot" }, { status: 403 });
     }
 
-    // 0.1 Rate Limiting (10 requests per minute per userId)
+    // Rate limit to prevent abuse (default: 10 RPM per user).
     const limit = rateLimit(userId, 10, 60000);
     if (!limit.success) {
       return NextResponse.json({
@@ -244,7 +236,6 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 1. Simulation Path
     if (simulated) {
       const simulatedScore = Math.floor(Math.random() * 91) + 10;
       const voucher = await callMiniMaxVoucherGen("simulated-action", simulatedScore) || {
@@ -266,7 +257,6 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 2. Real Path
     if (!image) return NextResponse.json({ error: "No image" }, { status: 400 });
 
     const vision = await callMiniMaxVision(image);
@@ -332,7 +322,7 @@ async function persistVerification(userId: any, username: any, avatar: any, imag
       }
 
       if (voucher) {
-        // Daily limit: max 5 vouchers per user
+        // Enforce a security limit of 5 vouchers per user per rolling 24-hour window.
         const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
         const dailyVoucherCount = await vouchers.countDocuments({
           userId,

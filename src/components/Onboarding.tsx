@@ -3,11 +3,7 @@
 import { useState } from "react";
 import { Leaf, Camera, Trophy, ArrowRight, Check } from "lucide-react";
 
-type OnboardingProps = {
-    onComplete: () => void;
-    totalVerifiedUsers: number;
-    totalVouchers: number;
-};
+import { OnboardingProps } from "@/types";
 
 const SLIDES = [
     {

@@ -1,15 +1,16 @@
+import { STORAGE_KEYS } from "./utils";
 
 export function getUserId(): string {
     if (typeof window === "undefined") {
         return "";
     }
 
-    const STORAGE_KEY = "eco_verify_user_id";
-    let userId = localStorage.getItem(STORAGE_KEY);
+    const userId = localStorage.getItem(STORAGE_KEYS.USER_ID);
 
     if (!userId) {
-        userId = crypto.randomUUID();
-        localStorage.setItem(STORAGE_KEY, userId);
+        const newId = crypto.randomUUID();
+        localStorage.setItem(STORAGE_KEYS.USER_ID, newId);
+        return newId;
     }
 
     return userId;

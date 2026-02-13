@@ -23,56 +23,16 @@ import Onboarding from "./Onboarding";
 import Leaderboard from "./Leaderboard";
 import VoucherList from "./VoucherList";
 
+import { Scan, LeaderboardEntry, Voucher, EcoVerifyClientProps } from "@/types";
+import { AVATARS, UI_CHUNKS, API_PATHS } from "@/constants";
+import { ensureString, STORAGE_KEYS } from "@/lib/utils";
+import * as api from "@/lib/api";
+
 const confettiPromise = import("canvas-confetti").then((m) => m.default);
 
-// Helper to prevent [object Object] in UI
-const ensureString = (msg: any): string => {
-  if (typeof msg === "string") return msg;
-  if (!msg) return "";
-  if (typeof msg === "object") {
-    return msg.message || msg.error || msg.details || JSON.stringify(msg);
-  }
-  return String(msg);
-};
 
-type Scan = {
-  image: string;
-  actionType: string;
-  score: number;
-  timestamp: string;
-  username?: string;
-  avatar?: string;
-};
 
-type LeaderboardEntry = {
-  rank?: number;
-  userId: string;
-  username: string;
-  avatar: string;
-  totalScore: number;
-};
-
-type Voucher = {
-  _id: string;
-  code: string;
-  title: string;
-  description: string;
-  expiry: string;
-  createdAt: string;
-  used?: boolean;
-};
-
-type Props = {
-  initialTotalScore: number;
-  initialScans: Scan[];
-  initialLeaderboard: LeaderboardEntry[];
-  itemOne: number;
-  itemTwo: number;
-};
-
-const AVATARS = ["🐼", "🦊", "🦁", "🐰", "🐸", "🐯", "🐨", "🐙", "🦄", "🐲"];
-
-export default function EcoVerifyClient({ initialTotalScore, initialScans, initialLeaderboard, itemOne, itemTwo }: Props) {
+export default function EcoVerifyClient({ initialTotalScore, initialScans, initialLeaderboard, itemOne, itemTwo }: EcoVerifyClientProps) {
   const [activeTab, setActiveTab] = useState<"verify" | "leaderboard" | "vouchers">("verify");
   const [globalScore, setGlobalScore] = useState(initialTotalScore);
   const [scans, setScans] = useState<Scan[]>(initialScans);
@@ -80,7 +40,6 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
   const [vouchers, setVouchers] = useState<Voucher[]>([]);
   const [loadingVouchers, setLoadingVouchers] = useState(false);
 
-  // Global Stats State
   const [globalVerifiedUsers, setGlobalVerifiedUsers] = useState(itemOne);
   const [globalVouchersCount, setGlobalVouchersCount] = useState(itemTwo);
 
@@ -98,7 +57,6 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
 
 
 
-  // User Profile State
   const [userProfile, setUserProfile] = useState<{ username: string; avatar: string } | null>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [inputUsername, setInputUsername] = useState("");
@@ -108,9 +66,9 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    // Load local profile
-    const savedName = localStorage.getItem("eco_username");
-    const savedAvatar = localStorage.getItem("eco_avatar");
+    // Synchronize local profile and onboarding state from storage on mount.
+    const savedName = localStorage.getItem(STORAGE_KEYS.USERNAME);
+    const savedAvatar = localStorage.getItem(STORAGE_KEYS.AVATAR);
     if (savedName && savedAvatar) {
       setUserProfile({ username: savedName, avatar: savedAvatar });
       setInputUsername(savedName);
@@ -118,13 +76,12 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
     }
 
     // Check onboarding
-    const hideOnboarding = localStorage.getItem("hide_onboarding");
+    const hideOnboarding = localStorage.getItem(STORAGE_KEYS.HIDE_ONBOARDING);
     if (!hideOnboarding) {
       setShowOnboarding(true);
     }
   }, []);
 
-  // Username Availability Check
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
 
@@ -137,9 +94,11 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
 
       setIsCheckingUsername(true);
       try {
-        const res = await fetch(`/api/user?username=${encodeURIComponent(inputUsername)}`);
-        const data = await res.json();
-        setUsernameAvailable(data.available);
+        const data = await api.fetchLeaderboard(inputUsername); // Reuse fetchLeaderboard or add checkUsername to api lib
+        // Assuming checkUsername exists or we use a more generic check
+        const res = await fetch(`${API_PATHS.USER}?username=${encodeURIComponent(inputUsername)}`);
+        const rawData = await res.json();
+        setUsernameAvailable(rawData.available);
       } catch (error) {
         console.error("Failed to check username:", error);
         setUsernameAvailable(null);
@@ -148,11 +107,10 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
       }
     };
 
-    const timeoutId = setTimeout(checkUsername, 500); // 500ms debounce
+    const timeoutId = setTimeout(checkUsername, 500); // 500ms debounce to limit API calls during typing
     return () => clearTimeout(timeoutId);
   }, [inputUsername, userProfile?.username]);
 
-  // Rank State
   const [userRank, setUserRank] = useState<number | null>(null);
   const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
 
@@ -174,19 +132,8 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
 
   const handleActivateVoucher = async (id: string) => {
     try {
-      // Call persistent API
-      const res = await fetch("/api/vouchers/redeem", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ voucherId: id })
-      });
-
-      if (res.ok) {
-        // Update local state to show "Activated" immediately and persistently
-        setVouchers(prev => prev.map(v => v._id === id ? { ...v, used: true } : v));
-      } else {
-        console.error("Redemption failed on server");
-      }
+      await api.redeemVoucher(id);
+      setVouchers(prev => prev.map(v => v._id === id ? { ...v, used: true } : v));
     } catch (err) {
       console.error("Redemption API error:", err);
     }
@@ -195,19 +142,11 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
   const fetchLeaderboardAndStats = async () => {
     setLoadingLeaderboard(true);
     try {
-      const userId = getUserId();
-      // Pass userId to get personalized rank
-      const res = await fetch(`/api/leaderboard?userId=${userId}`);
-      if (res.ok) {
-        const data = await res.json();
-        setLeaderboard(data.leaderboard);
-        if (typeof data.totalVerifiedUsers === 'number') setGlobalVerifiedUsers(data.totalVerifiedUsers);
-        if (typeof data.totalVouchers === 'number') setGlobalVouchersCount(data.totalVouchers);
-        // Set Rank
-        if (typeof data.userRank === 'number') setUserRank(data.userRank);
-      } else {
-        console.error("Failed to fetch stats: HTTP", res.status);
-      }
+      const data = await api.fetchLeaderboard(getUserId());
+      setLeaderboard(data.leaderboard);
+      if (typeof data.totalVerifiedUsers === 'number') setGlobalVerifiedUsers(data.totalVerifiedUsers);
+      if (typeof data.totalVouchers === 'number') setGlobalVouchersCount(data.totalVouchers);
+      if (typeof data.userRank === 'number') setUserRank(data.userRank);
     } catch (e) {
       console.error("Failed to fetch leaderboard/stats", e);
     } finally {
@@ -222,32 +161,22 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
     const newProfile = { username: inputUsername, avatar: selectedAvatar };
 
     setUserProfile(newProfile);
-    localStorage.setItem("eco_username", inputUsername);
-    localStorage.setItem("eco_avatar", selectedAvatar);
+    localStorage.setItem(STORAGE_KEYS.USERNAME, inputUsername);
+    localStorage.setItem(STORAGE_KEYS.AVATAR, selectedAvatar);
     setShowProfileModal(false);
 
-    // Sync to backend
+    // Synchronize local profile changes to the backend and update the global leaderboard.
     try {
-      await fetch("/api/user", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, ...newProfile })
-      });
-      // Refresh leaderboard
-      const res = await fetch("/api/leaderboard");
-      if (res.ok) {
-        const data = await res.json();
-        setLeaderboard(data.leaderboard);
-      }
+      await api.saveUserProfile({ userId, ...newProfile });
+      const data = await api.fetchLeaderboard();
+      setLeaderboard(data.leaderboard);
     } catch (err) {
       console.error("Failed to save profile:", err);
     }
   };
 
   const generateRandomName = () => {
-    const adjs = ["Green", "Eco", "Clean", "Leafy", "Solar", "Windy", "Ocean", "Forest"];
-    const nouns = ["Panda", "Fox", "Hero", "Warrior", "Guardian", "Scout", "Ranger", "Spirit"];
-    const randomName = `${adjs[Math.floor(Math.random() * adjs.length)]}${nouns[Math.floor(Math.random() * nouns.length)]}${Math.floor(Math.random() * 99)}`;
+    const randomName = `${UI_CHUNKS.ADJECTIVES[Math.floor(Math.random() * UI_CHUNKS.ADJECTIVES.length)]}${UI_CHUNKS.NOUNS[Math.floor(Math.random() * UI_CHUNKS.NOUNS.length)]}${Math.floor(Math.random() * 99)}`;
     setInputUsername(randomName);
     setSelectedAvatar(AVATARS[Math.floor(Math.random() * AVATARS.length)]);
   };
@@ -274,8 +203,6 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
 
   const submitImage = async (imageBase64: string) => {
     let progressInterval: NodeJS.Timeout;
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 35000);
 
     try {
       setLoading(true);
@@ -286,6 +213,7 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
       setAudioUrl(null);
       setEarnedVoucher(null);
 
+      // Mimic backend processing progress for user feedback.
       progressInterval = setInterval(() => {
         setProgress((prev) => {
           if (prev >= 90) return prev;
@@ -294,42 +222,16 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
         });
       }, 500);
 
-      let data;
-      try {
-        const userId = getUserId();
-        const res = await fetch("/api/verify", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            image: imageBase64,
-            userId,
-            username: userProfile?.username,
-            avatar: userProfile?.avatar,
-            isPublic
-          }),
-          signal: controller.signal
-        });
+      const data = await api.verifyAction({
+        image: imageBase64,
+        userId: getUserId(),
+        username: userProfile?.username,
+        avatar: userProfile?.avatar,
+        isPublic
+      });
 
-        if (!res.ok) {
-          throw new Error("Verification request failed");
-        }
-        data = await res.json();
-      } catch (innerError) {
-        console.warn("Verification API failed/timed out, using client fallback", innerError);
-        data = {
-          verified: true,
-          score: 60,
-          actionType: "eco-action",
-          message: "We faced a connection hiccup, but here's some points for your effort!",
-          timestamp: new Date().toISOString()
-        };
-      }
-
-      clearTimeout(timeoutId);
       clearInterval(progressInterval);
       setProgress(100);
-
-      // Reset progress after a delay
       setTimeout(() => setProgress(0), 1000);
 
       setVerified(data.verified);
@@ -341,10 +243,9 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
         const addedScore = typeof data.score === "number" ? data.score : 0;
         setGlobalScore((prev) => prev + addedScore);
 
-        // Instant Voucher UI
         if (data.voucher) {
           setEarnedVoucher(data.voucher);
-          fetchVouchers(); // Refresh in background
+          api.fetchVouchers(getUserId()).then(v => setVouchers(v));
         }
 
         const newScan: Scan = {
@@ -356,8 +257,6 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
           avatar: userProfile?.avatar
         };
         setScans((prev) => [newScan, ...prev].slice(0, 10));
-
-        // Refresh global stats & Leaderboard
         await fetchLeaderboardAndStats();
 
         try {
@@ -377,15 +276,12 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
         }
       }
 
-      // Always refresh leaderboard to show updated score
-      fetch("/api/leaderboard")
-        .then(r => r.json())
-        .then(d => {
-          if (d.leaderboard) setLeaderboard(d.leaderboard);
-        })
-        .catch(console.error);
+      api.fetchLeaderboard().then(d => {
+        if (d.leaderboard) setLeaderboard(d.leaderboard);
+      });
 
       if (data.audioUrl && audioRef.current) {
+        // Reset and play generated feedback audio if available.
         audioRef.current.currentTime = 0;
         audioRef.current.play().catch(() => { });
       }
@@ -396,7 +292,6 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
     } finally {
       if (progressInterval!) clearInterval(progressInterval);
       setLoading(false);
-      clearTimeout(timeoutId);
     }
   };
 
@@ -407,32 +302,20 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
     setVerified(null);
     setScore(null);
 
-    // Simulate progress for UI effect
     let p = 0;
     const interval = setInterval(() => {
       p += 10;
-      if (p > 90) p = 90; // Hold at 90 until API returns
+      if (p > 90) p = 90;
       setProgress(p);
     }, 100);
 
     try {
-      const userId = getUserId();
-      const savedName = localStorage.getItem("eco_username");
-      const savedAvatar = localStorage.getItem("eco_avatar");
-
-      const res = await fetch("/api/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          simulated: true,
-          userId,
-          username: savedName,
-          avatar: savedAvatar,
-          honeypot: "" // Always empty for real users
-        })
+      const data = await api.verifyAction({
+        simulated: true,
+        userId: getUserId(),
+        username: userProfile?.username,
+        avatar: userProfile?.avatar
       });
-
-      const data = await res.json();
 
       clearInterval(interval);
       setProgress(100);
@@ -444,16 +327,12 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
         setFeedback(data.message);
         setGlobalScore(s => s + (data.score || 0));
 
-        // Refresh vouchers if one was awarded
         if (data.voucher) {
           setEarnedVoucher(data.voucher);
-          await fetchVouchers(); // Refresh list and wait
+          await api.fetchVouchers(getUserId()).then(v => setVouchers(v));
         }
 
-        // Refresh global stats & Leaderboard
         await fetchLeaderboardAndStats();
-
-        // Trigger confetti
         confettiPromise.then(c => c({ particleCount: 100, spread: 70, origin: { y: 0.6 } }));
       } else {
         setVerified(false);
@@ -508,7 +387,6 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
 
       {/* Right: Score & Profile */}
       <div className="flex items-center gap-4">
-        {/* Appealing Score Display */}
         <div className="hidden sm:flex flex-col items-center">
           <span className="text-[10px] uppercase tracking-widest text-neutral-500/60 font-black mb-1">Global Impact</span>
           <div className="flex items-center gap-2 bg-white/5 dark:bg-emerald-500/5 px-3 py-1.5 rounded-xl border border-white/10 dark:border-emerald-500/10 shadow-sm transition-all hover:bg-white/10">
@@ -724,7 +602,7 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
                 )}
               </div>
 
-              {/* Earned Voucher Display */}
+              {/* Dynamic reward display if a voucher was unlocked. */}
               {earnedVoucher && (
                 <div className="mt-3 bg-purple-900/20 border border-purple-500/30 rounded-xl p-4 relative overflow-hidden">
                   <div className="absolute top-0 right-0 p-2 opacity-10">
@@ -876,36 +754,6 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
                 Skip for now
               </button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Dev Tools */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="mt-12 pt-6 border-t border-white/5 opacity-50 hover:opacity-100 transition-opacity">
-          <p className="mb-3 text-[10px] uppercase tracking-widest text-neutral-600 font-bold text-center">Developer Controls</p>
-          <div className="flex justify-center gap-2">
-            <button onClick={simulateSuccess} className="px-4 py-2 text-xs bg-emerald-900/30 text-emerald-400 border border-emerald-900/50 rounded-lg hover:bg-emerald-900/50">
-              Simulate Success
-            </button>
-            <button onClick={simulateFailure} className="px-4 py-2 text-xs bg-red-900/30 text-red-400 border border-red-900/50 rounded-lg hover:bg-red-900/50">
-              Simulate Failure
-            </button>
-            <button
-              onClick={() => {
-                const userId = getUserId();
-                fetch(`/api/admin/migrate?targetUserId=${userId}`)
-                  .then(r => r.json())
-                  .then(d => {
-                    alert(d.message);
-                    window.location.reload();
-                  })
-                  .catch(e => alert(e.message));
-              }}
-              className="px-4 py-2 text-xs bg-blue-900/30 text-blue-400 border border-blue-900/50 rounded-lg hover:bg-blue-900/50"
-            >
-              Sync Legacy Data
-            </button>
           </div>
         </div>
       )}

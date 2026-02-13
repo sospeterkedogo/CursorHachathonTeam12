@@ -2,21 +2,9 @@
 
 import { Trophy, Medal, User, Loader2 } from "lucide-react";
 
-type LeaderboardEntry = {
-    rank?: number;
-    userId: string;
-    username: string;
-    avatar: string;
-    totalScore: number;
-};
+import { LeaderboardProps } from "@/types";
 
-type Props = {
-    entries: LeaderboardEntry[];
-    currentUserId: string | null;
-    loading?: boolean;
-};
-
-export default function Leaderboard({ entries, currentUserId, loading }: Props) {
+export default function Leaderboard({ entries, currentUserId, loading }: LeaderboardProps) {
     if (loading) {
         return (
             <div className="flex flex-col items-center justify-center py-12 text-neutral-500">
