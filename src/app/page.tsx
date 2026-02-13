@@ -9,7 +9,7 @@ async function getInitialData() {
     const scans = db.collection("scans");
 
     const verifiedScans = await scans
-      .find<{ score?: number | null }>({ verified: true })
+      .find<{ score?: number | null }>({ verified: true, isPublic: { $ne: false } })
       .sort({ timestamp: -1 })
       .limit(50)
       .toArray();
@@ -25,7 +25,8 @@ async function getInitialData() {
 
     const lastTen = await scans
       .find<{ image: string; actionType?: string | null; score?: number | null; timestamp?: Date; username?: string; avatar?: string }>({
-        verified: true
+        verified: true,
+        isPublic: { $ne: false }
       })
       .sort({ timestamp: -1 })
       .limit(10)

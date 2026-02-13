@@ -32,6 +32,7 @@ const VerifySchema = z.object({
   username: z.string().optional(),
   avatar: z.string().optional(),
   simulated: z.boolean().optional(),
+  isPublic: z.boolean().optional(),
   honeypot: z.string().optional(), // Bot detection
 });
 
@@ -117,8 +118,13 @@ async function callMiniMaxVision(imageBase64: string): Promise<VisionResult> {
 
     const parsed = JSON.parse(content);
 
-    // User requested random scores: 10-100
-    parsed.score = Math.floor(Math.random() * 91) + 10;
+    // ONLY override if the AI didn't provide a score or if we want to force randomness (as per previous requirement)
+    // However, if verified is false, we should probably set score to 0.
+    if (parsed.verified === false) {
+      parsed.score = 0;
+    } else if (typeof parsed.score !== "number") {
+      parsed.score = Math.floor(Math.random() * 91) + 10;
+    }
 
     return parsed;
   } catch (error: any) {
@@ -215,7 +221,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid request data", details: result.error.format() }, { status: 400 });
     }
 
-    const { image, userId, username, avatar, simulated, honeypot } = result.data;
+    const { image, userId, username, avatar, simulated, isPublic, honeypot } = result.data;
 
     if (honeypot) {
       logToFile(`Bot detected for user: ${userId}`);
@@ -248,7 +254,7 @@ export async function POST(req: NextRequest) {
       };
 
       const timestamp = new Date();
-      await persistVerification(userId, username, avatar, "simulated", true, simulatedScore, "simulated-action", voucher, timestamp);
+      await persistVerification(userId, username, avatar, "simulated", true, simulatedScore, "simulated-action", voucher, timestamp, isPublic ?? true);
 
       return NextResponse.json({
         verified: true,
@@ -273,7 +279,7 @@ export async function POST(req: NextRequest) {
     }
 
     const timestamp = new Date();
-    await persistVerification(userId, username, avatar, image, vision.verified, vision.score || 0, vision.actionType || "eco-action", voucher, timestamp);
+    await persistVerification(userId, username, avatar, image, vision.verified, vision.score || 0, vision.actionType || "eco-action", voucher, timestamp, isPublic ?? true);
 
     return NextResponse.json({
       ...vision,
@@ -295,14 +301,24 @@ export async function POST(req: NextRequest) {
   }
 }
 
-async function persistVerification(userId: any, username: any, avatar: any, image: string, verified: boolean, score: number, actionType: string, voucher: any, timestamp: Date) {
+async function persistVerification(userId: any, username: any, avatar: any, image: string, verified: boolean, score: number, actionType: string, voucher: any, timestamp: Date, isPublic: boolean) {
   try {
     const db = await getDb();
     const scans = db.collection("scans");
     const users = db.collection("users");
     const vouchers = db.collection("vouchers");
 
-    await scans.insertOne({ userId: userId || "anon", username, avatar, image: image.slice(0, 100), verified, score, actionType, timestamp });
+    await scans.insertOne({
+      userId: userId || "anon",
+      username,
+      avatar,
+      image: image.slice(0, 100),
+      verified,
+      score,
+      actionType,
+      timestamp,
+      isPublic: !!isPublic
+    });
 
     if (userId && score > 0) {
       try {

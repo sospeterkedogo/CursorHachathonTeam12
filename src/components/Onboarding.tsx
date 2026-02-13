@@ -116,20 +116,34 @@ export default function Onboarding({ onComplete, totalVerifiedUsers, totalVouche
                         </div>
 
                         {/* Action Button */}
-                        <button
-                            onClick={handleNext}
-                            className="w-full py-4 rounded-xl bg-emerald-600 text-white font-bold text-lg flex items-center justify-center gap-2 hover:bg-emerald-500 active:scale-[0.98] transition-all shadow-lg shadow-emerald-900/20"
-                        >
-                            {currentSlide === SLIDES.length - 1 ? (
-                                <>
-                                    Get Started <Check className="w-5 h-5" />
-                                </>
-                            ) : (
-                                <>
-                                    Next <ArrowRight className="w-5 h-5" />
-                                </>
+                        <div className="w-full space-y-3">
+                            <button
+                                onClick={handleNext}
+                                className="w-full py-4 rounded-xl bg-emerald-600 text-white font-bold text-lg flex items-center justify-center gap-2 hover:bg-emerald-500 active:scale-[0.98] transition-all shadow-lg shadow-emerald-900/20"
+                            >
+                                {currentSlide === SLIDES.length - 1 ? (
+                                    <>
+                                        Get Started <Check className="w-5 h-5" />
+                                    </>
+                                ) : (
+                                    <>
+                                        Next <ArrowRight className="w-5 h-5" />
+                                    </>
+                                )}
+                            </button>
+
+                            {currentSlide === SLIDES.length - 1 && (
+                                <button
+                                    onClick={() => {
+                                        localStorage.setItem("hide_onboarding", "true");
+                                        handleComplete();
+                                    }}
+                                    className="w-full py-2 text-sm text-neutral-500 hover:text-neutral-900 dark:hover:text-white transition-colors"
+                                >
+                                    Don&apos;t show this again
+                                </button>
                             )}
-                        </button>
+                        </div>
                     </div>
 
                 </div>

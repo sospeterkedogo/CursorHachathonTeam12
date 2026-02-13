@@ -91,7 +91,8 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
   const [score, setScore] = useState<number | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [earnedVoucher, setEarnedVoucher] = useState<Voucher | null>(null);
-  const [showOnboarding, setShowOnboarding] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(false); // Default to false, check in useEffect
+  const [isPublic, setIsPublic] = useState(true);
 
   // ... existing code ...
 
@@ -114,6 +115,12 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
       setUserProfile({ username: savedName, avatar: savedAvatar });
       setInputUsername(savedName);
       setSelectedAvatar(savedAvatar);
+    }
+
+    // Check onboarding
+    const hideOnboarding = localStorage.getItem("hide_onboarding");
+    if (!hideOnboarding) {
+      setShowOnboarding(true);
     }
   }, []);
 
@@ -261,6 +268,10 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
     reader.readAsDataURL(file);
   };
 
+  const deleteScan = (index: number) => {
+    setScans(prev => prev.filter((_, i) => i !== index));
+  };
+
   const submitImage = async (imageBase64: string) => {
     let progressInterval: NodeJS.Timeout;
     const controller = new AbortController();
@@ -278,7 +289,8 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
       progressInterval = setInterval(() => {
         setProgress((prev) => {
           if (prev >= 90) return prev;
-          return prev + Math.floor(Math.random() * 10) + 5;
+          const next = prev + Math.floor(Math.random() * 10) + 5;
+          return next > 90 ? 90 : next;
         });
       }, 500);
 
@@ -292,7 +304,8 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
             image: imageBase64,
             userId,
             username: userProfile?.username,
-            avatar: userProfile?.avatar
+            avatar: userProfile?.avatar,
+            isPublic
           }),
           signal: controller.signal
         });
@@ -315,6 +328,9 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
       clearTimeout(timeoutId);
       clearInterval(progressInterval);
       setProgress(100);
+
+      // Reset progress after a delay
+      setTimeout(() => setProgress(0), 1000);
 
       setVerified(data.verified);
       setScore(typeof data.score === "number" ? data.score : null);
@@ -627,6 +643,28 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
                 {loading ? "Scanning..." : "Verify"}
               </button>
 
+              <div className="mt-6 flex flex-col items-center gap-2">
+                <label className="flex items-center gap-2 cursor-pointer group">
+                  <div className="relative">
+                    <input
+                      type="checkbox"
+                      checked={isPublic}
+                      onChange={(e) => setIsPublic(e.target.checked)}
+                      className="sr-only"
+                    />
+                    <div className={`w-10 h-5 rounded-full transition-colors ${isPublic ? 'bg-emerald-500' : 'bg-neutral-600'}`}>
+                      <div className={`absolute top-1 left-1 w-3 h-3 bg-white rounded-full transition-transform ${isPublic ? 'translate-x-5' : 'translate-x-0'}`} />
+                    </div>
+                  </div>
+                  <span className="text-xs text-neutral-400 font-medium group-hover:text-neutral-300">Share with global community</span>
+                </label>
+                <p className="text-[10px] text-neutral-500 max-w-[200px]">
+                  {isPublic
+                    ? "Verified actions are shared publicly in the activity feed."
+                    : "Private actions still earn points but won't be shown in the feed."}
+                </p>
+              </div>
+
             </div>
 
             {/* Loading Overlay */}
@@ -746,6 +784,15 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
                     <div className="bg-[var(--primary)]/10 text-[var(--primary)] px-3 py-1 rounded-full text-xs font-bold tabular-nums border border-[var(--primary)]/20">
                       +{scan.score}
                     </div>
+                    {/* Delete Button */}
+                    <button
+                      onClick={() => deleteScan(idx)}
+                      className="ml-1 p-1.5 text-neutral-600 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors group/del"
+                      title="Remove from your view"
+                    >
+                      <User className="w-3.5 h-3.5 group-hover/del:hidden" />
+                      <span className="hidden group-hover/del:inline text-[10px] font-bold">✕</span>
+                    </button>
                   </div>
                 ))}
               </div>
