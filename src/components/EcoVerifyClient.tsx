@@ -411,7 +411,8 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
           simulated: true,
           userId,
           username: savedName,
-          avatar: savedAvatar
+          avatar: savedAvatar,
+          honeypot: "" // Always empty for real users
         })
       });
 

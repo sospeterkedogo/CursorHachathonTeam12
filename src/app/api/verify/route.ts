@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/mongodb";
 import fs from "fs";
 import path from "path";
+import { z } from "zod";
+import { rateLimit } from "@/lib/rate-limit";
 
 const LOG_FILE = path.join(process.cwd(), "verification-debug.log");
 function logToFile(msg: string) {
@@ -23,6 +25,15 @@ type VisionResult = {
 function generateRandomCode(): string {
   return Math.random().toString(36).substring(2, 10).toUpperCase();
 }
+
+const VerifySchema = z.object({
+  image: z.string().optional(),
+  userId: z.string().min(1),
+  username: z.string().optional(),
+  avatar: z.string().optional(),
+  simulated: z.boolean().optional(),
+  honeypot: z.string().optional(), // Bot detection
+});
 
 // Helper: Timeout wrapper for fetch
 async function fetchWithTimeout(resource: string, options: RequestInit & { timeout?: number } = {}) {
@@ -201,7 +212,35 @@ async function callMiniMaxVoucherGen(actionType: string, score: number): Promise
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { image, userId, username, avatar, simulated } = body;
+
+    // 0. Validation & Bot Check
+    const result = VerifySchema.safeParse(body);
+    if (!result.success) {
+      return NextResponse.json({ error: "Invalid request data", details: result.error.format() }, { status: 400 });
+    }
+
+    const { image, userId, username, avatar, simulated, honeypot } = result.data;
+
+    if (honeypot) {
+      logToFile(`Bot detected for user: ${userId}`);
+      return NextResponse.json({ error: "Cloudflare thinks you are a robot" }, { status: 403 });
+    }
+
+    // 0.1 Rate Limiting (10 requests per minute per userId)
+    const limit = rateLimit(userId, 10, 60000);
+    if (!limit.success) {
+      return NextResponse.json({
+        error: "Too many requests. Please slow down.",
+        retryAfter: limit.reset
+      }, {
+        status: 429,
+        headers: {
+          'X-RateLimit-Limit': limit.limit.toString(),
+          'X-RateLimit-Remaining': limit.remaining.toString(),
+          'X-RateLimit-Reset': limit.reset.toString(),
+        }
+      });
+    }
 
     // 1. Simulation Path
     if (simulated) {
@@ -281,7 +320,19 @@ async function persistVerification(userId: any, username: any, avatar: any, imag
       }
 
       if (voucher) {
-        await vouchers.insertOne({ userId, ...voucher, used: false, createdAt: timestamp, expiry: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) });
+        // Daily limit: max 5 vouchers per user
+        const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        const dailyVoucherCount = await vouchers.countDocuments({
+          userId,
+          createdAt: { $gte: twentyFourHoursAgo }
+        });
+
+        if (dailyVoucherCount < 5) {
+          await vouchers.insertOne({ userId, ...voucher, used: false, createdAt: timestamp, expiry: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) });
+        } else {
+          logToFile(`Voucher limit reached for user: ${userId}`);
+          // We still track the scan but don't issue a voucher
+        }
       }
     }
   } catch (e) {

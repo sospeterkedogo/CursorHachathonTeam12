@@ -1,5 +1,6 @@
 import { getDb } from "@/lib/mongodb";
 import { NextRequest, NextResponse } from "next/server";
+import { rateLimit } from "@/lib/rate-limit";
 
 export const dynamic = 'force-dynamic';
 
@@ -10,6 +11,12 @@ export async function GET(request: NextRequest) {
 
         if (!userId) {
             return NextResponse.json({ error: "Missing userId" }, { status: 400 });
+        }
+
+        // Rate limit: 20 requests per minute
+        const limit = rateLimit(userId, 20, 60000);
+        if (!limit.success) {
+            return NextResponse.json({ error: "Too many requests" }, { status: 429 });
         }
 
         const db = await getDb();
