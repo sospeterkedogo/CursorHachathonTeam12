@@ -505,7 +505,7 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
                 className="primary-btn rounded-full px-8 py-4 flex items-center gap-3 text-lg shadow-lg shadow-emerald-900/20 hover:bg-emerald-600 hover:text-white transition-all"
               >
                 <Camera className="w-5 h-5" />
-                {loading ? "Scanning..." : "Verify"}
+                <span className="font-bold">{loading ? "Scanning..." : "Take Photo"}</span>
               </button>
 
               <div className="mt-6 flex flex-col items-center gap-2">
