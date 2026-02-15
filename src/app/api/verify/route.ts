@@ -302,7 +302,7 @@ async function persistVerification(userId: any, username: any, avatar: any, imag
       userId: userId || "anon",
       username,
       avatar,
-      image: image.slice(0, 100),
+      image: image,
       verified,
       score,
       actionType,

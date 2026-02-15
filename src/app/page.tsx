@@ -16,7 +16,7 @@ async function getInitialData() {
 
     const leaderboard = await db.collection("users")
       .find({ totalScore: { $gt: 0 } })
-      .sort({ totalScore: -1 })
+      .sort({ totalScore: -1, lastActive: -1 })
       .limit(50)
       .project({ username: 1, avatar: 1, totalScore: 1, userId: 1, _id: 0 })
       .toArray();

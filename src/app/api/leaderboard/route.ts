@@ -11,9 +11,9 @@ export async function GET(req: any) {
         const leaderboard = await users
             .find(
                 { totalScore: { $gt: 0 } }, // Only show users with score
-                { projection: { username: 1, avatar: 1, totalScore: 1, userId: 1, _id: 0 } }
+                { projection: { username: 1, avatar: 1, totalScore: 1, userId: 1, _id: 0, lastActive: 1 } }
             )
-            .sort({ totalScore: -1 })
+            .sort({ totalScore: -1, lastActive: -1 })
             .limit(50)
             .toArray();
 
@@ -29,9 +29,17 @@ export async function GET(req: any) {
         if (userId) {
             userData = await users.findOne({ userId });
             if (userData && userData.totalScore > 0) {
-                // Rank is number of people with higher score + 1
-                const higherScores = await users.countDocuments({ totalScore: { $gt: userData.totalScore } });
-                userRank = higherScores + 1;
+                // Rank is number of people with higher score OR same score but active more recently + 1
+                const higherRanked = await users.countDocuments({
+                    $or: [
+                        { totalScore: { $gt: userData.totalScore } },
+                        {
+                            totalScore: userData.totalScore,
+                            lastActive: { $gt: userData.lastActive || new Date(0) }
+                        }
+                    ]
+                });
+                userRank = higherRanked + 1;
             }
         }
 
