@@ -26,55 +26,53 @@ export default function Leaderboard({ entries, currentUserId, loading }: Leaderb
     }
 
     return (
-        <div className="space-y-4">
-            <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold flex items-center gap-2">
-                    <Trophy className="w-5 h-5 text-amber-500" />
-                    Global Leaderboard
-                </h2>
-            </div>
+        <div className="space-y-4 animate-fade-in">
+            <div className="glass-panel overflow-hidden border-none shadow-xl">
+                <div className="flex flex-col max-h-[60vh] overflow-y-auto custom-scrollbar divide-y divide-neutral-100/5 dark:divide-white/5">
+                    {entries.map((user, index) => {
+                        const rank = index + 1;
+                        const isCurrentUser = user.userId === currentUserId;
 
-            <div className="flex flex-col max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar divide-y divide-neutral-200/10 dark:divide-white/5">
-                {entries.map((user, index) => {
-                    const rank = index + 1;
-                    const isCurrentUser = user.userId === currentUserId;
+                        let rankColor;
+                        if (rank === 1) rankColor = "text-amber-400";
+                        else if (rank === 2) rankColor = "text-neutral-400";
+                        else if (rank === 3) rankColor = "text-amber-700";
+                        else rankColor = "text-neutral-500";
 
-                    let rankIcon;
-                    if (rank === 1) rankIcon = <Medal className="w-5 h-5 text-yellow-500" />;
-                    else if (rank === 2) rankIcon = <Medal className="w-5 h-5 text-neutral-400" />;
-                    else if (rank === 3) rankIcon = <Medal className="w-5 h-5 text-amber-700" />;
-                    else rankIcon = <span className="font-mono font-bold text-neutral-500 w-5 text-center">{rank}</span>;
+                        return (
+                            <div
+                                key={user.userId}
+                                className={`flex items-center gap-4 p-4 transition-all animate-slide-up ${isCurrentUser
+                                    ? "bg-emerald-500/10"
+                                    : "hover:bg-white/5"
+                                    }`}
+                                style={{ animationDelay: `${index * 50}ms` }}
+                            >
+                                <div className={`flex-shrink-0 w-8 font-black text-center ${rankColor}`}>
+                                    {rank}
+                                </div>
 
-                    return (
-                        <div
-                            key={user.userId}
-                            className={`flex items-center gap-4 p-3 transition-all ${isCurrentUser
-                                ? "bg-emerald-500/10 border-l-4 border-emerald-500"
-                                : "hover:bg-white/5"
-                                }`}
-                        >
-                            <div className="flex-shrink-0 w-8 flex items-center justify-center">
-                                {rankIcon}
+                                <div className="flex-shrink-0 w-11 h-11 rounded-full bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center text-xl overflow-hidden border-2 border-white/10 shadow-sm relative group">
+                                    {user.avatar || <User className="w-6 h-6 text-neutral-400" />}
+                                    {isCurrentUser && <div className="absolute inset-0 border-2 border-emerald-500 rounded-full animate-pulse" />}
+                                </div>
+
+                                <div className="flex-1 min-w-0">
+                                    <p className={`font-bold truncate ${isCurrentUser ? "text-emerald-500" : "text-neutral-800 dark:text-neutral-200"}`}>
+                                        {user.username}
+                                        {isCurrentUser && <span className="ml-2 text-[9px] bg-emerald-500 text-white font-black px-1.5 py-0.5 rounded uppercase tracking-wider">You</span>}
+                                    </p>
+                                    <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest mt-0.5">Eco Champion</p>
+                                </div>
+
+                                <div className="text-right">
+                                    <p className="font-black tabular-nums text-lg text-emerald-500">{user.totalScore.toLocaleString()}</p>
+                                    <p className="text-[9px] text-neutral-500 font-black uppercase tracking-widest">Points</p>
+                                </div>
                             </div>
-
-                            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center text-lg overflow-hidden border border-emerald-500/20">
-                                {user.avatar || <User className="w-5 h-5 text-emerald-500" />}
-                            </div>
-
-                            <div className="flex-1 min-w-0">
-                                <p className={`font-semibold truncate ${isCurrentUser ? "text-emerald-500" : ""}`}>
-                                    {user.username}
-                                    {isCurrentUser && <span className="ml-2 text-[10px] bg-emerald-500/20 px-1.5 py-0.5 rounded text-emerald-500 uppercase tracking-wide">You</span>}
-                                </p>
-                            </div>
-
-                            <div className="text-right">
-                                <p className="font-bold tabular-nums text-lg">{user.totalScore.toLocaleString()}</p>
-                                <p className="text-[10px] text-neutral-500 uppercase tracking-wider">Points</p>
-                            </div>
-                        </div>
-                    );
-                })}
+                        );
+                    })}
+                </div>
             </div>
         </div>
     );

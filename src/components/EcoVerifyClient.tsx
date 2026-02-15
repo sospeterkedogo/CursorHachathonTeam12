@@ -371,76 +371,79 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
   };
 
   const Header = () => (
-    <header className="flex items-center justify-between mb-10 pt-4 px-1">
-      {/* Left: Logo */}
-      <div className="flex items-center gap-3 group cursor-default">
-        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-400/20 to-emerald-600/5 flex items-center justify-center border border-emerald-500/20 shadow-inner group-hover:scale-105 transition-transform duration-300">
-          <Leaf className="w-7 h-7 text-emerald-500 drop-shadow-[0_0_8px_rgba(16,185,129,0.4)]" />
+    <header className="flex items-center justify-between mb-6 pt-4 px-2">
+      <div className="flex items-center gap-2.5">
+        <div className="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+          <Leaf className="w-6 h-6 text-white" />
         </div>
-        <div className="flex flex-col">
-          <h1 className="text-2xl font-black tracking-tight leading-none bg-clip-text text-transparent bg-gradient-to-r from-emerald-500 to-emerald-400">
+        <div>
+          <h1 className="text-xl font-bold tracking-tight leading-none text-neutral-900 dark:text-white">
             EcoVerify
           </h1>
-          <div className="flex items-center gap-1.5 mt-0.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <p className="text-[10px] text-emerald-500/60 font-bold tracking-widest uppercase">Saver Mode</p>
-          </div>
+          <p className="text-[10px] text-emerald-500 font-bold tracking-wider uppercase mt-0.5">Impact Tracker</p>
         </div>
       </div>
 
-      {/* Right: Score & Profile */}
-      <div className="flex items-center gap-4">
-        <div className="hidden sm:flex flex-col items-center">
-          <span className="text-[10px] uppercase tracking-widest text-neutral-500/60 font-black mb-1">Global Impact</span>
-          <div className="flex items-center gap-2 bg-white/5 dark:bg-emerald-500/5 px-3 py-1.5 rounded-xl border border-white/10 dark:border-emerald-500/10 shadow-sm transition-all hover:bg-white/10">
-            <div className="flex items-center gap-1.5">
-              <Trophy className="w-4 h-4 text-amber-500 animate-bounce-slow" />
-              <span className="text-lg font-black text-emerald-500 tabular-nums">
-                {globalScore.toLocaleString()}
-              </span>
-            </div>
-            {/* User Rank Display */}
-            {userRank && (
-              <div className="flex items-center gap-1 pl-2 ml-2 border-l border-white/10">
-                <span className="text-[10px] text-neutral-500 font-bold uppercase">#</span>
-                <span className="text-base font-black text-neutral-300">{userRank}</span>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Mobile condensed score */}
-        <div className="sm:hidden flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-3 py-2 rounded-xl">
-          <Trophy className="w-4 h-4 text-amber-500" />
-          <span className="text-sm font-black text-emerald-100">{globalScore}</span>
-        </div>
-
-        <ThemeToggle />
-
-        {/* Profile Icon */}
-        <div
-          onClick={() => setShowProfileModal(true)}
-          className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-2xl cursor-pointer hover:border-emerald-500/50 hover:bg-emerald-500/20 transition-all relative group shadow-lg overflow-hidden"
-        >
-          {userProfile?.avatar || <User className="w-6 h-6 text-emerald-500/50" />}
-          <div className="absolute inset-0 bg-gradient-to-t from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-          <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 border-2 border-white dark:border-black rounded-full" />
-        </div>
-
-        {/* Feedback Button */}
+      <div className="flex items-center gap-2">
         <button
           onClick={() => setShowFeedbackModal(true)}
-          className="w-12 h-12 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center cursor-pointer hover:border-purple-500/50 hover:bg-purple-500/20 transition-all shadow-lg group"
-          title="Give Feedback"
+          className="w-10 h-10 rounded-xl bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 flex items-center justify-center text-neutral-500 hover:text-emerald-500 transition-all shadow-sm"
+          aria-label="Give Feedback"
         >
-          <MessageSquare className="w-6 h-6 text-purple-500/50 group-hover:text-purple-500" />
+          <MessageSquare className="w-5 h-5" />
         </button>
+        <ThemeToggle />
+        <div
+          onClick={() => setShowProfileModal(true)}
+          className="w-10 h-10 rounded-xl bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 flex items-center justify-center text-xl cursor-pointer hover:border-emerald-500 transition-all relative overflow-hidden"
+        >
+          {userProfile?.avatar || <User className="w-5 h-5 text-neutral-400" />}
+        </div>
       </div>
     </header>
   );
 
+  const BottomNav = () => (
+    <nav className="fixed bottom-6 left-0 right-0 flex justify-center px-4 z-50 pointer-events-none">
+      <div className="w-full max-w-md bg-white/80 dark:bg-black/80 backdrop-blur-2xl border border-neutral-200/50 dark:border-white/10 rounded-2xl p-1.5 shadow-2xl flex items-center justify-between animate-slide-up pointer-events-auto">
+        <button
+          onClick={() => setActiveTab("verify")}
+          className={`flex-1 flex flex-col items-center gap-1 py-2 rounded-xl transition-all duration-300 ${activeTab === "verify" ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20" : "text-neutral-500 hover:text-neutral-900 dark:hover:text-white"}`}
+        >
+          <Camera className="w-5 h-5" />
+          <span className="text-[10px] font-bold uppercase tracking-tighter">Home</span>
+        </button>
+        <button
+          onClick={() => {
+            setActiveTab("leaderboard");
+            fetchLeaderboardAndStats();
+          }}
+          className={`flex-1 flex flex-col items-center gap-1 py-2 rounded-xl transition-all duration-300 ${activeTab === "leaderboard" ? "bg-amber-500 text-white shadow-lg shadow-amber-500/20" : "text-neutral-500 hover:text-neutral-900 dark:hover:text-white"}`}
+        >
+          <Trophy className="w-5 h-5" />
+          <span className="text-[10px] font-bold uppercase tracking-tighter">Ranking</span>
+        </button>
+        <button
+          onClick={() => {
+            setActiveTab("vouchers");
+            fetchVouchers();
+          }}
+          className={`flex-1 flex flex-col items-center gap-1 py-2 rounded-xl transition-all duration-300 relative ${activeTab === "vouchers" ? "bg-purple-500 text-white shadow-lg shadow-purple-500/20" : "text-neutral-500 hover:text-neutral-900 dark:hover:text-white"}`}
+        >
+          <Ticket className="w-5 h-5" />
+          <span className="text-[10px] font-bold uppercase tracking-tighter">Rewards</span>
+          {vouchers.filter(v => !v.used).length > 0 && (
+            <span className="absolute top-1.5 right-4 bg-red-500 text-white text-[8px] font-bold px-1 rounded-full border border-white dark:border-black">
+              {vouchers.filter(v => !v.used).length}
+            </span>
+          )}
+        </button>
+      </div>
+    </nav>
+  );
+
   return (
-    <div className="w-full max-w-md mx-auto pb-24">
+    <div className="w-full max-w-md mx-auto px-4 pb-32">
       {showOnboarding && <Onboarding onComplete={() => setShowOnboarding(false)} totalVerifiedUsers={globalVerifiedUsers} totalVouchers={globalVouchersCount} />}
       <FeedbackModal
         isOpen={showFeedbackModal}
@@ -448,55 +451,22 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
         username={userProfile?.username}
       />
       <Header />
+      <BottomNav />
 
-      {/* Tabs */}
-      <div className="grid grid-cols-3 gap-2 p-1 bg-white/5 dark:bg-black/20 rounded-xl mb-6 backdrop-blur-sm">
-        <button
-          onClick={() => setActiveTab("verify")}
-          className={`flex items-center justify-center gap-2 py-2.5 text-sm font-semibold rounded-lg transition-all ${activeTab === "verify" ? "bg-emerald-600 text-white shadow-lg" : "text-neutral-500 hover:text-neutral-300 hover:bg-white/5"}`}
-        >
-          <Camera className="w-4 h-4" />
-          Home
-        </button>
-        <button
-          onClick={() => {
-            setActiveTab("leaderboard");
-            fetchLeaderboardAndStats();
-          }}
-          className={`flex items-center justify-center gap-2 py-2.5 text-sm font-semibold rounded-lg transition-all ${activeTab === "leaderboard" ? "bg-amber-600 text-white shadow-lg" : "text-neutral-500 hover:text-neutral-300 hover:bg-white/5"}`}
-        >
-          <Trophy className="w-4 h-4" />
-          Leaderboard
-        </button>
-        <button
-          onClick={() => {
-            setActiveTab("vouchers");
-            fetchVouchers();
-          }}
-          className={`flex items-center justify-center gap-2 py-2.5 text-sm font-semibold rounded-lg transition-all relative ${activeTab === "vouchers" ? "bg-purple-600 text-white shadow-lg" : "text-neutral-500 hover:text-neutral-300 hover:bg-white/5"}`}
-        >
-          <Ticket className="w-4 h-4" />
-          Vouchers
-          {loadingVouchers ? (
-            <span className="absolute -top-1 -right-1 bg-purple-500 text-white p-1 rounded-full border border-black shadow animate-spin">
-              <Loader2 className="w-2.5 h-2.5" />
-            </span>
-          ) : vouchers.filter(v => !v.used).length > 0 && (
-            <span className="absolute -top-1 -right-1 bg-purple-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-black shadow">
-              {vouchers.filter(v => !v.used).length}
-            </span>
-          )}
-        </button>
-      </div>
-
-      {/* Global Stats (Subtle) */}
-      <div className="flex justify-center mb-6">
-        {globalVouchersCount > 1 && (
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/5 border border-emerald-500/10">
-            <Ticket className="w-3.5 h-3.5 text-emerald-500/60" />
-            <span className="text-xs font-medium text-emerald-600/60 dark:text-emerald-400/60">
-              <span className="font-bold">{globalVouchersCount.toLocaleString()}</span> vouchers awarded globally
-            </span>
+      {/* Hero Stats */}
+      <div className="flex items-center justify-between bg-emerald-500/10 dark:bg-emerald-500/5 border border-emerald-500/20 rounded-2xl p-4 mb-6 animate-fade-in shadow-sm">
+        <div className="flex flex-col">
+          <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Global Impact</span>
+          <span className="text-2xl font-black text-emerald-500 tabular-nums">
+            {globalScore.toLocaleString()}
+          </span>
+        </div>
+        {userRank && (
+          <div className="text-right">
+            <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Global Rank</span>
+            <div className="flex items-center justify-end gap-1">
+              <span className="text-xl font-black text-neutral-800 dark:text-neutral-200">#{userRank}</span>
+            </div>
           </div>
         )}
       </div>
@@ -621,15 +591,15 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
 
               {/* Dynamic reward display if a voucher was unlocked. */}
               {earnedVoucher && (
-                <div className="mt-3 bg-purple-900/20 border border-purple-500/30 rounded-xl p-4 relative overflow-hidden">
+                <div className="mt-3 bg-purple-900/20 border border-purple-500/30 rounded-xl p-4 relative overflow-hidden animate-slide-up">
                   <div className="absolute top-0 right-0 p-2 opacity-10">
                     <Ticket className="w-16 h-16 rotate-12 text-purple-400" />
                   </div>
                   <p className="text-xs uppercase tracking-widest text-purple-400 font-bold mb-1">Reward Unlocked!</p>
-                  <h4 className="text-lg font-bold text-white mb-1">{earnedVoucher.title}</h4>
-                  <p className="text-xs text-neutral-400 mb-3">{earnedVoucher.description}</p>
+                  <h4 className="text-lg font-bold text-white mb-1">{earnedVoucher?.title}</h4>
+                  <p className="text-xs text-neutral-400 mb-3">{earnedVoucher?.description}</p>
                   <div className="flex items-center justify-between bg-black/40 rounded px-3 py-2 border border-purple-500/20">
-                    <code className="font-mono text-purple-300 font-bold">{earnedVoucher.code}</code>
+                    <code className="font-mono text-purple-300 font-bold">{earnedVoucher?.code}</code>
                     <button onClick={() => setActiveTab("vouchers")} className="text-[10px] bg-purple-600 hover:bg-purple-500 text-white px-2 py-1 rounded transition-colors">
                       View Wallet
                     </button>
@@ -661,8 +631,15 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
                   <div key={idx} className="glass-panel p-3 flex items-center gap-4 hover:bg-white/5 transition-colors flex-shrink-0">
                     <div className="relative w-12 h-12 flex-shrink-0">
                       {/* User Avatar or Placeholder Image */}
-                      <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white/10 bg-neutral-800 flex items-center justify-center text-xl relative z-10">
-                        <img src={`data:image/jpeg;base64,${scan.image}`} alt="opt" className="w-full h-full object-cover" />
+                      <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white/10 bg-neutral-800 flex items-center justify-center text-xl relative z-10 shadow-inner">
+                        <img
+                          src={`data:image/jpeg;base64,${scan.image}`}
+                          alt="eco action"
+                          className="w-full h-full object-cover transition-opacity duration-300"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = "https://ui-avatars.com/api/?name=Eco&background=10b981&color=fff";
+                          }}
+                        />
                       </div>
                       <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-emerald-900 border border-black flex items-center justify-center z-20 overflow-hidden text-xs">
                         {scan.avatar || "👤"}
@@ -694,86 +671,89 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
             )}
           </section>
         </>
-      )}
+      )
+      }
 
       {/* Profile Modal */}
-      {showProfileModal && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="w-full max-w-sm bg-neutral-900 border border-white/10 rounded-2xl p-6 shadow-2xl space-y-6">
-            <div className="text-center">
-              <h2 className="text-xl font-bold text-white mb-2">Claim Your Profile</h2>
-              <p className="text-sm text-neutral-400">Save your username to appear on the leaderboard.</p>
-            </div>
-
-            <div className="flex flex-col items-center gap-4">
-              <div className="w-20 h-20 rounded-full bg-neutral-800 border-2 border-emerald-500/50 flex items-center justify-center text-4xl shadow-lg shadow-emerald-900/20">
-                {selectedAvatar}
+      {
+        showProfileModal && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+            <div className="w-full max-w-sm bg-neutral-900 border border-white/10 rounded-2xl p-6 shadow-2xl space-y-6">
+              <div className="text-center">
+                <h2 className="text-xl font-bold text-white mb-2">Claim Your Profile</h2>
+                <p className="text-sm text-neutral-400">Save your username to appear on the leaderboard.</p>
               </div>
-              <div className="grid grid-cols-5 gap-2">
-                {AVATARS.map(avatar => (
-                  <button
-                    key={avatar}
-                    onClick={() => setSelectedAvatar(avatar)}
-                    className={`w-8 h-8 rounded-full flex items-center justify-center text-lg hover:bg-white/10 transition-colors ${selectedAvatar === avatar ? "bg-white/20 ring-2 ring-emerald-500" : ""}`}
-                  >
-                    {avatar}
-                  </button>
-                ))}
-              </div>
-            </div>
 
-            <div className="space-y-4">
-              <div>
-                <label className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-2 block">Username</label>
-                <div className="flex gap-2">
-                  <input
-                    value={inputUsername}
-                    onChange={(e) => setInputUsername(e.target.value)}
-                    placeholder="Enter username"
-                    className="flex-1 bg-neutral-950 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-emerald-500 transition-colors"
-                  />
-                  <button
-                    onClick={generateRandomName}
-                    className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 text-neutral-400"
-                  >
-                    🎲
-                  </button>
+              <div className="flex flex-col items-center gap-4">
+                <div className="w-20 h-20 rounded-full bg-neutral-800 border-2 border-emerald-500/50 flex items-center justify-center text-4xl shadow-lg shadow-emerald-900/20">
+                  {selectedAvatar}
                 </div>
-                {/* Availability Feedback */}
-                <div className="h-4 mt-1 pl-1">
-                  {isCheckingUsername ? (
-                    <span className="text-xs text-neutral-500 flex items-center gap-1">
-                      <Loader2 className="w-3 h-3 animate-spin" /> Checking...
-                    </span>
-                  ) : usernameAvailable === true ? (
-                    <span className="text-xs text-emerald-400 flex items-center gap-1">
-                      ✓ Username available
-                    </span>
-                  ) : usernameAvailable === false ? (
-                    <span className="text-xs text-red-400 flex items-center gap-1">
-                      ✕ Username taken
-                    </span>
-                  ) : null}
+                <div className="grid grid-cols-5 gap-2">
+                  {AVATARS.map(avatar => (
+                    <button
+                      key={avatar}
+                      onClick={() => setSelectedAvatar(avatar)}
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-lg hover:bg-white/10 transition-colors ${selectedAvatar === avatar ? "bg-white/20 ring-2 ring-emerald-500" : ""}`}
+                    >
+                      {avatar}
+                    </button>
+                  ))}
                 </div>
               </div>
 
-              <button
-                onClick={saveProfile}
-                disabled={!inputUsername.trim() || usernameAvailable === false || isCheckingUsername}
-                className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Save Profile
-              </button>
-              <button
-                onClick={() => setShowProfileModal(false)}
-                className="w-full py-2 text-sm text-neutral-500 hover:text-neutral-300"
-              >
-                Skip for now
-              </button>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-2 block">Username</label>
+                  <div className="flex gap-2">
+                    <input
+                      value={inputUsername}
+                      onChange={(e) => setInputUsername(e.target.value)}
+                      placeholder="Enter username"
+                      className="flex-1 bg-neutral-950 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-emerald-500 transition-colors"
+                    />
+                    <button
+                      onClick={generateRandomName}
+                      className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 text-neutral-400"
+                    >
+                      🎲
+                    </button>
+                  </div>
+                  {/* Availability Feedback */}
+                  <div className="h-4 mt-1 pl-1">
+                    {isCheckingUsername ? (
+                      <span className="text-xs text-neutral-500 flex items-center gap-1">
+                        <Loader2 className="w-3 h-3 animate-spin" /> Checking...
+                      </span>
+                    ) : usernameAvailable === true ? (
+                      <span className="text-xs text-emerald-400 flex items-center gap-1">
+                        ✓ Username available
+                      </span>
+                    ) : usernameAvailable === false ? (
+                      <span className="text-xs text-red-400 flex items-center gap-1">
+                        ✕ Username taken
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
+
+                <button
+                  onClick={saveProfile}
+                  disabled={!inputUsername.trim() || usernameAvailable === false || isCheckingUsername}
+                  className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Save Profile
+                </button>
+                <button
+                  onClick={() => setShowProfileModal(false)}
+                  className="w-full py-2 text-sm text-neutral-500 hover:text-neutral-300"
+                >
+                  Skip for now
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* Footer */}
       <footer className="mt-16 py-8 text-center border-t border-white/5">
