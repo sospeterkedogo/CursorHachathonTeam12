@@ -111,7 +111,6 @@ export default function Onboarding({ onComplete, totalVerifiedUsers, totalVouche
                             ))}
                         </div>
 
-                        {/* Action Button */}
                         <div className="w-full space-y-3">
                             <button
                                 onClick={handleNext}

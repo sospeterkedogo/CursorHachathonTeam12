@@ -5,7 +5,8 @@ export const API_PATHS = {
     LEADERBOARD: "/api/leaderboard",
     VOUCHERS: "/api/vouchers",
     REDEEM: "/api/vouchers/redeem",
-    USER: "/api/user"
+    USER: "/api/user",
+    FEEDBACK: "/api/feedback"
 };
 
 export const UI_CHUNKS = {

@@ -14,7 +14,8 @@ import {
   ShieldCheck,
   Zap,
   Star,
-  Loader2
+  Loader2,
+  MessageSquare
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { getUserId } from "@/lib/userId";
@@ -22,6 +23,7 @@ import { ThemeToggle } from "./ThemeToggle";
 import Onboarding from "./Onboarding";
 import Leaderboard from "./Leaderboard";
 import VoucherList from "./VoucherList";
+import FeedbackModal from "./FeedbackModal";
 
 import { Scan, LeaderboardEntry, Voucher, EcoVerifyClientProps } from "@/types";
 import { AVATARS, UI_CHUNKS, API_PATHS } from "@/constants";
@@ -52,6 +54,7 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
   const [earnedVoucher, setEarnedVoucher] = useState<Voucher | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false); // Default to false, check in useEffect
   const [isPublic, setIsPublic] = useState(true);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
 
   // ... existing code ...
 
@@ -423,6 +426,15 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
           <div className="absolute inset-0 bg-gradient-to-t from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
           <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 border-2 border-white dark:border-black rounded-full" />
         </div>
+
+        {/* Feedback Button */}
+        <button
+          onClick={() => setShowFeedbackModal(true)}
+          className="w-12 h-12 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center cursor-pointer hover:border-purple-500/50 hover:bg-purple-500/20 transition-all shadow-lg group"
+          title="Give Feedback"
+        >
+          <MessageSquare className="w-6 h-6 text-purple-500/50 group-hover:text-purple-500" />
+        </button>
       </div>
     </header>
   );
@@ -430,6 +442,11 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
   return (
     <div className="w-full max-w-md mx-auto pb-24">
       {showOnboarding && <Onboarding onComplete={() => setShowOnboarding(false)} totalVerifiedUsers={globalVerifiedUsers} totalVouchers={globalVouchersCount} />}
+      <FeedbackModal
+        isOpen={showFeedbackModal}
+        onClose={() => setShowFeedbackModal(false)}
+        username={userProfile?.username}
+      />
       <Header />
 
       {/* Tabs */}

@@ -68,3 +68,24 @@ export async function saveUserProfile(profile: {
     if (!res.ok) throw new Error("Failed to save profile");
     return res.json();
 }
+
+export async function submitFeedback(feedback: {
+    userId: string;
+    username?: string;
+    rating?: number;
+    comment?: string;
+}) {
+    const res = await fetch(API_PATHS.FEEDBACK, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(feedback)
+    });
+    if (!res.ok) throw new Error("Failed to submit feedback");
+    return res.json();
+}
+
+export async function getFeedback() {
+    const res = await fetch(API_PATHS.FEEDBACK);
+    if (!res.ok) throw new Error("Failed to fetch feedback");
+    return res.json();
+}
