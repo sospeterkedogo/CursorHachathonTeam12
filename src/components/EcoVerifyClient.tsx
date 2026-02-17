@@ -18,9 +18,11 @@ import {
   MessageSquare,
   Image as ImageIcon,
   X as CloseIcon,
-  Maximize2
+  Maximize2,
+  ExternalLink
 } from "lucide-react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { getUserId } from "@/lib/userId";
 import { ThemeToggle } from "./ThemeToggle";
 import Onboarding from "./Onboarding";
@@ -36,7 +38,7 @@ import * as api from "@/lib/api";
 const confettiPromise = import("canvas-confetti").then((m) => m.default);
 
 export default function EcoVerifyClient({ initialTotalScore, initialScans, initialLeaderboard, itemOne, itemTwo }: EcoVerifyClientProps) {
-  const [activeTab, setActiveTab] = useState<"verify" | "leaderboard" | "vouchers">("verify");
+  const [activeTab, setActiveTab] = useState<"verify" | "leaderboard" | "vouchers" | "profile">("verify");
   const [globalScore, setGlobalScore] = useState(initialTotalScore);
   const [scans, setScans] = useState<Scan[]>(initialScans);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>(initialLeaderboard);
@@ -52,8 +54,14 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
   const [verified, setVerified] = useState<boolean | null>(null);
   const [score, setScore] = useState<number | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
-  const [earnedVoucher, setEarnedVoucher] = useState<Voucher | null>(null);
-  const [showOnboarding, setShowOnboarding] = useState(false); // Default to false, check in useEffect
+  const [earnedVoucher, setEarnedVoucher] = useState<any | null>(null);
+
+  const [userActivity, setUserActivity] = useState<Scan[]>([]);
+  const [loadingActivity, setLoadingActivity] = useState(false);
+  const [activityPage, setActivityPage] = useState(0);
+  const [hasMoreActivity, setHasMoreActivity] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const [isPublic, setIsPublic] = useState(true);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [showImageGallery, setShowImageGallery] = useState(false);
@@ -110,6 +118,7 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
     if (!hideOnboarding) {
       setShowOnboarding(true);
     }
+    setIsMounted(true);
   }, []);
 
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
@@ -182,6 +191,26 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
     }
   };
 
+  const fetchUserActivity = async (page = 0, append = false) => {
+    setLoadingActivity(true);
+    try {
+      const data = await api.fetchUserActivity(getUserId(), page, 10);
+      if (data.activity) {
+        if (append) {
+          setUserActivity(prev => [...prev, ...data.activity]);
+        } else {
+          setUserActivity(data.activity);
+        }
+        setHasMoreActivity(data.hasMore);
+        setActivityPage(page);
+      }
+    } catch (e) {
+      console.error("Failed to fetch activity", e);
+    } finally {
+      setLoadingActivity(false);
+    }
+  };
+
   const saveProfile = async () => {
     if (!inputUsername.trim()) return;
 
@@ -224,100 +253,228 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
     reader.readAsDataURL(file);
   };
 
-  const deleteScan = (index: number) => {
-    setScans(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const submitImage = async (imageBase64: string) => {
-    let progressInterval: NodeJS.Timeout;
+  const deleteScan = async (scanId?: string, index?: number) => {
+    if (!scanId) {
+      // For local-only (e.g. pending/unsaved) deletions
+      if (typeof index === 'number') {
+        setScans(prev => prev.filter((_, i) => i !== index));
+      }
+      return;
+    }
 
     try {
-      setLoading(true);
-      setProgress(0);
-      setFeedback(null);
-      setVerified(null);
-      setScore(null);
-      setAudioUrl(null);
-      setEarnedVoucher(null);
+      const res = await api.deleteAction(scanId, getUserId());
+      if (res.success) {
+        // Remove from both local lists
+        setScans(prev => prev.filter(s => s._id !== scanId));
+        setUserActivity(prev => prev.filter(s => s._id !== scanId));
+        if (typeof res.totalScore === 'number') {
+          setGlobalScore(res.totalScore);
+        }
+        await fetchLeaderboardAndStats();
+      }
+    } catch (err) {
+      console.error("Failed to delete scan:", err);
+    }
+  };
 
-      progressInterval = setInterval(() => {
-        setProgress((prev) => {
-          if (prev >= 90) return prev;
-          const next = prev + Math.floor(Math.random() * 10) + 5;
-          return next > 90 ? 90 : next;
-        });
-      }, 500);
+  const handleToggleVisibility = async (scanId: string, isPublic: boolean) => {
+    try {
+      const res = await api.toggleVisibility(scanId, getUserId(), isPublic);
+      if (res.success) {
+        // Update local state in both lists
+        setUserActivity(prev => prev.map(s => s._id === scanId ? { ...s, isPublic } : s));
 
-      const data = await api.verifyAction({
+        if (isPublic) {
+          // If made public, we might need to add it to the global scans if it's not there
+          const scanToUpdate = userActivity.find(s => s._id === scanId);
+          if (scanToUpdate) {
+            setScans(prev => {
+              if (prev.find(s => s._id === scanId)) {
+                return prev.map(s => s._id === scanId ? { ...s, isPublic } : s);
+              }
+              return [{ ...scanToUpdate, isPublic }, ...prev].slice(0, 100);
+            });
+          }
+        } else {
+          // If made private, remove from global scans
+          setScans(prev => prev.filter(s => s._id !== scanId));
+        }
+      }
+    } catch (err) {
+      console.error("Failed to toggle visibility:", err);
+    }
+  };
+
+  const submitImage = async (imageBase64: string, source: "camera" | "gallery" = "camera") => {
+    let progressInterval: NodeJS.Timeout | null = null;
+    const tempScanId = Math.random().toString(36).substring(7);
+
+    setLoading(true);
+    setProgress(0);
+    setFeedback(null);
+    setVerified(null);
+    setScore(null);
+    setEarnedVoucher(null);
+
+    const pendingScan: Scan = {
+      image: imageBase64,
+      actionType: "Verifying...",
+      score: 0,
+      timestamp: new Date().toISOString(),
+      username: userProfile?.username,
+      avatar: userProfile?.avatar,
+      status: "pending",
+      _id: tempScanId
+    };
+
+    setScans(prev => [pendingScan, ...prev]);
+
+    progressInterval = setInterval(() => {
+      setProgress(prev => (prev >= 90 ? 90 : prev + 10));
+    }, 500);
+
+    try {
+      const response = await api.verifyAction({
         image: imageBase64,
         userId: getUserId(),
         username: userProfile?.username,
         avatar: userProfile?.avatar,
-        isPublic
+        isPublic: source === "gallery" ? false : isPublic,
+        source: source
       });
 
-      clearInterval(progressInterval);
-      setProgress(100);
-      setTimeout(() => setProgress(0), 1000);
+      if (response.status === "pending" && response.scanId) {
+        // Polling loop
+        let attempts = 0;
+        const maxAttempts = 30; // 60 seconds max
+        const scanId = response.scanId;
 
-      setVerified(data.verified);
-      setScore(typeof data.score === "number" ? data.score : null);
-      setFeedback(ensureString(data.message));
-      setAudioUrl(data.audioUrl || null);
+        while (attempts < maxAttempts) {
+          attempts++;
+          await new Promise(resolve => setTimeout(resolve, 2000));
+
+          const statusData = await api.getVerificationStatus(scanId);
+
+          if (statusData.status === "completed") {
+            // Remove the pending scan and add the completed one in one flow
+            handleVerificationComplete(statusData, imageBase64, progressInterval);
+            return;
+          } else if (statusData.status === "failed") {
+            throw new Error(statusData.error || "Verification failed");
+          }
+          // Continue polling
+        }
+        throw new Error("Verification timed out");
+      } else {
+        // Fallback for immediate response (if any) or unexpected format
+        handleVerificationComplete(response, imageBase64, progressInterval);
+      }
+    } catch (err: any) {
+      console.error(err);
+      // Ensure placeholder is removed on error
+      setScans(prev => prev.filter(s => !(s.actionType === "Verifying..." && s.image === imageBase64)));
+      setFeedback("Something went wrong. Please try again.");
+      setVerified(false);
+      if (progressInterval) clearInterval(progressInterval);
+      setLoading(false);
+    }
+  };
+
+  const handleVerificationComplete = async (data: any, imageBase64: string, progressInterval: NodeJS.Timeout | null) => {
+    if (progressInterval) clearInterval(progressInterval);
+    setProgress(100);
+    setTimeout(() => {
+      setProgress(0);
+      setLoading(false);
+    }, 1000);
+
+    setVerified(data.verified);
+    setScore(typeof data.score === "number" ? data.score : null);
+    setFeedback(ensureString(data.message));
+    setAudioUrl(data.audioUrl || null);
+
+    // Filter out the pending placeholder scan first
+    let currentScans: Scan[] = [];
+    setScans((prev) => {
+      const filtered = prev.filter(s => !(s.actionType === "Verifying..." && s.image === imageBase64));
 
       if (data.verified || (typeof data.score === "number" && data.score > 0)) {
         const addedScore = typeof data.score === "number" ? data.score : 0;
-        setGlobalScore((prev) => prev + addedScore);
-
-        if (data.voucher) {
-          setEarnedVoucher(data.voucher);
-          api.fetchVouchers(getUserId()).then(v => setVouchers(v));
-        }
-
         const newScan: Scan = {
+          _id: data._id, // Use persistent ID from status API
+          userId: data.userId,
           image: imageBase64,
           actionType: data.actionType || "eco-action",
           score: addedScore,
           timestamp: data.timestamp || new Date().toISOString(),
           username: userProfile?.username,
-          avatar: userProfile?.avatar
+          avatar: userProfile?.avatar,
+          status: 'completed'
         };
-        setScans((prev) => [newScan, ...prev].slice(0, 100)); // Increased limit for pagination testing
-        setCurrentPage(0);
-        await fetchLeaderboardAndStats();
+        currentScans = [newScan, ...filtered].slice(0, 100);
 
-        try {
-          const confetti = await confettiPromise;
-          confetti({
-            particleCount: 120,
-            spread: 70,
-            origin: { y: 0.7 },
-            colors: ["#22c55e", "#a3e635", "#bbf7d0"]
-          });
-        } catch (err) {
-          console.warn("Confetti failed:", err);
-        }
+        // Also update activity history if it was already fetched
+        setUserActivity(prev => [newScan, ...prev]);
 
-        if (!userProfile) {
-          setTimeout(() => setShowProfileModal(true), 1500);
-        }
+        return currentScans;
       }
 
-      api.fetchLeaderboard().then(d => {
-        if (d.leaderboard) setLeaderboard(d.leaderboard);
-      });
-
-      if (data.audioUrl && audioRef.current) {
-        audioRef.current.currentTime = 0;
-        audioRef.current.play().catch(() => { });
+      // If NOT verified, we might still want it in our personal activity history if the API stored it
+      if (data.status === 'failed' || data.verified === false) {
+        const failedScan: Scan = {
+          _id: data._id,
+          userId: data.userId,
+          image: imageBase64,
+          actionType: data.actionType || "Failed Verification",
+          score: 0,
+          timestamp: data.timestamp || new Date().toISOString(),
+          username: userProfile?.username,
+          avatar: userProfile?.avatar,
+          status: 'failed'
+        };
+        setUserActivity(prev => [failedScan, ...prev]);
       }
-    } catch (err: any) {
-      console.error(err);
-      setFeedback("Something went wrong. Please try again.");
-      setVerified(false);
-    } finally {
-      if (progressInterval!) clearInterval(progressInterval);
-      setLoading(false);
+
+      return filtered;
+    });
+
+    if (data.verified || (typeof data.score === "number" && data.score > 0)) {
+      const addedScore = typeof data.score === "number" ? data.score : 0;
+      setGlobalScore((prev) => prev + addedScore);
+
+      if (data.voucher) {
+        setEarnedVoucher(data.voucher);
+        api.fetchVouchers(getUserId()).then(v => setVouchers(v));
+      }
+
+      setCurrentPage(0);
+      await fetchLeaderboardAndStats();
+
+      try {
+        const confetti = await confettiPromise;
+        confetti({
+          particleCount: 120,
+          spread: 70,
+          origin: { y: 0.7 },
+          colors: ["#22c55e", "#a3e635", "#bbf7d0"]
+        });
+      } catch (err) {
+        console.warn("Confetti failed:", err);
+      }
+
+      if (!userProfile) {
+        setTimeout(() => setShowProfileModal(true), 1500);
+      }
+    }
+
+    api.fetchLeaderboard().then(d => {
+      if (d.leaderboard) setLeaderboard(d.leaderboard);
+    });
+
+    if (data.audioUrl && audioRef.current) {
+      audioRef.current.currentTime = 0;
+      audioRef.current.play().catch(() => { });
     }
   };
 
@@ -355,46 +512,51 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
   );
 
   const BottomNav = () => (
-    <nav className="fixed bottom-6 left-0 right-0 flex justify-center px-4 z-50 pointer-events-none">
-      <div className="w-full max-w-md bg-white/80 dark:bg-black/80 backdrop-blur-2xl border border-neutral-200/50 dark:border-white/10 rounded-2xl p-1.5 shadow-2xl flex items-center justify-between animate-slide-up pointer-events-auto">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-black border-t border-neutral-200 dark:border-white/10 animate-slide-up">
+      <div className="w-full max-w-3xl mx-auto flex items-center justify-between p-1">
         <button
           onClick={() => setActiveTab("verify")}
-          className={`flex-1 flex flex-col items-center gap-1 py-2 rounded-xl transition-all duration-300 ${activeTab === "verify" ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20" : "text-neutral-500 hover:text-neutral-900 dark:hover:text-white"}`}
+          className={`flex-1 px-4 py-3 rounded-xl transition-all duration-300 flex flex-col items-center justify-center gap-1 ${activeTab === "verify" ? "text-emerald-500" : "text-neutral-500 hover:text-neutral-900 dark:hover:text-white"}`}
         >
-          <Camera className="w-5 h-5" />
-          <span className="text-[10px] font-bold uppercase tracking-tighter">Home</span>
+          <Camera className={`w-5 h-5 flex-shrink-0 ${activeTab === "verify" ? "fill-emerald-500/10" : ""}`} />
+          <span className={`text-[10px] font-bold uppercase tracking-tight ${activeTab === "verify" ? "opacity-100" : "opacity-60"}`}>Home</span>
         </button>
         <button
           onClick={() => {
             setActiveTab("leaderboard");
             fetchLeaderboardAndStats();
           }}
-          className={`flex-1 flex flex-col items-center gap-1 py-2 rounded-xl transition-all duration-300 ${activeTab === "leaderboard" ? "bg-amber-500 text-white shadow-lg shadow-amber-500/20" : "text-neutral-500 hover:text-neutral-900 dark:hover:text-white"}`}
+          className={`flex-1 px-4 py-3 rounded-xl transition-all duration-300 flex flex-col items-center justify-center gap-1 ${activeTab === "leaderboard" ? "text-amber-500" : "text-neutral-500 hover:text-neutral-900 dark:hover:text-white"}`}
         >
-          <Trophy className="w-5 h-5" />
-          <span className="text-[10px] font-bold uppercase tracking-tighter">Ranking</span>
+          <Trophy className={`w-5 h-5 flex-shrink-0 ${activeTab === "leaderboard" ? "fill-amber-500/10" : ""}`} />
+          <span className={`text-[10px] font-bold uppercase tracking-tight ${activeTab === "leaderboard" ? "opacity-100" : "opacity-60"}`}>Ranking</span>
         </button>
         <button
           onClick={() => {
             setActiveTab("vouchers");
             fetchVouchers();
           }}
-          className={`flex-1 flex flex-col items-center gap-1 py-2 rounded-xl transition-all duration-300 relative ${activeTab === "vouchers" ? "bg-purple-500 text-white shadow-lg shadow-purple-500/20" : "text-neutral-500 hover:text-neutral-900 dark:hover:text-white"}`}
+          className={`flex-1 px-4 py-3 rounded-xl transition-all duration-300 flex flex-col items-center justify-center gap-1 ${activeTab === "vouchers" ? "text-purple-500" : "text-neutral-500 hover:text-neutral-900 dark:hover:text-white"}`}
         >
-          <Ticket className="w-5 h-5" />
-          <span className="text-[10px] font-bold uppercase tracking-tighter">Rewards</span>
-          {vouchers.filter(v => !v.used).length > 0 && (
-            <span className="absolute top-1.5 right-4 bg-red-500 text-white text-[8px] font-bold px-1 rounded-full border border-white dark:border-black">
-              {vouchers.filter(v => !v.used).length}
-            </span>
-          )}
+          <Ticket className={`w-5 h-5 flex-shrink-0 ${activeTab === "vouchers" ? "fill-purple-500/10" : ""}`} />
+          <span className={`text-[10px] font-bold uppercase tracking-tight ${activeTab === "vouchers" ? "opacity-100" : "opacity-60"}`}>Rewards</span>
+        </button>
+        <button
+          onClick={() => {
+            setActiveTab("profile");
+            fetchUserActivity(0, false);
+          }}
+          className={`flex-1 px-4 py-3 rounded-xl transition-all duration-300 flex flex-col items-center justify-center gap-1 ${activeTab === "profile" ? "text-indigo-500" : "text-neutral-500 hover:text-neutral-900 dark:hover:text-white"}`}
+        >
+          <User className={`w-5 h-5 flex-shrink-0 ${activeTab === "profile" ? "fill-indigo-500/10" : ""}`} />
+          <span className={`text-[10px] font-bold uppercase tracking-tight ${activeTab === "profile" ? "opacity-100" : "opacity-60"}`}>Profile</span>
         </button>
       </div>
     </nav>
   );
 
   return (
-    <div className="w-full max-w-md mx-auto px-4 pb-32">
+    <div className="w-full mx-auto px-4 pb-20">
       {showOnboarding && <Onboarding onComplete={() => setShowOnboarding(false)} totalVerifiedUsers={globalVerifiedUsers} totalVouchers={globalVouchersCount} />}
       <FeedbackModal
         isOpen={showFeedbackModal}
@@ -433,6 +595,24 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
           loading={loadingVouchers}
           onActivate={handleActivateVoucher}
         />
+      ) : activeTab === "profile" ? (
+        isMounted ? (
+          <ProfileView
+            activity={userActivity}
+            loading={loadingActivity}
+            onDelete={deleteScan}
+            onToggleVisibility={handleToggleVisibility}
+            currentUserId={getUserId()}
+            userProfile={userProfile}
+            hasMore={hasMoreActivity}
+            onLoadMore={() => fetchUserActivity(activityPage + 1, true)}
+          />
+        ) : (
+          <div className="flex flex-col items-center justify-center py-20 opacity-50">
+            <Loader2 className="w-8 h-8 animate-spin text-emerald-500 mb-2" />
+            <span className="text-xs font-bold text-neutral-500 uppercase">Loading Profile...</span>
+          </div>
+        )
       ) : (
         <>
           <div className="apple-card relative overflow-hidden mb-8 group">
@@ -584,7 +764,7 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
                           className="w-full h-full object-cover transition-transform duration-500 group-hover/card:scale-110"
                         />
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/card:opacity-100 flex items-center justify-center transition-opacity">
-                          <Maximize2 className="w-5 h-5 text-white" />
+                          <Maximize2 className="w-5 h-5" />
                         </div>
                       </div>
                       <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-emerald-600 dark:bg-emerald-900 border border-white dark:border-black flex items-center justify-center z-20 overflow-hidden text-xs shadow-lg">
@@ -593,23 +773,38 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
                     </div>
                     <div className="flex-1 min-w-0 ml-1">
                       <span className="font-bold text-sm text-neutral-900 dark:text-neutral-200 truncate block">{scan.username || "Anonymous"}</span>
-                      <p className="text-xs text-emerald-600 dark:text-emerald-400 capitalize font-medium truncate mb-1">{scan.actionType.replace(/-/g, ' ')}</p>
-                      <span className="text-[10px] text-neutral-500">{new Date(scan.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                      {scan.status === 'pending' ? (
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <Loader2 className="w-3 h-3 text-emerald-500 animate-spin" />
+                          <span className="text-[10px] text-emerald-500 font-bold uppercase tracking-tight">Verifying...</span>
+                        </div>
+                      ) : (
+                        <p className="text-xs text-emerald-600 dark:text-emerald-400 capitalize font-medium truncate mb-1">{scan.actionType.replace(/-/g, ' ')}</p>
+                      )}
+                      <span className="text-[10px] text-neutral-500">
+                        {isMounted ? new Date(scan.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "..."}
+                      </span>
                     </div>
-                    <div className="flex flex-col items-end gap-2">
-                      <div className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-3 py-1 rounded-full text-xs font-black tabular-nums border border-emerald-500/20">
-                        +{scan.score}
+                    {scan.userId && (
+                      <div className="flex items-center gap-1">
+                        {scan.score > 0 && (
+                          <div className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-3 py-1 rounded-full text-xs font-black tabular-nums border border-emerald-500/20">
+                            +{scan.score}
+                          </div>
+                        )}
+                        {isMounted && (scan.userId === getUserId()) && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteScan(scan._id, idx);
+                            }}
+                            className="p-1 text-neutral-400 hover:text-red-500 transition-colors"
+                          >
+                            <span className="text-[10px] font-bold">✕</span>
+                          </button>
+                        )}
                       </div>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          deleteScan(idx);
-                        }}
-                        className="p-1 text-neutral-400 hover:text-red-500 transition-colors"
-                      >
-                        <span className="text-[10px] font-bold">✕</span>
-                      </button>
-                    </div>
+                    )}
                   </div>
                 ))}
 
@@ -807,6 +1002,130 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// --- Profile View Component ---
+function ProfileView({ activity, loading, onDelete, onToggleVisibility, currentUserId, userProfile, hasMore, onLoadMore }: {
+  activity: Scan[];
+  loading: boolean;
+  onDelete: (id?: string) => void;
+  onToggleVisibility: (id: string, isPublic: boolean) => void;
+  currentUserId: string;
+  userProfile: { username: string; avatar: string } | null;
+  hasMore: boolean;
+  onLoadMore: () => void;
+}) {
+  return (
+    <div className="space-y-6 animate-fade-in pb-20">
+      <div className="glass-panel p-6 border-emerald-500/20 bg-emerald-500/5 flex flex-col items-center">
+        <div className="w-16 h-16 rounded-full bg-neutral-100 dark:bg-neutral-800 border-2 border-emerald-500 flex items-center justify-center text-3xl mb-3 shadow-lg">
+          {userProfile?.avatar || "👤"}
+        </div>
+        <h2 className="text-xl font-bold text-neutral-900 dark:text-white uppercase tracking-tight">
+          {userProfile?.username || "Guest Impact"}
+        </h2>
+        <div className="flex items-center gap-2 mt-1">
+          <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">Impact Dashboard</span>
+          <div className="w-1 h-1 rounded-full bg-neutral-300" />
+          <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Personal Action Log</span>
+        </div>
+      </div>
+
+      <section className="space-y-4">
+        <div className="flex items-center justify-between px-1">
+          <h3 className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Your Activity</h3>
+        </div>
+
+        {activity.length === 0 && !loading ? (
+          <div className="glass-panel p-12 text-center border-dashed border-neutral-200 dark:border-white/10">
+            <p className="text-sm text-neutral-500">Your ecological footprints will appear here.</p>
+            <p className="text-[10px] text-neutral-400 mt-2 uppercase tracking-tighter">Start verifying to make an impact!</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {activity.map((scan, idx) => (
+              <div key={scan._id || idx} className="glass-panel p-4 flex flex-col gap-4 border border-neutral-200 dark:border-white/5 group/activity">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-lg overflow-hidden border border-neutral-200 dark:border-white/10 flex-shrink-0 bg-neutral-100 dark:bg-neutral-800">
+                    <img
+                      src={scan.image && scan.image.length > 200
+                        ? (scan.image.startsWith('data:') ? scan.image : `data:image/jpeg;base64,${scan.image}`)
+                        : `https://ui-avatars.com/api/?name=${encodeURIComponent(scan.actionType)}&background=059669&color=fff`}
+                      className="w-full h-full object-cover"
+                      alt=""
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-bold text-neutral-900 dark:text-neutral-100 truncate pr-2">
+                        {scan.actionType.replace(/-/g, ' ')}
+                      </h4>
+                      {scan.score > 0 && (
+                        <span className="text-sm font-black text-emerald-500 tabular-nums shrink-0">+{scan.score}</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full ${scan.status === 'failed' ? 'bg-red-500/10 text-red-500' : 'bg-emerald-500/10 text-emerald-500'}`}>
+                        {scan.status || 'Verified'}
+                      </span>
+                      <span className="text-[10px] text-neutral-400 font-medium">
+                        {new Date(scan.timestamp).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-3 border-t border-neutral-100 dark:border-white/5 mt-1">
+                  <div className="flex items-center gap-1.5 grayscale group-hover/activity:grayscale-0 transition-all opacity-60 group-hover/activity:opacity-100">
+                    <div className={`w-1.5 h-1.5 rounded-full ${scan.isPublic ? 'bg-emerald-500 shadow-sm shadow-emerald-500/50' : 'bg-neutral-400'}`} />
+                    <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-tighter">
+                      {scan.isPublic ? 'Public Feed' : 'Private Draft'}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    {scan.status !== 'pending' && (
+                      <button
+                        onClick={() => scan._id && onToggleVisibility(scan._id, !scan.isPublic)}
+                        className={`px-3 py-1 rounded-lg text-[9px] font-bold transition-all uppercase tracking-widest border ${scan.isPublic ? 'border-neutral-200 dark:border-neutral-700 text-neutral-500 hover:text-red-500 hover:border-red-200' : 'bg-emerald-500 text-white border-emerald-500 shadow-sm shadow-emerald-500/20'}`}
+                      >
+                        {scan.isPublic ? 'Remove from Feed' : 'Add to Feed'}
+                      </button>
+                    )}
+                    <button
+                      onClick={() => onDelete(scan._id)}
+                      className="p-1.5 text-neutral-400 hover:text-red-500 transition-colors"
+                      title="Delete action"
+                    >
+                      <CloseIcon className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {hasMore && (
+          <button
+            onClick={onLoadMore}
+            disabled={loading}
+            className="w-full py-4 text-xs font-bold text-neutral-500 uppercase tracking-widest hover:text-emerald-500 transition-colors flex items-center justify-center gap-2"
+          >
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Load older actions"}
+          </button>
+        )}
+
+        <div className="pt-12 pb-8 flex flex-col items-center gap-4 border-t border-neutral-100 dark:border-white/5">
+          <div className="flex items-center gap-6">
+            <a href="/privacy" className="text-[10px] font-bold text-neutral-400 hover:text-emerald-500 transition-colors uppercase tracking-widest">Privacy Policy</a>
+            <a href="/terms" className="text-[10px] font-bold text-neutral-400 hover:text-emerald-500 transition-colors uppercase tracking-widest">Terms of Service</a>
+          </div>
+          <p className="text-[9px] text-neutral-400 font-medium uppercase tracking-tighter opacity-50">EcoVerify Hackathon v1.0 • 2026</p>
+        </div>
+      </section>
     </div>
   );
 }

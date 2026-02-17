@@ -4,10 +4,10 @@ import { getDb } from "@/lib/mongodb";
 
 export async function GET(
     req: NextRequest,
-    { params }: { params: { userId: string } }
+    { params }: { params: Promise<{ userId: string }> }
 ) {
     try {
-        const userId = params.userId;
+        const { userId } = await params;
         if (!userId) {
             return NextResponse.json({ error: "User ID required" }, { status: 400 });
         }

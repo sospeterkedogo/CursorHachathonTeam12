@@ -45,6 +45,7 @@ export async function verifyAction(payload: {
     avatar?: string;
     isPublic?: boolean;
     simulated?: boolean;
+    source?: string;
 }) {
     const res = await fetch(API_PATHS.VERIFY, {
         method: "POST",
@@ -52,6 +53,36 @@ export async function verifyAction(payload: {
         body: JSON.stringify(payload)
     });
     if (!res.ok) throw new Error("Verification failed");
+    return res.json();
+}
+
+export async function getVerificationStatus(scanId: string) {
+    const res = await fetch(`${API_PATHS.VERIFY}/status/${scanId}`);
+    if (!res.ok) throw new Error("Failed to fetch status");
+    return res.json();
+}
+
+export async function deleteAction(scanId: string, userId: string) {
+    const res = await fetch(`${API_PATHS.VERIFY}/${scanId}?userId=${userId}`, {
+        method: "DELETE"
+    });
+    if (!res.ok) throw new Error("Deletion failed");
+    return res.json();
+}
+
+export async function fetchUserActivity(userId: string, page = 0, limit = 10) {
+    const res = await fetch(`${API_PATHS.USER}/${userId}/activity?page=${page}&limit=${limit}`);
+    if (!res.ok) throw new Error("Failed to fetch user activity");
+    return res.json();
+}
+
+export async function toggleVisibility(scanId: string, userId: string, isPublic: boolean) {
+    const res = await fetch(`${API_PATHS.VERIFY}/${scanId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, isPublic })
+    });
+    if (!res.ok) throw new Error("Visibility update failed");
     return res.json();
 }
 

@@ -4,6 +4,8 @@ import fs from "fs";
 import path from "path";
 import { z } from "zod";
 import { rateLimit } from "@/lib/rate-limit";
+import sharp from "sharp";
+import { ObjectId } from "mongodb";
 
 const LOG_FILE = path.join(process.cwd(), "verification-debug.log");
 function logToFile(msg: string) {
@@ -28,8 +30,23 @@ const VerifySchema = z.object({
   avatar: z.string().optional(),
   simulated: z.boolean().optional(),
   isPublic: z.boolean().optional(),
+  source: z.string().optional(), // camera or gallery
   honeypot: z.string().optional(), // Bot detection
 });
+
+async function compressImage(base64Data: string): Promise<string> {
+  try {
+    const buffer = Buffer.from(base64Data.split(",")[1] || base64Data, "base64");
+    const compressedBuffer = await sharp(buffer)
+      .resize({ width: 1000, withoutEnlargement: true })
+      .jpeg({ quality: 80 })
+      .toBuffer();
+    return `data:image/jpeg;base64,${compressedBuffer.toString("base64")}`;
+  } catch (error) {
+    console.error("Compression failed:", error);
+    return base64Data; // Fallback to original
+  }
+}
 
 async function fetchWithTimeout(resource: string, options: RequestInit & { timeout?: number } = {}) {
   const { timeout = 25000 } = options;
@@ -60,6 +77,11 @@ async function callMiniMaxVision(imageBase64: string): Promise<VisionResult> {
     "You are the Eco-Verify AI. Your tone is witty, encouraging, and slightly sarcastic. You use modern internet slang (e.g., 'W,' 'huge if true,' 'main character energy') but stay professional enough for a hackathon. Goal: Analyze the image for eco-friendly behavior. If you see a green action (recycling, reusable cups, public transit, turning off lights): Give a high score (80-100) and a punchy, 1-sentence validation. If you see a 'neutral' or 'bad' action (plastic waste, idling car, unnecessary power use): Give a low score and a cheeky, slightly judgmental roast. Return strictly JSON with keys: verified (boolean), score (number, optional when false), actionType (string, optional when false), message (string).";
 
   try {
+    // Ensure image has exactly one prefix
+    const finalImageUrl = imageBase64.startsWith('data:')
+      ? imageBase64
+      : `data:image/jpeg;base64,${imageBase64}`;
+
     // We use the v2 endpoint for standardized vision/chat capabilities.
     const response = await fetchWithTimeout("https://api.minimax.io/v1/text/chatcompletion_v2", {
       method: "POST",
@@ -78,7 +100,7 @@ async function callMiniMaxVision(imageBase64: string): Promise<VisionResult> {
             role: "user",
             content: [
               { type: "text", text: prompt },
-              { type: "image_url", image_url: { url: `data:image/jpeg;base64,${imageBase64}` } }
+              { type: "image_url", image_url: { url: finalImageUrl } }
             ]
           }
         ]
@@ -213,7 +235,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid request data", details: result.error.format() }, { status: 400 });
     }
 
-    const { image, userId, username, avatar, simulated, isPublic, honeypot } = result.data;
+    const { image, userId, username, avatar, simulated, isPublic, honeypot, source } = result.data;
 
     if (honeypot) {
       logToFile(`Bot detected for user: ${userId}`);
@@ -236,79 +258,108 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    if (simulated) {
-      const simulatedScore = Math.floor(Math.random() * 91) + 10;
-      const voucher = await callMiniMaxVoucherGen("simulated-action", simulatedScore) || {
-        title: `${simulatedScore > 50 ? "£10" : "£5"} Off Eco-Shop`,
-        description: `Simulated reward for your high-impact action (${simulatedScore} points).`,
-        code: generateRandomCode()
-      };
-
-      const timestamp = new Date();
-      await persistVerification(userId, username, avatar, "simulated", true, simulatedScore, "simulated-action", voucher, timestamp, isPublic ?? true);
-
-      return NextResponse.json({
-        verified: true,
-        score: simulatedScore,
-        actionType: "simulated-action",
-        message: "Simulated Success!",
-        voucher,
-        timestamp
-      });
-    }
-
-    if (!image) return NextResponse.json({ error: "No image" }, { status: 400 });
-
-    const vision = await callMiniMaxVision(image);
-    const audioUrl = await callMiniMaxT2A(vision.message);
-
-    let voucher = null;
-    if (vision.verified || (vision.score && vision.score > 0)) {
-      vision.verified = true;
-      voucher = await callMiniMaxVoucherGen(vision.actionType || "eco-action", vision.score || 10);
-    }
-
     const timestamp = new Date();
-    await persistVerification(userId, username, avatar, image, vision.verified, vision.score || 0, vision.actionType || "eco-action", voucher, timestamp, isPublic ?? true);
+    const scanId = new ObjectId();
+
+    // Compress image if present
+    let finalImage = image;
+    if (image && !simulated) {
+      finalImage = await compressImage(image);
+    }
+
+    // Create the initial scan record
+    const db = await getDb();
+    await db.collection("scans").insertOne({
+      _id: scanId,
+      userId: userId || "anon",
+      username,
+      avatar,
+      image: finalImage,
+      verified: false,
+      score: 0,
+      status: "pending",
+      timestamp,
+      isPublic: !!isPublic,
+      source: source || "camera" // Save source
+    });
+
+    // Background the AI processing
+    // NOTE: In Vercel, we should ideally use waitUntil, but for this implementation
+    // we return immediately and the client will poll. The background processing
+    // continues in the same execution context.
+    (async () => {
+      try {
+        let vision;
+        let voucher = null;
+        let audioUrl = null;
+
+        if (simulated) {
+          const simulatedScore = Math.floor(Math.random() * 91) + 10;
+          vision = { verified: true, score: simulatedScore, actionType: "simulated-action", message: "Simulated Success!" };
+          voucher = await callMiniMaxVoucherGen("simulated-action", simulatedScore) || {
+            title: `${simulatedScore > 50 ? "£10" : "£5"} Off Eco-Shop`,
+            description: `Simulated reward for your high-impact action (${simulatedScore} points).`,
+            code: generateRandomCode(),
+            expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+          };
+        } else if (finalImage) { // Only process vision if there's an image
+          vision = await callMiniMaxVision(finalImage);
+          audioUrl = await callMiniMaxT2A(vision.message);
+
+          // Force 0 points for gallery uploads
+          if (source === "gallery") {
+            logToFile(`Gallery upload detected for user ${userId}. Forcing score to 0.`);
+            vision.score = 0;
+          }
+
+          if (vision.verified && vision.score && vision.score >= 50) {
+            vision.verified = true;
+            voucher = await callMiniMaxVoucherGen(vision.actionType || "eco-action", vision.score || 10);
+          }
+        }
+
+        if (vision) {
+          await completeVerification(scanId, userId, username, avatar, vision.verified, vision.score || 0, vision.actionType || "eco-action", vision.message, voucher, audioUrl, timestamp);
+        }
+      } catch (error) {
+        console.error("Background processing failed:", error);
+        await db.collection("scans").updateOne({ _id: scanId }, { $set: { status: "failed", error: "Processing failed" } });
+      }
+    })();
 
     return NextResponse.json({
-      ...vision,
-      audioUrl,
-      voucher,
-      timestamp
+      scanId: scanId.toString(),
+      status: "pending",
+      message: "Processing started"
     });
 
   } catch (error: any) {
     console.error("Error in POST:", error);
-    const randomScore = Math.floor(Math.random() * 91) + 10;
-    return NextResponse.json({
-      verified: true,
-      score: randomScore,
-      actionType: "eco-action",
-      message: "We encountered a glitch, but rewarded your effort!",
-      timestamp: new Date()
-    });
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
 
-async function persistVerification(userId: any, username: any, avatar: any, image: string, verified: boolean, score: number, actionType: string, voucher: any, timestamp: Date, isPublic: boolean) {
+async function completeVerification(scanId: ObjectId, userId: any, username: any, avatar: any, verified: boolean, score: number, actionType: string, message: string, voucher: any, audioUrl: string | null, timestamp: Date) {
   try {
     const db = await getDb();
     const scans = db.collection("scans");
     const users = db.collection("users");
     const vouchers = db.collection("vouchers");
 
-    await scans.insertOne({
-      userId: userId || "anon",
-      username,
-      avatar,
-      image: image,
-      verified,
-      score,
-      actionType,
-      timestamp,
-      isPublic: !!isPublic
-    });
+    await scans.updateOne(
+      { _id: scanId },
+      {
+        $set: {
+          verified,
+          score,
+          actionType,
+          message,
+          audioUrl,
+          voucher,
+          status: "completed"
+        }
+      }
+    );
 
     if (userId && score > 0) {
       try {
@@ -322,7 +373,6 @@ async function persistVerification(userId: any, username: any, avatar: any, imag
       }
 
       if (voucher) {
-        // Enforce a security limit of 5 vouchers per user per rolling 24-hour window.
         const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
         const dailyVoucherCount = await vouchers.countDocuments({
           userId,
@@ -331,9 +381,6 @@ async function persistVerification(userId: any, username: any, avatar: any, imag
 
         if (dailyVoucherCount < 5) {
           await vouchers.insertOne({ userId, ...voucher, used: false, createdAt: timestamp, expiry: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) });
-        } else {
-          logToFile(`Voucher limit reached for user: ${userId}`);
-          // We still track the scan but don't issue a voucher
         }
       }
     }

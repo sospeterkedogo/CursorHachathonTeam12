@@ -14,7 +14,7 @@ export function ThemeToggle() {
     }, []);
 
     if (!mounted) {
-        return <div className="w-9 h-9" />; // Placeholder to prevent layout shift
+        return <button className="w-9 h-9 opacity-0" aria-hidden="true" />; // Placeholder to matching tag
     }
 
     return (

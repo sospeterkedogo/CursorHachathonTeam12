@@ -1,4 +1,6 @@
 export type Scan = {
+    _id?: string;
+    userId?: string;
     image: string;
     actionType: string;
     score: number;
@@ -6,6 +8,7 @@ export type Scan = {
     username?: string;
     avatar?: string;
     isPublic?: boolean;
+    status?: 'pending' | 'completed' | 'failed';
 };
 
 export type LeaderboardEntry = {

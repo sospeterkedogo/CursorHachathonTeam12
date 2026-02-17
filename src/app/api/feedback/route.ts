@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/mongodb";
 import { z } from "zod";
 
+export const dynamic = 'force-dynamic';
+
 const FeedbackSchema = z.object({
     userId: z.string().min(1),
     username: z.string().optional(),
