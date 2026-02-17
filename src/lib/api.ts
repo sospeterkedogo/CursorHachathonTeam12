@@ -120,3 +120,10 @@ export async function getFeedback() {
     if (!res.ok) throw new Error("Failed to fetch feedback");
     return res.json();
 }
+export async function deleteAccount(userId: string) {
+    const res = await fetch(`${API_PATHS.USER}/${userId}`, {
+        method: "DELETE"
+    });
+    if (!res.ok) throw new Error("Failed to delete account");
+    return res.json();
+}

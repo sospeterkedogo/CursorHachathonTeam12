@@ -19,7 +19,10 @@ import {
   Image as ImageIcon,
   X as CloseIcon,
   Maximize2,
-  ExternalLink
+  ExternalLink,
+  Trash2,
+  AlertTriangle,
+  RotateCcw
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
@@ -217,17 +220,39 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
     const userId = getUserId();
     const newProfile = { username: inputUsername, avatar: selectedAvatar };
 
-    setUserProfile(newProfile);
-    localStorage.setItem(STORAGE_KEYS.USERNAME, inputUsername);
-    localStorage.setItem(STORAGE_KEYS.AVATAR, selectedAvatar);
-    setShowProfileModal(false);
-
     try {
       await api.saveUserProfile({ userId, ...newProfile });
+      setUserProfile(newProfile);
+      localStorage.setItem(STORAGE_KEYS.USERNAME, inputUsername);
+      localStorage.setItem(STORAGE_KEYS.AVATAR, selectedAvatar);
+      setShowProfileModal(false);
+
       const data = await api.fetchLeaderboard();
       setLeaderboard(data.leaderboard);
     } catch (err) {
       console.error("Failed to save profile:", err);
+    }
+  };
+
+  const handleClearCache = () => {
+    if (confirm("This will clear your local sessions and reset your profile. Your verified actions will remain on the server. Proceed?")) {
+      localStorage.removeItem(STORAGE_KEYS.USERNAME);
+      localStorage.removeItem(STORAGE_KEYS.AVATAR);
+      localStorage.removeItem(STORAGE_KEYS.HIDE_ONBOARDING);
+      window.location.reload();
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (confirm("CRITICAL: This will permanently delete your account and all your verified actions. This cannot be undone. Are you absolutely sure?")) {
+      try {
+        await api.deleteAccount(getUserId());
+        localStorage.clear();
+        window.location.reload();
+      } catch (err) {
+        console.error("Failed to delete account:", err);
+        alert("Failed to delete account. Please try again later.");
+      }
     }
   };
 
@@ -606,6 +631,9 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
             userProfile={userProfile}
             hasMore={hasMoreActivity}
             onLoadMore={() => fetchUserActivity(activityPage + 1, true)}
+            onUpdateProfile={() => setShowProfileModal(true)}
+            onClearCache={handleClearCache}
+            onDeleteAccount={handleDeleteAccount}
           />
         ) : (
           <div className="flex flex-col items-center justify-center py-20 opacity-50">
@@ -1007,7 +1035,7 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
 }
 
 // --- Profile View Component ---
-function ProfileView({ activity, loading, onDelete, onToggleVisibility, currentUserId, userProfile, hasMore, onLoadMore }: {
+function ProfileView({ activity, loading, onDelete, onToggleVisibility, currentUserId, userProfile, hasMore, onLoadMore, onUpdateProfile, onClearCache, onDeleteAccount }: {
   activity: Scan[];
   loading: boolean;
   onDelete: (id?: string) => void;
@@ -1016,10 +1044,22 @@ function ProfileView({ activity, loading, onDelete, onToggleVisibility, currentU
   userProfile: { username: string; avatar: string } | null;
   hasMore: boolean;
   onLoadMore: () => void;
+  onUpdateProfile: () => void;
+  onClearCache: () => void;
+  onDeleteAccount: () => void;
 }) {
+  const [showSettings, setShowSettings] = useState(false);
+
   return (
     <div className="space-y-6 animate-fade-in pb-20">
-      <div className="glass-panel p-6 border-emerald-500/20 bg-emerald-500/5 flex flex-col items-center">
+      <div className="glass-panel p-6 border-emerald-500/20 bg-emerald-500/5 flex flex-col items-center relative overflow-hidden">
+        <button
+          onClick={() => setShowSettings(!showSettings)}
+          className={`absolute top-4 right-4 p-2 rounded-xl transition-all ${showSettings ? 'bg-emerald-500 text-white' : 'bg-white/50 dark:bg-black/50 text-neutral-500 hover:text-emerald-500'}`}
+        >
+          <Settings className={`w-5 h-5 ${showSettings ? 'animate-spin-slow' : ''}`} />
+        </button>
+
         <div className="w-16 h-16 rounded-full bg-neutral-100 dark:bg-neutral-800 border-2 border-emerald-500 flex items-center justify-center text-3xl mb-3 shadow-lg">
           {userProfile?.avatar || "👤"}
         </div>
@@ -1032,6 +1072,48 @@ function ProfileView({ activity, loading, onDelete, onToggleVisibility, currentU
           <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Personal Action Log</span>
         </div>
       </div>
+
+      {showSettings && (
+        <div className="glass-panel p-6 border-neutral-200 dark:border-white/10 animate-slide-up space-y-6">
+          <div>
+            <h3 className="text-xs font-bold text-neutral-400 uppercase tracking-widest mb-4">Account Settings</h3>
+            <div className="space-y-3">
+              <button
+                onClick={onUpdateProfile}
+                className="w-full flex items-center justify-between p-4 rounded-xl bg-neutral-100 dark:bg-white/5 hover:bg-neutral-200 dark:hover:bg-white/10 transition-all border border-neutral-200 dark:border-white/5"
+              >
+                <div className="flex items-center gap-3">
+                  <User className="w-5 h-5 text-emerald-500" />
+                  <span className="text-sm font-semibold">Edit Profile</span>
+                </div>
+                <ChevronRight className="w-4 h-4 text-neutral-400" />
+              </button>
+
+              <button
+                onClick={onClearCache}
+                className="w-full flex items-center justify-between p-4 rounded-xl bg-neutral-100 dark:bg-white/5 hover:bg-neutral-200 dark:hover:bg-white/10 transition-all border border-neutral-200 dark:border-white/5"
+              >
+                <div className="flex items-center gap-3">
+                  <RotateCcw className="w-5 h-5 text-amber-500" />
+                  <span className="text-sm font-semibold">Clear Local Cache</span>
+                </div>
+                <ChevronRight className="w-4 h-4 text-neutral-400" />
+              </button>
+
+              <button
+                onClick={onDeleteAccount}
+                className="w-full flex items-center justify-between p-4 rounded-xl bg-red-500/5 hover:bg-red-500/10 transition-all border border-red-500/20 group"
+              >
+                <div className="flex items-center gap-3">
+                  <Trash2 className="w-5 h-5 text-red-500" />
+                  <span className="text-sm font-semibold text-red-500">Delete Account</span>
+                </div>
+                <AlertTriangle className="w-4 h-4 text-red-500/50 group-hover:text-red-500 transition-colors" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <section className="space-y-4">
         <div className="flex items-center justify-between px-1">
