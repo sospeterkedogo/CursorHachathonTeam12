@@ -3,10 +3,10 @@ import { getDb } from "@/lib/mongodb";
 
 export async function DELETE(
     req: NextRequest,
-    { params }: { params: { userId: string } }
+    { params }: { params: Promise<{ userId: string }> }
 ) {
     try {
-        const { userId } = params;
+        const { userId } = await params;
 
         if (!userId) {
             return NextResponse.json({ error: "Missing userId" }, { status: 400 });
