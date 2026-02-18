@@ -31,6 +31,7 @@ import { Lightbox } from "./eco-verify/Lightbox";
 export default function EcoVerifyClient({ initialTotalScore, initialScans, initialLeaderboard, itemOne, itemTwo }: EcoVerifyClientProps) {
   const [activeTab, setActiveTab] = useState<"verify" | "leaderboard" | "vouchers" | "profile">("verify");
   const [globalScore, setGlobalScore] = useState(initialTotalScore);
+  const [userScore, setUserScore] = useState(0); // Personal score 4 goal progress
   const [leaderboard, setLeaderboard] = useState(initialLeaderboard);
   const [globalVerifiedUsers, setGlobalVerifiedUsers] = useState(itemOne);
   const [globalVouchersCount, setGlobalVouchersCount] = useState(itemTwo);
@@ -68,6 +69,7 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
       setShowOnboarding(true);
     }
     setIsMounted(true);
+    fetchLeaderboardAndStats(); // Fetch updated stats on mount
   }, []);
 
   const fetchLeaderboardAndStats = async () => {
@@ -77,6 +79,7 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
       if (typeof data.totalVerifiedUsers === 'number') setGlobalVerifiedUsers(data.totalVerifiedUsers);
       if (typeof data.totalVouchers === 'number') setGlobalVouchersCount(data.totalVouchers);
       if (typeof data.userRank === 'number') setUserRank(data.userRank);
+      if (data.userData && typeof data.userData.totalScore === 'number') setUserScore(data.userData.totalScore);
     } catch (e) {
       console.error("Failed to fetch leaderboard/stats", e);
     }
@@ -85,6 +88,7 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
   const handleVerificationSuccess = (data: any) => {
     if (data.verified || (typeof data.score === "number" && data.score > 0)) {
       setGlobalScore(prev => prev + (data.score || 0));
+      setUserScore(prev => prev + (data.score || 0)); // Update personal score immediately
       fetchLeaderboardAndStats();
       if (data.voucher) {
         fetchVouchers();
@@ -151,8 +155,8 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
       />
 
       <div className="max-w-3xl mx-auto px-4 pt-[calc(5rem+env(safe-area-inset-top,0px))]">
-        <div className="pt-2">
-          <ImpactSummary globalScore={globalScore} userRank={userRank} />
+        <div>
+          <ImpactSummary globalScore={globalScore} userScore={userScore} userRank={userRank} />
         </div>
 
         {activeTab === "leaderboard" ? (
@@ -207,6 +211,7 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
               audioUrl={audioUrl}
               audioRef={audioRef}
               onViewVouchers={() => setActiveTab("vouchers")}
+              onCapture={(base64) => submitImage(base64, "camera", handleVerificationSuccess)}
             />
 
             <ActivityFeed

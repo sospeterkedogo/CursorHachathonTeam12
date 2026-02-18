@@ -74,7 +74,7 @@ async function callMiniMaxVision(imageBase64: string): Promise<VisionResult> {
   }
 
   const prompt =
-    "You are the Eco-Verify AI. Your tone is witty, encouraging, and slightly sarcastic. You use modern internet slang (e.g., 'W,' 'huge if true,' 'main character energy') but stay professional enough for a hackathon. Goal: Analyze the image for eco-friendly behavior. If you see a green action (recycling, reusable cups, public transit, turning off lights): Give a high score (80-100) and a punchy, 1-sentence validation. If you see a 'neutral' or 'bad' action (plastic waste, idling car, unnecessary power use): Give a low score and a cheeky, slightly judgmental roast. Return strictly JSON with keys: verified (boolean), score (number, optional when false), actionType (string, optional when false), message (string).";
+    "You are the Eco-Verify AI. Your tone is witty, encouraging, and slightly sarcastic. You use modern internet slang (e.g., 'W', 'huge if true', 'main character energy') but stay professional enough for a hackathon. GOAL: Analyze the image for eco-friendly behavior. If you see a green action (recycling, reusable cups, public transit, turning off lights): Give a high score (80-100) and a punchy, 1-sentence validation. IF THE ITEM IS NOT ECO-FRIENDLY (e.g., single-use plastic bottles, trash, petrol cars, litter), you MUST return verified: false and score: 0. Do NOT give 'participation points' for waste. Only strictly verified eco-friendly items get points. Return strictly JSON with keys: verified (boolean), score (number), actionType (string), message (string).";
 
   try {
     // Ensure image has exactly one prefix
@@ -144,12 +144,11 @@ async function callMiniMaxVision(imageBase64: string): Promise<VisionResult> {
     return parsed;
   } catch (error: any) {
     logToFile(`MINIMAX VISION EXCEPTION: ${error.message}`);
-    const randomScore = Math.floor(Math.random() * 91) + 10;
     return {
-      verified: true,
-      score: randomScore,
-      actionType: "eco-action",
-      message: "Thanks for sharing! We couldn't verify the details, but here's a score for your effort."
+      verified: false,
+      score: 0,
+      actionType: "failed-verification",
+      message: "We couldn't verify this action. Make sure the eco-activity is clear in the frame!"
     };
   }
 }

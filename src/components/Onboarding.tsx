@@ -130,7 +130,7 @@ export default function Onboarding({ onComplete, totalVerifiedUsers, totalVouche
                             {currentSlide === SLIDES.length - 1 && (
                                 <button
                                     onClick={() => {
-                                        localStorage.setItem("hide_onboarding", "true");
+                                        localStorage.setItem("eco-hide-onboarding", "true");
                                         handleComplete();
                                     }}
                                     className="w-full py-2 text-sm text-neutral-500 hover:text-neutral-900 dark:hover:text-white transition-colors"
