@@ -21,6 +21,7 @@ import { useEcoActions } from "@/hooks/use-eco-actions";
 import { Header } from "./eco-verify/Header";
 import { BottomNav } from "./eco-verify/BottomNav";
 import { ImpactSummary } from "./eco-verify/ImpactSummary";
+import { HowItWorks } from "./eco-verify/HowItWorks";
 import { VerificationSection } from "./eco-verify/VerificationSection";
 import { ActivityFeed } from "./eco-verify/ActivityFeed";
 import { ProfileView } from "./eco-verify/ProfileView";
@@ -156,6 +157,7 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
 
       <div className="max-w-3xl mx-auto px-4 pt-[calc(5rem+env(safe-area-inset-top,0px))]">
         <div>
+          {activeTab === "verify" && !showOnboarding && <HowItWorks />}
           <ImpactSummary globalScore={globalScore} userScore={userScore} userRank={userRank} />
         </div>
 

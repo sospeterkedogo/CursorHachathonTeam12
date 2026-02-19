@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef, useEffect, useState } from 'react';
-import { Camera, X, RefreshCw } from 'lucide-react';
+import { Camera, X, RefreshCw, CheckCircle2, ShieldCheck, Zap } from 'lucide-react';
 
 interface CameraPreviewProps {
     onCapture: (base64Image: string) => void;
@@ -14,8 +14,11 @@ export const CameraPreview: React.FC<CameraPreviewProps> = ({ onCapture, onClose
     const [stream, setStream] = useState<MediaStream | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [isCameraReady, setIsCameraReady] = useState(false);
+    const [showSplash, setShowSplash] = useState(true);
 
     useEffect(() => {
+        if (showSplash) return;
+
         async function startCamera() {
             try {
                 const mediaStream = await navigator.mediaDevices.getUserMedia({
@@ -39,7 +42,7 @@ export const CameraPreview: React.FC<CameraPreviewProps> = ({ onCapture, onClose
                 stream.getTracks().forEach(track => track.stop());
             }
         };
-    }, []);
+    }, [showSplash]);
 
     const handleCapture = () => {
         if (videoRef.current && canvasRef.current) {
@@ -58,6 +61,75 @@ export const CameraPreview: React.FC<CameraPreviewProps> = ({ onCapture, onClose
             }
         }
     };
+
+    if (showSplash) {
+        return (
+            <div className="fixed inset-0 z-[100] bg-white/90 dark:bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-6 animate-in fade-in duration-300">
+                <div className="w-full max-w-md bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-white/10 rounded-3xl p-8 space-y-8 shadow-2xl relative overflow-hidden text-neutral-900 dark:text-white">
+                    {/* Background Pattern */}
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
+                    <div className="absolute bottom-0 left-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl -ml-16 -mb-16 pointer-events-none" />
+
+                    <div className="text-center space-y-2 relative z-10">
+                        <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-emerald-500/20">
+                            <Camera className="w-8 h-8 text-emerald-600 dark:text-emerald-500" />
+                        </div>
+                        <h2 className="text-2xl font-bold">Ready to verify?</h2>
+                        <p className="text-neutral-500 dark:text-neutral-400">
+                            We use your camera to identify your eco-action.
+                        </p>
+                    </div>
+
+                    <div className="space-y-4 relative z-10">
+                        <div className="flex items-start gap-4 p-3 rounded-xl bg-neutral-50 dark:bg-white/5 border border-neutral-200 dark:border-white/5">
+                            <div className="p-2 bg-emerald-100 dark:bg-emerald-500/20 rounded-lg shrink-0">
+                                <Zap className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                            </div>
+                            <div>
+                                <h4 className="font-semibold text-sm">Instant Analysis</h4>
+                                <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">AI verifies your action in seconds.</p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-start gap-4 p-3 rounded-xl bg-neutral-50 dark:bg-white/5 border border-neutral-200 dark:border-white/5">
+                            <div className="p-2 bg-blue-100 dark:bg-blue-500/20 rounded-lg shrink-0">
+                                <CheckCircle2 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                            </div>
+                            <div>
+                                <h4 className="font-semibold text-sm">Public Feed</h4>
+                                <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">Your win inspires others (no faces!).</p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-start gap-4 p-3 rounded-xl bg-neutral-50 dark:bg-white/5 border border-neutral-200 dark:border-white/5">
+                            <div className="p-2 bg-purple-100 dark:bg-purple-500/20 rounded-lg shrink-0">
+                                <ShieldCheck className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                            </div>
+                            <div>
+                                <h4 className="font-semibold text-sm">Privacy First</h4>
+                                <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">We don't save your personal data.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 relative z-10 pt-2">
+                        <button
+                            onClick={onClose}
+                            className="py-3.5 px-4 rounded-xl font-bold text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-white/5 transition-colors"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={() => setShowSplash(false)}
+                            className="py-3.5 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-bold transition-all shadow-lg shadow-emerald-500/25 active:scale-95"
+                        >
+                            Let's Go!
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center p-4">

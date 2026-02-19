@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Camera, Image as ImageIcon, Leaf, X } from "lucide-react";
+import { Camera, Image as ImageIcon, Leaf, X, UploadCloud } from "lucide-react";
 import { CameraPreview } from "./CameraPreview";
 
 interface VerificationSectionProps {
@@ -51,24 +51,35 @@ export const VerificationSection: React.FC<VerificationSectionProps> = ({
                         </p>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-[320px]">
+                    <div className="w-full max-w-[320px] space-y-3">
                         <button
                             onClick={() => setShowCamera(true)}
                             disabled={loading}
-                            className="primary-btn rounded-full py-4 flex items-center justify-center gap-2 text-lg font-bold shadow-lg"
+                            className="primary-btn rounded-2xl w-full py-4 flex items-center justify-center gap-3 text-lg font-bold shadow-lg active:scale-95 transition-transform"
                         >
-                            <Camera className="w-5 h-5" />
-                            <span>{loading ? "Wait..." : "Scan"}</span>
+                            <Camera className="w-6 h-6" />
+                            <span>{loading ? "Wait..." : "Scan Environment"}</span>
                         </button>
 
-                        <button
-                            onClick={onShowGallery}
-                            disabled={loading}
-                            className="bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-900 dark:text-white rounded-full py-4 flex items-center justify-center gap-2 text-lg font-bold shadow-lg border border-neutral-200 dark:border-white/10 transition-all"
-                        >
-                            <ImageIcon className="w-5 h-5 text-emerald-500" />
-                            <span>Gallery</span>
-                        </button>
+                        <div className="grid grid-cols-2 gap-3">
+                            <button
+                                onClick={onTriggerFileInput}
+                                disabled={loading}
+                                className="bg-white dark:bg-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-700 text-neutral-900 dark:text-white rounded-xl py-3 flex flex-col items-center justify-center gap-1.5 text-sm font-bold shadow-sm border border-neutral-200 dark:border-white/10 transition-all active:scale-95"
+                            >
+                                <UploadCloud className="w-5 h-5 text-blue-500" />
+                                <span>Upload File</span>
+                            </button>
+
+                            <button
+                                onClick={onShowGallery}
+                                disabled={loading}
+                                className="bg-white dark:bg-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-700 text-neutral-900 dark:text-white rounded-xl py-3 flex flex-col items-center justify-center gap-1.5 text-sm font-bold shadow-sm border border-neutral-200 dark:border-white/10 transition-all active:scale-95"
+                            >
+                                <ImageIcon className="w-5 h-5 text-purple-500" />
+                                <span>App Gallery</span>
+                            </button>
+                        </div>
                     </div>
 
                     <div className="mt-6 flex flex-col items-center gap-2">

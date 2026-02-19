@@ -9,6 +9,7 @@ export type Scan = {
     avatar?: string;
     isPublic?: boolean;
     status?: 'pending' | 'completed' | 'failed';
+    message?: string;
 };
 
 export type LeaderboardEntry = {

@@ -24,7 +24,7 @@ async function getInitialData() {
     const totalScore = verifiedScans.reduce((sum, s) => sum + (s.score ?? 0), 0);
 
     const lastTen = await scans
-      .find<{ image: string; actionType?: string | null; score?: number | null; timestamp?: Date; username?: string; avatar?: string }>({
+      .find<{ image: string; actionType?: string | null; score?: number | null; timestamp?: Date; username?: string; avatar?: string; message?: string }>({
         verified: true,
         isPublic: { $ne: false }
       })
@@ -45,7 +45,8 @@ async function getInitialData() {
         score: s.score ?? 0,
         timestamp: s.timestamp?.toISOString() ?? new Date().toISOString(),
         username: s.username,
-        avatar: s.avatar
+        avatar: s.avatar,
+        message: s.message
       })),
       leaderboard,
       totalVerifiedUsers,
