@@ -140,7 +140,8 @@ export function useEcoActions(initialScans: Scan[], userProfile: { username: str
                         timestamp: data.timestamp || new Date().toISOString(),
                         username: userProfile?.username,
                         avatar: userProfile?.avatar,
-                        status: 'completed'
+                        status: 'completed',
+                        message: data.message
                     };
 
                     setUserActivity(prev => [newScan, ...prev]);

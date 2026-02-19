@@ -13,6 +13,51 @@ interface ActivityFeedProps {
     onSetCurrentPage: (page: number | ((prev: number) => number)) => void;
 }
 
+const ExpandableText = ({ text }: { text: string }) => {
+    const [isExpanded, setIsExpanded] = useState(false);
+    const [isOverflowing, setIsOverflowing] = useState(false);
+    const textRef = useRef<HTMLParagraphElement>(null);
+
+    useEffect(() => {
+        const checkOverflow = () => {
+            if (textRef.current) {
+                setIsOverflowing(textRef.current.scrollHeight > textRef.current.clientHeight + 1);
+            }
+        };
+
+        checkOverflow();
+        window.addEventListener('resize', checkOverflow);
+        return () => window.removeEventListener('resize', checkOverflow);
+    }, [text]);
+
+    return (
+        <div className="flex-1">
+            <p
+                ref={textRef}
+                className={`text-sm text-neutral-600 dark:text-neutral-300 leading-relaxed font-medium ${!isExpanded ? 'line-clamp-2' : ''}`}
+            >
+                {text}
+            </p>
+
+            {(isOverflowing || isExpanded) && (
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        setIsExpanded(!isExpanded);
+                    }}
+                    className="mt-1.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5 hover:underline focus:outline-none"
+                >
+                    {isExpanded ? (
+                        <>Show Less <ChevronUp className="w-3 h-3" /></>
+                    ) : (
+                        <>More <ChevronDown className="w-3 h-3" /></>
+                    )}
+                </button>
+            )}
+        </div>
+    );
+};
+
 export const ActivityFeed: React.FC<ActivityFeedProps> = ({
     scans,
     currentPage,
@@ -24,18 +69,6 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({
     onSetCurrentPage
 }) => {
     const totalPages = Math.ceil(scans.length / itemsPerPage);
-    const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
-
-    const toggleExpand = (id: string, e: React.MouseEvent) => {
-        e.stopPropagation();
-        const newSet = new Set(expandedIds);
-        if (newSet.has(id)) {
-            newSet.delete(id);
-        } else {
-            newSet.add(id);
-        }
-        setExpandedIds(newSet);
-    };
 
     return (
         <section className="space-y-6">
@@ -53,8 +86,6 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({
             ) : (
                 <div className="space-y-6">
                     {scans.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage).map((scan, idx) => {
-                        const isExpanded = expandedIds.has(scan._id || idx.toString());
-
                         return (
                             <div
                                 key={idx}
@@ -108,20 +139,13 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({
                                     <div className="relative bg-neutral-50 dark:bg-white/5 rounded-lg p-3">
                                         <div className="flex gap-2">
                                             <Quote className="w-3 h-3 text-emerald-500/50 flex-shrink-0 rotate-180 mt-0.5" />
-                                            <div className="flex-1">
-                                                <p className={`text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed font-medium ${!isExpanded ? 'line-clamp-2' : ''}`}>
-                                                    {scan.message || "No specific commentary provided, but great job!"}
+                                            {scan.message ? (
+                                                <ExpandableText text={scan.message} />
+                                            ) : (
+                                                <p className="text-xs text-neutral-500 italic flex-1">
+                                                    No specific commentary provided, but great job!
                                                 </p>
-
-                                                {(scan.message && scan.message.length > 80) && (
-                                                    <button
-                                                        onClick={(e) => toggleExpand(scan._id || idx.toString(), e)}
-                                                        className="mt-1.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5 hover:underline focus:outline-none"
-                                                    >
-                                                        {isExpanded ? "Show Less" : "More"}
-                                                    </button>
-                                                )}
-                                            </div>
+                                            )}
                                         </div>
                                     </div>
 
