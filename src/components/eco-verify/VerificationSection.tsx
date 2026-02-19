@@ -58,7 +58,7 @@ export const VerificationSection: React.FC<VerificationSectionProps> = ({
                             className="primary-btn rounded-2xl w-full py-4 flex items-center justify-center gap-3 text-lg font-bold shadow-lg active:scale-95 transition-transform"
                         >
                             <Camera className="w-6 h-6" />
-                            <span>{loading ? "Wait..." : "Scan Environment"}</span>
+                            <span>{loading ? "Wait..." : "Scan"}</span>
                         </button>
 
                         <div className="grid grid-cols-2 gap-3">
