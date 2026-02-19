@@ -4,7 +4,7 @@ export type Scan = {
     image: string;
     actionType: string;
     score: number;
-    co2_saved?: number; // In mg
+    co2_saved: number; // In mg
     reasoning?: string; // AI explanation
     timestamp: string;
     username?: string;
@@ -43,6 +43,7 @@ export type VisionResult = {
 
 export type EcoVerifyClientProps = {
     initialTotalScore: number;
+    initialGlobalCO2: number;
     initialScans: Scan[];
     initialLeaderboard: LeaderboardEntry[];
     itemOne: number;

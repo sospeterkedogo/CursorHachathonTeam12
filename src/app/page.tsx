@@ -21,7 +21,15 @@ async function getInitialData() {
       .project({ username: 1, avatar: 1, totalScore: 1, userId: 1, _id: 0 })
       .toArray();
 
-    const totalScore = verifiedScans.reduce((sum, s) => sum + (s.score ?? 0), 0);
+    const globalPointsAgg = await db.collection("users").aggregate([
+      { $group: { _id: null, total: { $sum: "$totalScore" } } }
+    ]).toArray();
+    const totalScore = globalPointsAgg[0]?.total || 0;
+
+    const globalCO2Agg = await db.collection("users").aggregate([
+      { $group: { _id: null, total: { $sum: "$totalCO2" } } }
+    ]).toArray();
+    const totalGlobalCO2 = globalCO2Agg[0]?.total || 0;
 
     const lastTen = await scans
       .find<{ image: string; actionType?: string | null; score?: number | null; timestamp?: Date; username?: string; avatar?: string; message?: string }>({
@@ -37,12 +45,14 @@ async function getInitialData() {
 
     return {
       totalScore,
+      totalGlobalCO2,
       lastTen: lastTen.map((s: any) => ({
         _id: s._id.toString(),
         userId: s.userId,
         image: s.image,
         actionType: s.actionType ?? "eco-action",
         score: s.score ?? 0,
+        co2_saved: s.co2_saved ?? 0,
         timestamp: s.timestamp?.toISOString() ?? new Date().toISOString(),
         username: s.username,
         avatar: s.avatar,
@@ -57,6 +67,7 @@ async function getInitialData() {
     // Return empty data on error so the page still loads
     return {
       totalScore: 0,
+      totalGlobalCO2: 0,
       lastTen: [],
       leaderboard: [],
       totalVerifiedUsers: 0,
@@ -66,13 +77,14 @@ async function getInitialData() {
 }
 
 export default async function Page() {
-  const { totalScore, lastTen, leaderboard, totalVerifiedUsers, totalVouchers } = await getInitialData();
+  const { totalScore, totalGlobalCO2, lastTen, leaderboard, totalVerifiedUsers, totalVouchers } = await getInitialData();
 
   return (
     <main className="flex min-h-screen flex-col items-center px-3 py-6 sm:px-4 sm:py-8">
       <section className="w-full max-w-3xl space-y-6 sm:space-y-8">
         <EcoVerifyClient
           initialTotalScore={totalScore}
+          initialGlobalCO2={totalGlobalCO2}
           initialScans={lastTen}
           initialLeaderboard={leaderboard as any[]}
           itemOne={totalVerifiedUsers}

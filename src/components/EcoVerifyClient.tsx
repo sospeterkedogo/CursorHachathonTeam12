@@ -30,10 +30,10 @@ import { ProfileModal } from "./eco-verify/ProfileModal";
 import { GalleryModal } from "./eco-verify/GalleryModal";
 import { Lightbox } from "./eco-verify/Lightbox";
 
-export default function EcoVerifyClient({ initialTotalScore, initialScans, initialLeaderboard, itemOne, itemTwo }: EcoVerifyClientProps) {
+export default function EcoVerifyClient({ initialTotalScore, initialGlobalCO2, initialScans, initialLeaderboard, itemOne, itemTwo }: EcoVerifyClientProps) {
   const [activeTab, setActiveTab] = useState<"verify" | "leaderboard" | "vouchers" | "profile">("verify");
   const [globalScore, setGlobalScore] = useState(initialTotalScore); // This is now Global Points
-  const [globalCO2, setGlobalCO2] = useState(0);
+  const [globalCO2, setGlobalCO2] = useState(initialGlobalCO2);
   const [userScore, setUserScore] = useState(0); // Personal score 4 goal progress
   const [leaderboard, setLeaderboard] = useState(initialLeaderboard);
   const [globalVerifiedUsers, setGlobalVerifiedUsers] = useState(itemOne);
