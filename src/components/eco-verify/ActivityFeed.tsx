@@ -8,7 +8,6 @@ interface ActivityFeedProps {
     itemsPerPage: number;
     isMounted: boolean;
     getUserId: () => string;
-    onDeleteScan: (id?: string, idx?: number) => void;
     onSetLightboxImage: (image: string | null) => void;
     onSetCurrentPage: (page: number | ((prev: number) => number)) => void;
 }
@@ -64,7 +63,6 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({
     itemsPerPage,
     isMounted,
     getUserId,
-    onDeleteScan,
     onSetLightboxImage,
     onSetCurrentPage
 }) => {
@@ -149,20 +147,7 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({
                                         </div>
                                     </div>
 
-                                    {/* Delete Action */}
-                                    {isMounted && (scan.userId === getUserId()) && (
-                                        <div className="mt-3 flex justify-end">
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    onDeleteScan(scan._id, idx);
-                                                }}
-                                                className="text-[10px] text-red-400 hover:text-red-500 transition-colors font-medium flex items-center gap-1 hover:bg-red-500/5 px-2 py-1 rounded"
-                                            >
-                                                Delete Entry
-                                            </button>
-                                        </div>
-                                    )}
+
                                 </div>
                             </div>
                         );

@@ -222,7 +222,6 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
               itemsPerPage={ITEMS_PER_PAGE}
               isMounted={isMounted}
               getUserId={getUserId}
-              onDeleteScan={deleteScan}
               onSetLightboxImage={setLightboxImage}
               onSetCurrentPage={setCurrentPage}
             />
