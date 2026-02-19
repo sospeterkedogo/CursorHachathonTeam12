@@ -126,7 +126,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                                                 {scan.actionType.replace(/-/g, ' ')}
                                             </h4>
                                             {scan.score > 0 && (
-                                                <span className="text-sm font-black text-emerald-500 tabular-nums shrink-0">+{scan.score}</span>
+                                                <span className="text-sm font-black text-emerald-500 tabular-nums shrink-0">+{scan.score} mg</span>
                                             )}
                                         </div>
                                         <div className="flex items-center gap-2 mt-1">

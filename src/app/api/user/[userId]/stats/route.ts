@@ -18,9 +18,12 @@ export async function GET(
         // Aggregate stats
         const userScans = await scans.find({ userId, verified: true }).toArray();
 
-        const totalScore = userScans.reduce((acc, scan) => acc + (scan.score || 0), 0);
+        const totalPoints = userScans.reduce((acc, scan) => acc + (scan.score || 0), 0);
+        const totalCO2 = userScans.reduce((acc, scan) => acc + (scan.co2_saved || 0), 0);
+
         const totalActions = userScans.length;
-        const averageScore = totalActions > 0 ? Math.round(totalScore / totalActions) : 0;
+        // Average Score is now Average Points per action
+        const averageScore = totalActions > 0 ? Math.round(totalPoints / totalActions) : 0;
 
         // Calculate most common action
         const actionCounts: Record<string, number> = {};
@@ -48,7 +51,9 @@ export async function GET(
 
         return NextResponse.json({
             userId,
-            totalScore,
+            totalScore: totalPoints, // Returning Points as totalScore for compatibility
+            totalPoints,             // Explicit field
+            totalCO2,                // Explicit field
             totalActions,
             averageScore,
             mostCommonAction,

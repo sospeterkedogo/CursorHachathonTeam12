@@ -40,6 +40,7 @@ export async function GET(
             image: s.image,
             actionType: s.actionType || "eco-action",
             score: s.score || 0,
+            co2_saved: s.co2_saved || 0,
             verified: s.verified,
             status: s.status || (s.verified ? "completed" : "failed"),
             message: s.message,

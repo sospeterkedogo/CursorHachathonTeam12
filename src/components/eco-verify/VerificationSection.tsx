@@ -134,9 +134,9 @@ export const VerificationSection: React.FC<VerificationSectionProps> = ({
                             </div>
                             {verified && typeof score === "number" && (
                                 <div className="flex flex-col items-end gap-1">
-                                    <div className="flex flex-col items-center bg-black/5 dark:bg-white/5 rounded-lg px-3 py-1.5 border border-black/5 dark:border-white/5">
-                                        <span className="text-[10px] uppercase text-neutral-500 font-bold">Score</span>
-                                        <span className="text-xl font-bold text-emerald-500 tabular-nums">+{score}</span>
+                                    <div className="flex flex-col items-end bg-black/5 dark:bg-white/5 rounded-lg px-3 py-1.5 border border-black/5 dark:border-white/5">
+                                        <span className="text-[10px] uppercase text-neutral-500 font-bold">Est. Offset</span>
+                                        <span className="text-xl font-bold text-emerald-500 tabular-nums">{score} mg</span>
                                     </div>
                                 </div>
                             )}

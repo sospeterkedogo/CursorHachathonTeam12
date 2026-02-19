@@ -19,7 +19,7 @@ export const Header: React.FC<HeaderProps> = ({ userProfile, onShowFeedback, onS
                     <h1 className="text-xl font-bold tracking-tight leading-none text-neutral-900 dark:text-white">
                         EcoVerify
                     </h1>
-                    <p className="text-[10px] text-emerald-500 font-bold tracking-wider uppercase mt-0.5">Impact Tracker</p>
+
                 </div>
             </div>
 

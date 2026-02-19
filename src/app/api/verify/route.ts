@@ -74,7 +74,7 @@ async function callMiniMaxVision(imageBase64: string): Promise<VisionResult> {
   }
 
   const prompt =
-    "You are the Eco-Verify AI. Your tone is witty, encouraging, and slightly sarcastic. You use modern internet slang (e.g., 'W', 'huge if true', 'main character energy') but stay professional enough for a hackathon. GOAL: Analyze the image for eco-friendly behavior. If you see a green action (recycling, reusable cups, public transit, turning off lights): Give a high score (80-100) and a punchy, 1-sentence validation. IF THE ITEM IS NOT ECO-FRIENDLY (e.g., single-use plastic bottles, trash, petrol cars, litter), you MUST return verified: false and score: 0. Do NOT give 'participation points' for waste. Only strictly verified eco-friendly items get points. Return strictly JSON with keys: verified (boolean), score (number), actionType (string), message (string).";
+    "You are an Environmental Auditor. Your job is to verify eco-actions with scientific rigour but practical understanding. RULES: 1. REJECT single-use plastics, disposables, or greenwashing (Score 0). 2. ACCEPT 'passive' eco-signals like Bicycles (alternative transport), Repair Tools (circular economy), Public Transit scenes, or Plant-based meals. These implied actions SAVE emissions. 3. Calculate estimated CO2 saved in milligrams (mg). 4. Output a 'reasoning' string. Return strictly JSON: { verified: boolean, score: number (mg CO2), actionType: string, message: string, reasoning: string }.";
 
   try {
     // Ensure image has exactly one prefix
@@ -137,8 +137,20 @@ async function callMiniMaxVision(imageBase64: string): Promise<VisionResult> {
     // Enforce 0 score for non-verified actions while providing fallbacks for missing AI scores.
     if (parsed.verified === false) {
       parsed.score = 0;
+      parsed.co2_saved = 0;
     } else if (typeof parsed.score !== "number") {
-      parsed.score = Math.floor(Math.random() * 91) + 10;
+      // Fallback for CO2 estimation if AI fails to provide a number but verifies it
+      parsed.score = Math.floor(Math.random() * 500) + 100; // 100-600mg CO2
+      parsed.co2_saved = parsed.score;
+    } else {
+      parsed.co2_saved = parsed.score;
+    }
+
+    // Default reasoning if missing
+    if (!parsed.reasoning) {
+      parsed.reasoning = parsed.verified
+        ? "Verified eco-friendly action based on visual evidence."
+        : "Could not verify impactful eco-action.";
     }
 
     return parsed;
@@ -301,24 +313,47 @@ export async function POST(req: NextRequest) {
             code: generateRandomCode(),
             expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
           };
-        } else if (finalImage) { // Only process vision if there's an image
+        } else if (finalImage) {
+          // Only process vision if there's an image
+
+          // Calculate CO2 and Points
+          // Default: 1 Point = 10mg CO2 (Adjust as needed)
+          const POINTS_PER_MG = 0.1;
+
           vision = await callMiniMaxVision(finalImage);
           audioUrl = await callMiniMaxT2A(vision.message);
 
-          // Force 0 points for gallery uploads
+          // AI returns score in 'mg CO2' as per prompt
+          vision.co2_saved = vision.score || 0;
+
+          // Calculate 'Points'
+          let points = Math.floor(vision.co2_saved * POINTS_PER_MG);
+
+          // Force 0 POINTS for gallery uploads, but keep CO2
           if (source === "gallery") {
-            logToFile(`Gallery upload detected for user ${userId}. Forcing score to 0.`);
-            vision.score = 0;
+            logToFile(`Gallery upload detected for user ${userId}. Awarding 0 points but tracking CO2.`);
+            vision.score = 0; // Score = Points
+          } else {
+            vision.score = points; // Score = Points
           }
 
-          if (vision.verified && vision.score && vision.score >= 50) {
-            vision.verified = true;
-            voucher = await callMiniMaxVoucherGen(vision.actionType || "eco-action", vision.score || 10);
+          if (vision.verified && vision.co2_saved && vision.co2_saved >= 50) {
+            // ... voucher logic uses points or CO2? Let's use Points? Or CO2?
+            // User said "reward in points". 
+            // Let's pass points to voucher gen?
+            // The voucher prompt says "earned ${score} points". So we use points.
+            // If source is gallery (0 points), they get no voucher? "Do not award in points". 
+            // Usually vouchers are for gamified points. So yes, gallery = no voucher usually.
+            if (vision.score > 0) {
+              voucher = await callMiniMaxVoucherGen(vision.actionType || "eco-action", vision.score);
+            }
           }
         }
 
+        // ...
+
         if (vision) {
-          await completeVerification(scanId, userId, username, avatar, vision.verified, vision.score || 0, vision.actionType || "eco-action", vision.message, voucher, audioUrl, timestamp);
+          await completeVerification(scanId, userId, username, avatar, vision.verified, vision.score || 0, vision.co2_saved || 0, vision.actionType || "eco-action", vision.message, voucher, audioUrl, timestamp, vision.reasoning);
         }
       } catch (error) {
         console.error("Background processing failed:", error);
@@ -338,7 +373,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-async function completeVerification(scanId: ObjectId, userId: any, username: any, avatar: any, verified: boolean, score: number, actionType: string, message: string, voucher: any, audioUrl: string | null, timestamp: Date) {
+async function completeVerification(scanId: ObjectId, userId: any, username: any, avatar: any, verified: boolean, score: number, co2_saved: number, actionType: string, message: string, voucher: any, audioUrl: string | null, timestamp: Date, reasoning?: string) {
   try {
     const db = await getDb();
     const scans = db.collection("scans");
@@ -350,9 +385,11 @@ async function completeVerification(scanId: ObjectId, userId: any, username: any
       {
         $set: {
           verified,
-          score,
+          score, // POINTS
+          co2_saved, // MG CO2
           actionType,
           message,
+          reasoning: reasoning || null,
           audioUrl,
           voucher,
           status: "completed"
@@ -364,11 +401,11 @@ async function completeVerification(scanId: ObjectId, userId: any, username: any
       try {
         await users.updateOne(
           { userId },
-          { $inc: { totalScore: score }, $set: { lastActive: timestamp, ...(username && { username }), ...(avatar && { avatar }) }, $setOnInsert: { username: "Guest", avatar: "👤" } },
+          { $inc: { totalScore: score, totalCO2: co2_saved }, $set: { lastActive: timestamp, ...(username && { username }), ...(avatar && { avatar }) }, $setOnInsert: { username: "Guest", avatar: "👤" } },
           { upsert: true }
         );
       } catch {
-        await users.updateOne({ userId }, { $inc: { totalScore: score }, $set: { lastActive: timestamp } }, { upsert: true });
+        await users.updateOne({ userId }, { $inc: { totalScore: score, totalCO2: co2_saved }, $set: { lastActive: timestamp } }, { upsert: true });
       }
 
       if (voucher) {

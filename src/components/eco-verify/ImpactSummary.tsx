@@ -1,105 +1,118 @@
-import React, { useState } from "react";
-import { ChevronDown, ChevronUp, Globe, Trophy } from "lucide-react";
+import React from "react";
+import { Globe, Trophy } from "lucide-react";
+import { formatCompactNumber } from "@/lib/format";
 
-interface ImpactSummaryProps {
-    globalScore: number;
-    userScore: number;
+interface GlobalBannerProps {
+    globalScore: number; // This will trigger points
+    globalCO2: number;
     userRank: number | null;
 }
 
-export const ImpactSummary: React.FC<ImpactSummaryProps> = ({ globalScore, userScore, userRank }) => {
-    const [expandedSection, setExpandedSection] = useState<'global' | 'goal' | null>(null);
+export const GlobalBanner: React.FC<GlobalBannerProps> = ({ globalScore, globalCO2, userRank }) => {
+    return (
+        <div className="bg-emerald-500 text-white rounded-2xl p-4 shadow-lg shadow-emerald-500/20 relative overflow-hidden mb-4">
+            <div className="absolute top-0 right-0 p-4 opacity-10">
+                <Globe className="w-24 h-24" />
+            </div>
 
-    // Dynamic Goal Logic: Nearest 500 block above userScore
-    const step = 500;
+            <div className="relative z-10 flex flex-col gap-4">
+                <div className="flex items-center gap-2 mb-1 opacity-80">
+                    <Globe className="w-4 h-4" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest">Global Impact</span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <div className="text-2xl font-black tabular-nums tracking-tight">
+                            {formatCompactNumber(globalCO2)}
+                        </div>
+                        <div className="text-[10px] font-bold uppercase tracking-widest opacity-80">
+                            mg CO2 Saved
+                        </div>
+                    </div>
+                    <div>
+                        <div className="text-2xl font-black tabular-nums tracking-tight">
+                            {formatCompactNumber(globalScore)}
+                        </div>
+                        <div className="text-[10px] font-bold uppercase tracking-widest opacity-80">
+                            Global Points
+                        </div>
+                    </div>
+                </div>
+
+                {userRank && (
+                    <div className="absolute top-4 right-4 text-right">
+                        <span className="text-[10px] font-bold uppercase tracking-widest opacity-80 block">Rank</span>
+                        <span className="text-xl font-black">#{userRank}</span>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
+interface GoalCardProps {
+    userScore: number;
+    className?: string;
+}
+
+export const GoalCard: React.FC<GoalCardProps> = ({ userScore, className = "" }) => {
+    // Derive Points from User Score (which is mg CO2). 
+    // Wait, `userScore` prop usually comes from `totalScore` in DB.
+    // If DB `totalScore` acts as Points now (per my route.ts update where `score = points`), then `userScore` IS points.
+    // But previously it was mg.
+    // The route update sets `score` (points) and `co2_saved` (mg).
+
+    // EXISTING USERS: Their `totalScore` is accumulated mg.
+    // NEW SCANS: `score` will be smaller (mg/100).
+    // This creates a data mismatch. 
+    // Ideally I should migrate legacy scores: `totalScore = totalScore / 100`.
+    // For now, let's treat `userScore` as POINTS.
+
+    // Dynamic Goal Logic: Nearest 100 block above userScore
+    const step = 100;
     const currentGoal = Math.ceil((userScore + 1) / step) * step;
     const progress = Math.min((userScore / currentGoal) * 100, 100);
 
-    const toggleSection = (section: 'global' | 'goal') => {
-        setExpandedSection(prev => prev === section ? null : section);
-    };
-
     return (
-        <div className="flex flex-col gap-4 mb-6 animate-fade-in">
-            <div className="flex gap-3">
-                {/* Global Impact Button */}
-                <button
-                    onClick={() => toggleSection('global')}
-                    className={`flex-1 flex items-center justify-between p-3 rounded-2xl transition-all ${expandedSection === 'global' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'bg-emerald-500/5 hover:bg-emerald-500/10 border border-emerald-500/20'}`}
-                >
-                    <div className="flex items-center gap-2">
-                        <div className={`p-1.5 rounded-full ${expandedSection === 'global' ? 'bg-white/20' : 'bg-emerald-500/10'}`}>
-                            <Globe className={`w-4 h-4 ${expandedSection === 'global' ? 'text-white' : 'text-emerald-500'}`} />
-                        </div>
-                        <span className={`text-xs font-bold uppercase tracking-wider ${expandedSection === 'global' ? 'text-white' : 'text-neutral-600 dark:text-neutral-400'}`}>
-                            Global
-                        </span>
+        <div className={`bg-blue-500/5 border border-blue-500/10 rounded-2xl p-3 ${className}`}>
+            <div className="flex justify-between items-end mb-2">
+                <div className="flex flex-col">
+                    <div className="flex items-center gap-1.5 mb-1">
+                        <Trophy className="w-3 h-3 text-blue-500" />
+                        <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Next Goal</span>
                     </div>
-                    {expandedSection === 'global' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4 opacity-50" />}
-                </button>
-
-                {/* Goal Progress Button */}
-                <button
-                    onClick={() => toggleSection('goal')}
-                    className={`flex-1 flex items-center justify-between p-3 rounded-2xl transition-all ${expandedSection === 'goal' ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20' : 'bg-blue-500/5 hover:bg-blue-500/10 border border-blue-500/20'}`}
-                >
-                    <div className="flex items-center gap-2">
-                        <div className={`p-1.5 rounded-full ${expandedSection === 'goal' ? 'bg-white/20' : 'bg-blue-500/10'}`}>
-                            <Trophy className={`w-4 h-4 ${expandedSection === 'goal' ? 'text-white' : 'text-blue-500'}`} />
-                        </div>
-                        <span className={`text-xs font-bold uppercase tracking-wider ${expandedSection === 'goal' ? 'text-white' : 'text-neutral-600 dark:text-neutral-400'}`}>
-                            My Goal
-                        </span>
-                    </div>
-                    {expandedSection === 'goal' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4 opacity-50" />}
-                </button>
+                    <span className="text-sm font-bold text-neutral-800 dark:text-white">
+                        <span className="text-blue-500">{userScore}</span>/{currentGoal} pts
+                    </span>
+                </div>
+                {/* 
+                <span className="text-[10px] font-bold text-blue-500 bg-blue-500/10 px-2 py-0.5 rounded-full">
+                    Unlock Voucher
+                </span>
+                */}
             </div>
 
-            {/* Collapsible Content: Global */}
-            {expandedSection === 'global' && (
-                <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-2xl p-4 animate-slide-up">
-                    <div className="flex items-center justify-between mb-2">
-                        <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Community Score</span>
-                        <span className="text-2xl font-black text-emerald-500 tabular-nums">{globalScore.toLocaleString()}</span>
-                    </div>
-                    {userRank && (
-                        <div className="flex items-center justify-between border-t border-emerald-500/10 pt-2">
-                            <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Your Global Rank</span>
-                            <span className="text-lg font-black text-neutral-800 dark:text-neutral-200">#{userRank}</span>
-                        </div>
-                    )}
-                </div>
-            )}
+            <div className="h-2 w-full bg-neutral-100 dark:bg-white/5 rounded-full overflow-hidden border border-neutral-200 dark:border-white/5">
+                <div
+                    className="h-full bg-blue-500 transition-all duration-1000 ease-out relative"
+                    style={{ width: `${progress}%` }}
+                />
+            </div>
 
-            {/* Collapsible Content: Goal */}
-            {expandedSection === 'goal' && (
-                <div className="bg-blue-500/5 border border-blue-500/10 rounded-2xl p-4 animate-slide-up">
-                    <div className="flex justify-between items-end mb-2">
-                        <div className="flex flex-col">
-                            <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Next Reward</span>
-                            <span className="text-sm font-bold text-neutral-800 dark:text-white">
-                                <span className="text-blue-500">{userScore}</span>/{currentGoal} Points
-                            </span>
-                        </div>
-                        <span className="text-[10px] font-bold text-blue-500 bg-blue-500/10 px-2 py-0.5 rounded-full">
-                            Unlock Voucher
-                        </span>
-                    </div>
+            <p className="text-[10px] text-neutral-400 mt-2 font-medium text-right">
+                {currentGoal - userScore} pts to go
+            </p>
+        </div>
+    );
+};
 
-                    <div className="h-3 w-full bg-neutral-100 dark:bg-white/5 rounded-full overflow-hidden border border-neutral-200 dark:border-white/5">
-                        <div
-                            className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 transition-all duration-1000 ease-out relative"
-                            style={{ width: `${progress}%` }}
-                        >
-                            <div className="absolute inset-0 bg-white/20 animate-pulse" />
-                        </div>
-                    </div>
-
-                    <p className="text-[10px] text-neutral-500 mt-2 font-medium">
-                        {currentGoal - userScore} more points to reach your next goal!
-                    </p>
-                </div>
-            )}
+// Keep ImpactSummary for backward compatibility if needed, but we will use components directly
+export const ImpactSummary: React.FC<GlobalBannerProps & GoalCardProps> = (props) => {
+    return (
+        <div className="flex flex-col">
+            <GlobalBanner globalScore={props.globalScore} globalCO2={props.globalCO2} userRank={props.userRank} />
+            <GoalCard userScore={props.userScore} />
         </div>
     );
 };

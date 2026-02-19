@@ -36,11 +36,22 @@ export async function GET(req: any) {
             const totalVerifiedUsers = await users.countDocuments({ totalScore: { $gt: 0 } });
             const totalVouchers = await db.collection("vouchers").countDocuments({});
 
-            baseData = { leaderboard, totalVerifiedUsers, totalVouchers };
+            // Aggregations for Global Stats
+            const globalPointsAgg = await users.aggregate([
+                { $group: { _id: null, total: { $sum: "$totalScore" } } }
+            ]).toArray();
+            const totalGlobalPoints = globalPointsAgg[0]?.total || 0;
+
+            const globalCO2Agg = await users.aggregate([
+                { $group: { _id: null, total: { $sum: "$totalCO2" } } }
+            ]).toArray();
+            const totalGlobalCO2 = globalCO2Agg[0]?.total || 0;
+
+            baseData = { leaderboard, totalVerifiedUsers, totalVouchers, totalGlobalPoints, totalGlobalCO2 };
             cachedLeaderboard = { data: baseData, timestamp: now };
         }
 
-        const { leaderboard, totalVerifiedUsers, totalVouchers } = baseData;
+        const { leaderboard, totalVerifiedUsers, totalVouchers, totalGlobalPoints, totalGlobalCO2 } = baseData;
 
         // Calculate User Rank if userId provided (this part is not cached as it's user-specific)
         let userRank = null;
@@ -64,7 +75,15 @@ export async function GET(req: any) {
             }
         }
 
-        return NextResponse.json({ leaderboard, totalVerifiedUsers, totalVouchers, userRank, userData });
+        return NextResponse.json({
+            leaderboard,
+            totalVerifiedUsers,
+            totalVouchers,
+            totalGlobalPoints,
+            totalGlobalCO2,
+            userRank,
+            userData
+        });
     } catch (error) {
         console.error("Error fetching leaderboard:", error);
         return NextResponse.json({ leaderboard: [] }, { status: 500 });

@@ -4,6 +4,8 @@ export type Scan = {
     image: string;
     actionType: string;
     score: number;
+    co2_saved?: number; // In mg
+    reasoning?: string; // AI explanation
     timestamp: string;
     username?: string;
     avatar?: string;
@@ -33,7 +35,9 @@ export type Voucher = {
 export type VisionResult = {
     verified: boolean;
     score?: number;
+    co2_saved?: number;
     actionType?: string;
+    reasoning?: string;
     message: string;
 };
 

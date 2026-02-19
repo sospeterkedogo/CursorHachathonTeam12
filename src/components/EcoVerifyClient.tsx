@@ -20,7 +20,8 @@ import { useEcoActions } from "@/hooks/use-eco-actions";
 // Components
 import { Header } from "./eco-verify/Header";
 import { BottomNav } from "./eco-verify/BottomNav";
-import { ImpactSummary } from "./eco-verify/ImpactSummary";
+import { GlobalBanner, GoalCard } from "./eco-verify/ImpactSummary";
+
 import { HowItWorks } from "./eco-verify/HowItWorks";
 import { VerificationSection } from "./eco-verify/VerificationSection";
 import { ActivityFeed } from "./eco-verify/ActivityFeed";
@@ -31,7 +32,8 @@ import { Lightbox } from "./eco-verify/Lightbox";
 
 export default function EcoVerifyClient({ initialTotalScore, initialScans, initialLeaderboard, itemOne, itemTwo }: EcoVerifyClientProps) {
   const [activeTab, setActiveTab] = useState<"verify" | "leaderboard" | "vouchers" | "profile">("verify");
-  const [globalScore, setGlobalScore] = useState(initialTotalScore);
+  const [globalScore, setGlobalScore] = useState(initialTotalScore); // This is now Global Points
+  const [globalCO2, setGlobalCO2] = useState(0);
   const [userScore, setUserScore] = useState(0); // Personal score 4 goal progress
   const [leaderboard, setLeaderboard] = useState(initialLeaderboard);
   const [globalVerifiedUsers, setGlobalVerifiedUsers] = useState(itemOne);
@@ -81,6 +83,11 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
       if (typeof data.totalVouchers === 'number') setGlobalVouchersCount(data.totalVouchers);
       if (typeof data.userRank === 'number') setUserRank(data.userRank);
       if (data.userData && typeof data.userData.totalScore === 'number') setUserScore(data.userData.totalScore);
+
+      // Update Global Stats
+      if (typeof data.totalGlobalPoints === 'number') setGlobalScore(data.totalGlobalPoints);
+      if (typeof data.totalGlobalCO2 === 'number') setGlobalCO2(data.totalGlobalCO2);
+
     } catch (e) {
       console.error("Failed to fetch leaderboard/stats", e);
     }
@@ -88,8 +95,11 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
 
   const handleVerificationSuccess = (data: any) => {
     if (data.verified || (typeof data.score === "number" && data.score > 0)) {
+      // Optimistic updates
       setGlobalScore(prev => prev + (data.score || 0));
-      setUserScore(prev => prev + (data.score || 0)); // Update personal score immediately
+      setGlobalCO2(prev => prev + (data.co2_saved || 0));
+      setUserScore(prev => prev + (data.score || 0));
+
       fetchLeaderboardAndStats();
       if (data.voucher) {
         fetchVouchers();
@@ -156,9 +166,15 @@ export default function EcoVerifyClient({ initialTotalScore, initialScans, initi
       />
 
       <div className="max-w-3xl mx-auto px-4 pt-[calc(5rem+env(safe-area-inset-top,0px))]">
-        <div>
-          {activeTab === "verify" && !showOnboarding && <HowItWorks />}
-          <ImpactSummary globalScore={globalScore} userScore={userScore} userRank={userRank} />
+        <div className="space-y-4 mb-6">
+          <GlobalBanner globalScore={globalScore} globalCO2={globalCO2} userRank={userRank} />
+
+          {activeTab === "verify" && !showOnboarding && (
+            <div className="grid grid-cols-2 gap-3">
+              <HowItWorks className="h-full" />
+              <GoalCard userScore={userScore} className="h-full" />
+            </div>
+          )}
         </div>
 
         {activeTab === "leaderboard" ? (

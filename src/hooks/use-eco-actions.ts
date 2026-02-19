@@ -137,6 +137,7 @@ export function useEcoActions(initialScans: Scan[], userProfile: { username: str
                         image: imageBase64,
                         actionType: data.actionType || "eco-action",
                         score: addedScore,
+                        co2_saved: data.co2_saved || 0,
                         timestamp: data.timestamp || new Date().toISOString(),
                         username: userProfile?.username,
                         avatar: userProfile?.avatar,

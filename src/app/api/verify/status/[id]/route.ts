@@ -27,6 +27,7 @@ export async function GET(
             status: scan.status || "completed", // Fallback for old scans
             verified: scan.verified,
             score: scan.score,
+            co2_saved: scan.co2_saved,
             actionType: scan.actionType,
             message: scan.message, // MiniMax message if stored
             audioUrl: scan.audioUrl,
