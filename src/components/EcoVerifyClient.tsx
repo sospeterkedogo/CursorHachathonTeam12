@@ -63,7 +63,8 @@ export default function EcoVerifyClient({ initialTotalScore, initialGlobalCO2, i
   const {
     scans, userActivity, loadingActivity, fetchUserActivity,
     deleteScan, handleToggleVisibility, submitImage, loading,
-    progress, feedback, verified, score, audioUrl, earnedVoucher
+    progress, feedback, verified, score, audioUrl, earnedVoucher,
+    lastCapturedImage
   } = useEcoActions(initialScans, userProfile);
 
   useEffect(() => {
@@ -230,6 +231,7 @@ export default function EcoVerifyClient({ initialTotalScore, initialGlobalCO2, i
               audioRef={audioRef}
               onViewVouchers={() => setActiveTab("vouchers")}
               onCapture={(base64) => submitImage(base64, "camera", handleVerificationSuccess)}
+              lastCapturedImage={lastCapturedImage}
             />
 
             <ActivityFeed

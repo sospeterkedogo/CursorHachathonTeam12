@@ -19,6 +19,7 @@ export function useEcoActions(initialScans: Scan[], userProfile: { username: str
     const [score, setScore] = useState<number | null>(null);
     const [audioUrl, setAudioUrl] = useState<string | null>(null);
     const [earnedVoucher, setEarnedVoucher] = useState<any | null>(null);
+    const [lastCapturedImage, setLastCapturedImage] = useState<string | null>(null);
 
     const fetchUserActivity = useCallback(async (page = 0, append = false) => {
         setLoadingActivity(true);
@@ -95,6 +96,7 @@ export function useEcoActions(initialScans: Scan[], userProfile: { username: str
         setVerified(null);
         setScore(null);
         setEarnedVoucher(null);
+        setLastCapturedImage(imageBase64);
 
         const pendingScan: Scan = {
             image: imageBase64,
@@ -247,6 +249,7 @@ export function useEcoActions(initialScans: Scan[], userProfile: { username: str
         verified,
         score,
         audioUrl,
-        earnedVoucher
+        earnedVoucher,
+        lastCapturedImage
     };
 }

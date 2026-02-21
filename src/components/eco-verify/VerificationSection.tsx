@@ -17,6 +17,7 @@ interface VerificationSectionProps {
     audioRef: React.RefObject<HTMLAudioElement>;
     onViewVouchers: () => void;
     onCapture: (base64: string) => void;
+    lastCapturedImage?: string | null;
 }
 
 export const VerificationSection: React.FC<VerificationSectionProps> = ({
@@ -33,9 +34,18 @@ export const VerificationSection: React.FC<VerificationSectionProps> = ({
     audioUrl,
     audioRef,
     onViewVouchers,
-    onCapture
+    onCapture,
+    lastCapturedImage
 }) => {
     const [showCamera, setShowCamera] = useState(false);
+    const [isDesktop, setIsDesktop] = useState(false);
+
+    React.useEffect(() => {
+        setIsDesktop(window.innerWidth > 1024);
+        const handleResize = () => setIsDesktop(window.innerWidth > 1024);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     return (
         <>
@@ -45,11 +55,24 @@ export const VerificationSection: React.FC<VerificationSectionProps> = ({
                         <div className="w-20 h-20 rounded-full bg-emerald-500/10 dark:bg-emerald-500/5 flex items-center justify-center border border-emerald-500/20 mb-4 mx-auto">
                             <Leaf className="w-8 h-8 text-emerald-500" />
                         </div>
-                        <h2 className="text-xl font-semibold mb-2">Verify Action</h2>
+                        <h2 className="text-xl font-semibold mb-2">Waste Auditor</h2>
                         <p className="text-sm text-neutral-400 max-w-[240px] mx-auto leading-relaxed">
-                            Take a photo of your eco-friendly habit to verify and earn points.
+                            Scan your waste or your reusables.
                         </p>
                     </div>
+
+                    {isDesktop && (
+                        <div className="mb-6 p-4 bg-white dark:bg-neutral-800 rounded-2xl border border-neutral-200 dark:border-white/10 flex flex-col items-center gap-2">
+                            <div className="w-32 h-32 bg-neutral-100 dark:bg-neutral-900 rounded-lg flex items-center justify-center relative overflow-hidden">
+                                <img
+                                    src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${typeof window !== 'undefined' ? window.location.href : ''}`}
+                                    alt="QR Code"
+                                    className="w-28 h-28"
+                                />
+                            </div>
+                            <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-tight">Scan with phone to verify</p>
+                        </div>
+                    )}
 
                     <div className="w-full max-w-[320px] space-y-3">
                         <button
@@ -102,6 +125,15 @@ export const VerificationSection: React.FC<VerificationSectionProps> = ({
 
                 {loading && (
                     <div className="absolute inset-0 z-20 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center text-center p-6 transition-all duration-500">
+                        {lastCapturedImage && (
+                            <div className="absolute inset-0 -z-10 opacity-30">
+                                <img
+                                    src={lastCapturedImage.startsWith('data:') ? lastCapturedImage : `data:image/jpeg;base64,${lastCapturedImage}`}
+                                    alt="Preview"
+                                    className="w-full h-full object-cover"
+                                />
+                            </div>
+                        )}
                         <div className="relative w-24 h-24 mb-6">
                             <svg className="w-full h-full" viewBox="0 0 100 100">
                                 <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="4" />
@@ -112,7 +144,7 @@ export const VerificationSection: React.FC<VerificationSectionProps> = ({
                             </div>
                         </div>
                         <h3 className="text-lg font-medium text-white mb-1">Analyzing...</h3>
-                        <p className="text-sm text-neutral-400">Verifying your eco-action</p>
+                        <p className="text-sm text-neutral-400">Auditing your waste</p>
                     </div>
                 )}
             </div>

@@ -18,7 +18,7 @@ export const HowItWorks = ({ className = "" }: { className?: string }) => {
                     <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shadow-sm text-[10px] font-bold">
                         1
                     </div>
-                    <span className="text-[10px] font-bold text-neutral-600 dark:text-neutral-400">Snap</span>
+                    <span className="text-[10px] font-bold text-neutral-600 dark:text-neutral-400">Scan Waste</span>
                 </div>
 
                 {/* Step 2 */}
@@ -26,7 +26,7 @@ export const HowItWorks = ({ className = "" }: { className?: string }) => {
                     <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 border border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400 shadow-sm text-[10px] font-bold">
                         2
                     </div>
-                    <span className="text-[10px] font-bold text-neutral-600 dark:text-neutral-400">Check</span>
+                    <span className="text-[10px] font-bold text-neutral-600 dark:text-neutral-400">Audit AI</span>
                 </div>
 
                 {/* Step 3 */}
@@ -34,7 +34,7 @@ export const HowItWorks = ({ className = "" }: { className?: string }) => {
                     <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/30 border border-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400 shadow-sm text-[10px] font-bold">
                         3
                     </div>
-                    <span className="text-[10px] font-bold text-neutral-600 dark:text-neutral-400">Points</span>
+                    <span className="text-[10px] font-bold text-neutral-600 dark:text-neutral-400">Earn Pts</span>
                 </div>
             </div>
         </div>

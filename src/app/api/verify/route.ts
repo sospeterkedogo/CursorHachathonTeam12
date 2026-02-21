@@ -74,7 +74,15 @@ async function callMiniMaxVision(imageBase64: string): Promise<VisionResult> {
   }
 
   const prompt =
-    "You are an Environmental Auditor. Your job is to verify eco-actions with scientific rigour but practical understanding. RULES: 1. REJECT single-use plastics, disposables, or greenwashing (Score 0). 2. ACCEPT 'passive' eco-signals like Bicycles (alternative transport), Repair Tools (circular economy), Public Transit scenes, or Plant-based meals. These implied actions SAVE emissions. 3. Calculate estimated CO2 saved in milligrams (mg). 4. Output a 'reasoning' string. Return strictly JSON: { verified: boolean, score: number (mg CO2), actionType: string, message: string, reasoning: string }.";
+    "You are a Waste Auditor. Your job is to verify recycling or reuse actions. " +
+    "TIERED SCORING RULES: " +
+    "1. Tier 1 (Small): Paper, Tins (+5 pts). " +
+    "2. Tier 2 (Medium): Plastic bottles, Glass (+20 pts). " +
+    "3. Tier 3 (Large): E-waste, Appliances (+500 pts). " +
+    "4. REJECT: General trash not being sorted, greenwashing, or irrelevant images (Score 0). " +
+    "5. CRITICAL: Do NOT penalize (roast) users for recycling single-use plastics if it is the local norm and they are recycling correctly. Instead, encourage it and provide the appropriate Tier 2 points. " +
+    "Calculate estimated CO2 saved in milligrams (mg). " +
+    "Return strictly JSON: { verified: boolean, score: number (Points), co2_saved: number (mg CO2), actionType: string, message: string, reasoning: string }.";
 
   try {
     // Ensure image has exactly one prefix
@@ -315,37 +323,24 @@ export async function POST(req: NextRequest) {
           };
         } else if (finalImage) {
           // Only process vision if there's an image
-
-          // Calculate CO2 and Points
-          // Default: 1 Point = 10mg CO2 (Adjust as needed)
-          const POINTS_PER_MG = 0.1;
-
           vision = await callMiniMaxVision(finalImage);
           audioUrl = await callMiniMaxT2A(vision.message);
 
-          // AI returns score in 'mg CO2' as per prompt
-          vision.co2_saved = vision.score || 0;
-
-          // Calculate 'Points'
-          let points = Math.floor(vision.co2_saved * POINTS_PER_MG);
-
-          // Force 0 POINTS for gallery uploads, but keep CO2
+          // Force 0 POINTS for gallery uploads, but keep CO2 and verification
           if (source === "gallery") {
             logToFile(`Gallery upload detected for user ${userId}. Awarding 0 points but tracking CO2.`);
             vision.score = 0; // Score = Points
-          } else {
-            vision.score = points; // Score = Points
           }
 
-          if (vision.verified && vision.co2_saved && vision.co2_saved >= 50) {
-            // ... voucher logic uses points or CO2? Let's use Points? Or CO2?
-            // User said "reward in points". 
-            // Let's pass points to voucher gen?
-            // The voucher prompt says "earned ${score} points". So we use points.
-            // If source is gallery (0 points), they get no voucher? "Do not award in points". 
-            // Usually vouchers are for gamified points. So yes, gallery = no voucher usually.
-            if (vision.score > 0) {
-              voucher = await callMiniMaxVoucherGen(vision.actionType || "eco-action", vision.score);
+          const currentScore = vision.score ?? 0;
+          const currentCO2 = vision.co2_saved ?? 0;
+
+          if (vision.verified && (currentScore > 0 || currentCO2 > 0)) {
+            // Reward high impact with vouchers
+            if (currentScore >= 20 || currentCO2 >= 100) {
+              if (currentScore > 0) {
+                voucher = await callMiniMaxVoucherGen(vision.actionType || "waste-audit", currentScore);
+              }
             }
           }
         }
@@ -397,7 +392,7 @@ async function completeVerification(scanId: ObjectId, userId: any, username: any
       }
     );
 
-    if (userId && score > 0) {
+    if (userId && (score > 0 || co2_saved > 0)) {
       try {
         await users.updateOne(
           { userId },

@@ -8,16 +8,16 @@ import { OnboardingProps } from "@/types";
 const SLIDES = [
     {
         id: "welcome",
-        title: "Welcome to Eco-Verify",
-        description: "Join a growing community of climate champions. Turn your daily habits into verified impact points.",
+        title: "Welcome to Waste Auditor",
+        description: "Join a growing community of recycling champions. Turn your waste into verified impact points.",
         icon: Leaf,
         color: "text-emerald-500",
         bg: "bg-emerald-500/10",
     },
     {
         id: "verify",
-        title: "Snap & Verify",
-        description: "Simply take a photo of your action and verify it.",
+        title: "Scan & Audit",
+        description: "Simply scan your rubbish or recycling and let the AI audit your sustainability.",
         icon: Camera,
         color: "text-blue-500",
         bg: "bg-blue-500/10",
@@ -25,7 +25,7 @@ const SLIDES = [
     {
         id: "earn",
         title: "Earn & Compete",
-        description: "Get accurate points for every action. Earn vouchers and climb the global leaderboard.",
+        description: "Get tiered points: Tins (5), Plastics (20), E-Waste (500). Climb the global leaderboard.",
         icon: Trophy,
         color: "text-amber-500",
         bg: "bg-amber-500/10",
