@@ -14,7 +14,7 @@ export const GlobalBanner: React.FC<GlobalBannerProps> = ({ globalScore, globalC
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] as const }}
             className="flex flex-col gap-6 mb-6"
         >
             <div className="luxury-card bg-gradient-to-br from-emerald-500/20 via-emerald-500/5 to-transparent border-emerald-500/20 p-5 sm:p-8 shadow-2xl relative overflow-hidden group">

@@ -91,7 +91,7 @@ export default function Onboarding({ onComplete, totalVerifiedUsers, totalVouche
                                         initial={{ opacity: 0, x: 20 }}
                                         animate={{ opacity: 1, x: 0 }}
                                         exit={{ opacity: 0, x: -20 }}
-                                        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                                        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] as const }}
                                         className="flex flex-col items-center"
                                     >
                                         <div className="w-24 h-24 rounded-full bg-luxury-glass border border-white/10 flex items-center justify-center mb-10 shadow-2xl relative">
