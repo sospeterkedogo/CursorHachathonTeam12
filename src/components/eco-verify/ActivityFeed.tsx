@@ -1,8 +1,8 @@
-
 import { useState } from "react";
 import { formatCO2 } from "@/lib/format";
-import { ChevronUp, ChevronDown } from "lucide-react";
+import { ChevronUp, ChevronDown, User, Calendar, Zap } from "lucide-react";
 import { Scan } from "@/types";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface ActivityFeedProps {
     scans: Scan[];
@@ -37,20 +37,48 @@ export const ActivityFeed = ({
 
     const totalPages = Math.ceil(scans.length / itemsPerPage);
 
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.1
+            }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, x: -20 },
+        visible: { opacity: 1, x: 0 }
+    };
+
     return (
-        <section className="bg-white/50 dark:bg-black/10 backdrop-blur-sm rounded-xl border border-neutral-200 dark:border-white/5 overflow-hidden">
-            {/* Ledger Header */}
-            <div className="grid grid-cols-12 gap-2 p-3 bg-neutral-100/50 dark:bg-black/20 border-b border-neutral-200 dark:border-white/5 text-[10px] font-bold text-neutral-500 uppercase tracking-wider">
-                <div className="col-span-3">Date</div>
-                <div className="col-span-4">User</div>
-                <div className="col-span-3 text-right">Impact</div>
-                <div className="col-span-2 text-center">Status</div>
+        <section className="luxury-card bg-luxury-glass overflow-hidden mt-10">
+            {/* Ledger Header - Luxury Style */}
+            <div className="grid grid-cols-12 gap-2 sm:gap-4 px-4 sm:px-8 py-4 sm:py-6 bg-black/20 border-b border-white/5 items-center">
+                <div className="col-span-3 flex items-center gap-1 sm:gap-2">
+                    <Calendar className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-neutral-500" />
+                    <span className="text-[8px] sm:text-[10px] font-black text-neutral-500 uppercase tracking-[0.2em]">Timestamp</span>
+                </div>
+                <div className="col-span-4 flex items-center gap-1 sm:gap-2">
+                    <User className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-neutral-500" />
+                    <span className="text-[8px] sm:text-[10px] font-black text-neutral-500 uppercase tracking-[0.2em]">Auditor</span>
+                </div>
+                <div className="col-span-5 text-right flex items-center justify-end gap-1 sm:gap-2">
+                    <Zap className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-neutral-500" />
+                    <span className="text-[8px] sm:text-[10px] font-black text-neutral-500 uppercase tracking-[0.2em]">Global Impact</span>
+                </div>
             </div>
 
-            <div className="divide-y divide-neutral-100 dark:divide-white/5">
+            <motion.div
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                className="divide-y divide-white/5"
+            >
                 {scans.length === 0 ? (
-                    <div className="p-8 text-center text-xs text-neutral-400">
-                        No activity found.
+                    <div className="p-20 text-center">
+                        <p className="luxury-heading text-neutral-500 uppercase text-[10px] tracking-[0.5em]">Silence in the Ledger</p>
                     </div>
                 ) : (
                     scans.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage).map((scan, idx) => {
@@ -60,116 +88,135 @@ export const ActivityFeed = ({
                         const points = scan.score || 0;
 
                         return (
-                            <div key={uniqueId} className="group/row transition-colors hover:bg-neutral-50/50 dark:hover:bg-white/5">
+                            <motion.div
+                                key={uniqueId}
+                                variants={itemVariants}
+                                className="group/row transition-all duration-500 hover:bg-white/[0.02]"
+                            >
                                 {/* Main Row */}
                                 <div
-                                    className="grid grid-cols-12 gap-2 p-3 items-center cursor-pointer"
+                                    className="grid grid-cols-12 gap-2 sm:gap-4 px-4 sm:px-8 py-5 sm:py-8 items-center cursor-pointer"
                                     onClick={() => toggleExpand(uniqueId)}
                                 >
                                     {/* Date */}
                                     <div className="col-span-3 flex flex-col justify-center">
-                                        <span className="text-xs font-mono font-medium text-neutral-600 dark:text-neutral-400">
+                                        <span className="text-xs sm:text-sm luxury-data text-white">
                                             {isMounted ? new Date(scan.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric' }) : "--"}
                                         </span>
-                                        <span className="text-[10px] text-neutral-400">
+                                        <span className="text-[8px] sm:text-[10px] text-neutral-500 font-bold uppercase tracking-widest mt-0.5 sm:mt-1 opacity-50">
                                             {isMounted ? new Date(scan.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "--"}
                                         </span>
                                     </div>
 
                                     {/* User */}
-                                    <div className="col-span-4 flex items-center gap-2">
-                                        <div className="w-6 h-6 rounded bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center text-[10px] border border-neutral-300 dark:border-white/10">
+                                    <div className="col-span-4 flex items-center gap-2 sm:gap-4">
+                                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-luxury-glass flex items-center justify-center text-sm sm:text-lg border border-white/10 shadow-inner">
                                             {scan.avatar || "👤"}
                                         </div>
-                                        <span className="text-xs font-bold text-neutral-700 dark:text-neutral-300 truncate">
-                                            {scan.username || "Anon"}
-                                        </span>
+                                        <div className="flex flex-col min-w-0">
+                                            <span className="text-[10px] sm:text-sm font-bold text-white tracking-tight truncate">
+                                                {scan.username || "Anonymous"}
+                                            </span>
+                                            <span className="text-[7px] sm:text-[8px] font-black text-emerald-500/50 uppercase tracking-[0.2em] truncate">Verified</span>
+                                        </div>
                                     </div>
 
-                                    {/* Impact (Points + CO2) */}
-                                    <div className="col-span-3 text-right">
+                                    {/* Impact */}
+                                    <div className="col-span-5 text-right flex items-center justify-end gap-2 sm:gap-6">
                                         <div className="flex flex-col items-end">
-                                            <div className={`inline-block px-1.5 py-0.5 rounded mb-0.5 ${points > 0 ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-neutral-100 text-neutral-400'}`}>
-                                                <span className="text-xs font-mono font-bold tabular-nums">
+                                            <div className="flex items-baseline gap-0.5 sm:gap-1">
+                                                <span className="text-md sm:text-2xl luxury-data text-emerald-500">
                                                     {points}
                                                 </span>
-                                                <span className="text-[9px] ml-0.5">pts</span>
+                                                <span className="text-[7px] sm:text-[8px] font-black text-neutral-500 uppercase tracking-widest">pts</span>
                                             </div>
-                                            <div className="text-[9px] text-neutral-400 font-medium">
+                                            <div className="text-[8px] sm:text-[10px] text-neutral-500 font-bold tabular-nums opacity-60 leading-none">
                                                 {formatCO2(co2)}
                                             </div>
                                         </div>
-                                    </div>
-
-                                    {/* Status / Expand */}
-                                    <div className="col-span-2 flex justify-center">
-                                        {isExpanded ? <ChevronUp className="w-4 h-4 text-neutral-400" /> : <ChevronDown className="w-4 h-4 text-neutral-400 opacity-50 group-hover/row:opacity-100" />}
+                                        <div className="flex flex-col items-center justify-center w-6 sm:w-8">
+                                            {isExpanded ? <ChevronUp className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-500" /> : <ChevronDown className="w-3 h-3 sm:w-4 sm:h-4 text-neutral-500 opacity-20 group-hover/row:opacity-100 transition-all" />}
+                                        </div>
                                     </div>
                                 </div>
 
                                 {/* Expanded Audit Details */}
-                                {isExpanded && (
-                                    <div className="px-3 pb-3 pt-0 animate-slide-down">
-                                        <div className="bg-neutral-50 dark:bg-neutral-900/50 rounded-lg p-3 border border-neutral-100 dark:border-white/5 space-y-3">
-                                            {/* Action & Image */}
-                                            <div className="flex gap-3">
-                                                <div
-                                                    className="w-16 h-16 rounded overflow-hidden bg-neutral-200 flex-shrink-0 cursor-pointer border border-neutral-200 dark:border-white/10"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        onSetLightboxImage(scan.image);
-                                                    }}
-                                                >
-                                                    <img
-                                                        src={scan.image && scan.image.length > 200
-                                                            ? (scan.image.startsWith('data:') ? scan.image : `data:image/jpeg;base64,${scan.image}`)
-                                                            : `https://ui-avatars.com/api/?name=Eco&background=random`}
-                                                        alt="proof"
-                                                        className="w-full h-full object-cover"
-                                                    />
-                                                </div>
-                                                <div className="flex-1">
-                                                    <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Action Type</p>
-                                                    <p className="text-sm font-semibold capitalize text-neutral-800 dark:text-neutral-200">
-                                                        {scan.actionType?.replace(/-/g, ' ') || "Unspecified Action"}
-                                                    </p>
-                                                </div>
-                                            </div>
+                                <AnimatePresence>
+                                    {isExpanded && (
+                                        <motion.div
+                                            initial={{ height: 0, opacity: 0 }}
+                                            animate={{ height: "auto", opacity: 1 }}
+                                            exit={{ height: 0, opacity: 0 }}
+                                            className="overflow-hidden"
+                                        >
+                                            <div className="px-4 sm:px-8 pb-6 sm:pb-10 pt-0">
+                                                <div className="bg-black/40 rounded-2xl sm:rounded-3xl p-5 sm:p-8 border border-white/5 flex flex-col md:flex-row gap-6 sm:gap-10">
+                                                    {/* Proof Image */}
+                                                    <div
+                                                        className="w-full md:w-32 aspect-square md:aspect-auto md:h-32 rounded-xl sm:rounded-2xl overflow-hidden bg-neutral-900 flex-shrink-0 cursor-pointer border border-white/10 shadow-2xl relative group/img"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            onSetLightboxImage(scan.image);
+                                                        }}
+                                                    >
+                                                        <img
+                                                            src={scan.image && scan.image.length > 200
+                                                                ? (scan.image.startsWith('data:') ? scan.image : `data:image/jpeg;base64,${scan.image}`)
+                                                                : `https://ui-avatars.com/api/?name=Eco&background=random`}
+                                                            alt="Audit Proof"
+                                                            className="w-full h-full object-cover grayscale group-hover/img:grayscale-0 transition-all duration-700"
+                                                        />
+                                                        <div className="absolute inset-0 bg-emerald-500/20 opacity-0 group-hover/img:opacity-100 transition-opacity" />
+                                                    </div>
 
-                                            {/* Audit Reason */}
-                                            <div>
-                                                <p className="text-xs text-neutral-600 dark:text-neutral-400 font-mono leading-relaxed bg-white dark:bg-black/20 p-2 rounded border border-neutral-100 dark:border-white/5">
-                                                    {scan.reasoning || scan.message || "No specific audit notes provided."}
-                                                </p>
+                                                    <div className="flex-1 space-y-4 sm:space-y-6">
+                                                        <div>
+                                                            <p className="text-[8px] sm:text-[9px] font-black text-neutral-500 uppercase tracking-[0.4em] mb-1.5 sm:mb-2">Classified Action</p>
+                                                            <p className="text-xl sm:text-2xl luxury-heading text-white capitalize">
+                                                                {scan.actionType?.replace(/-/g, ' ') || "Elemental Audit"}
+                                                            </p>
+                                                        </div>
+                                                        <div className="space-y-1.5 sm:space-y-2">
+                                                            <p className="text-[8px] sm:text-[9px] font-black text-neutral-500 uppercase tracking-[0.4em] mb-1.5 sm:mb-2">Auditor Narration</p>
+                                                            <p className="text-xs sm:text-sm font-light text-neutral-400 italic leading-relaxed border-l-2 border-emerald-500/20 pl-3 sm:pl-4 py-1">
+                                                                "{scan.reasoning || scan.message || "No specific observations were recorded for this audit."}"
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </motion.div>
                         );
                     })
                 )}
-            </div>
+            </motion.div>
 
-            {/* Pagination Footer */}
+            {/* Pagination Footer - Luxury Refined */}
             {scans.length > itemsPerPage && totalPages > 1 && (
-                <div className="flex items-center justify-between p-3 bg-neutral-50/50 dark:bg-white/5 border-t border-neutral-200 dark:border-white/5">
+                <div className="flex items-center justify-between px-8 py-6 bg-black/40 border-t border-white/5">
                     <button
                         disabled={currentPage === 0}
                         onClick={() => onSetCurrentPage(prev => Math.max(0, prev as number - 1))}
-                        className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 hover:text-emerald-500 disabled:opacity-30 disabled:hover:text-neutral-500"
+                        className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500 hover:text-emerald-500 disabled:opacity-10 transition-colors"
                     >
-                        ← Prev
+                        Previous
                     </button>
-                    <span className="text-[10px] font-mono text-neutral-400">
-                        PAGE {currentPage + 1}/{totalPages}
-                    </span>
+                    <div className="flex items-center gap-3">
+                        <div className="h-px w-8 bg-white/10" />
+                        <span className="text-[10px] luxury-data text-neutral-500 opacity-60">
+                            {currentPage + 1} / {totalPages}
+                        </span>
+                        <div className="h-px w-8 bg-white/10" />
+                    </div>
                     <button
                         disabled={currentPage >= totalPages - 1}
                         onClick={() => onSetCurrentPage(prev => Math.min(totalPages - 1, prev as number + 1))}
-                        className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 hover:text-emerald-500 disabled:opacity-30 disabled:hover:text-neutral-500"
+                        className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500 hover:text-emerald-500 disabled:opacity-10 transition-colors"
                     >
-                        Next →
+                        Next
                     </button>
                 </div>
             )}

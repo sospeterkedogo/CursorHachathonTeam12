@@ -3,38 +3,35 @@
 @tailwind utilities;
 
 :root {
-  /* Light Mode */
-  --background: #ffffff;
-  --foreground: #0f172a;
+  /* Light Mode - Refined */
+  --background: #fdfdfd;
+  --foreground: #0a0a0a;
 
-  --card-bg: rgba(255, 255, 255, 0.7);
-  --card-border: rgba(203, 213, 225, 0.4);
+  --luxury-gold: #d4af37;
+  --luxury-emerald: #064e3b;
 
-  --primary: #16a34a;
-  /* Darker Green for light mode text contrast */
-  --primary-dark: #15803d;
+  --card-bg: rgba(255, 255, 255, 0.05);
+  --card-border: rgba(0, 0, 0, 0.08);
 
-  --glass-bg: rgba(255, 255, 255, 0.4);
-  --glass-border: rgba(226, 232, 240, 0.6);
+  --glass-bg: rgba(255, 255, 255, 0.03);
+  --glass-border: rgba(0, 0, 0, 0.05);
 
-  --apple-radius-lg: 20px;
-  --apple-radius-md: 14px;
+  --radius-luxury: 24px;
 }
 
 .dark {
-  /* Dark Mode */
-  --background: #000000;
-  --foreground: #ededed;
+  /* Dark Mode - Luxury */
+  --background: #050505;
+  --foreground: #f0f0f0;
 
-  --card-bg: rgba(28, 28, 30, 0.65);
-  --card-border: rgba(255, 255, 255, 0.1);
+  --luxury-gold: #e5c100;
+  --luxury-emerald: #10b981;
 
-  --primary: #34c759;
-  /* Apple Green */
-  --primary-dark: #28a745;
+  --card-bg: rgba(255, 255, 255, 0.03);
+  --card-border: rgba(255, 255, 255, 0.08);
 
-  --glass-bg: rgba(255, 255, 255, 0.08);
-  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-bg: rgba(255, 255, 255, 0.02);
+  --glass-border: rgba(255, 255, 255, 0.1);
 }
 
 html,
@@ -45,10 +42,7 @@ body {
   height: 100%;
   overflow-x: hidden;
   overscroll-behavior-y: none;
-  /* Prevent rubber-banding on mobile */
-  overscroll-behavior-x: none;
   touch-action: pan-y;
-  /* Prevent horizontal swipes from moving the page */
 }
 
 body {
@@ -61,118 +55,150 @@ body {
   flex-direction: column;
 }
 
-/* Utilities */
-.apple-card {
+/* Luxury Utilities */
+.luxury-card {
   background: var(--card-bg);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-luxury);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+  transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@media (max-width: 640px) {
+  :root {
+    --radius-luxury: 16px;
+  }
+}
+
+.luxury-heading {
+  font-family: var(--font-serif), serif;
+  letter-spacing: -0.02em;
+}
+
+.luxury-data {
+  font-family: var(--font-mono), monospace;
+  letter-spacing: 0.05em;
+  font-weight: 500;
+}
+
+/* Action Orb Button */
+.action-orb-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-orb {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--luxury-emerald), #065f46);
+  box-shadow: 0 0 30px rgba(16, 185, 129, 0.3), inset 0 0 15px rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  cursor: pointer;
+  border: none;
+  position: relative;
+  z-index: 2;
+}
+
+.action-orb::before {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  background: var(--luxury-emerald);
+  opacity: 0.2;
+  z-index: 1;
+  animation: orb-pulse 2.5s infinite;
+}
+
+@keyframes orb-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.3;
+  }
+
+  50% {
+    transform: scale(1.15);
+    opacity: 0.1;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 0.3;
+  }
+}
+
+.action-orb:hover {
+  transform: scale(1.05) translateY(-2px);
+  box-shadow: 0 0 50px rgba(16, 185, 129, 0.5), inset 0 0 20px rgba(255, 255, 255, 0.3);
+}
+
+.action-orb:active {
+  transform: scale(0.95);
+}
+
+/* Glassmorphism helpers */
+.bg-luxury-glass {
+  background: var(--glass-bg);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid var(--card-border);
-  border-radius: var(--apple-radius-lg);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
-}
-
-.glass-panel {
-  background: var(--glass-bg);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--glass-border);
-  border-radius: var(--apple-radius-md);
-  transition: transform 0.2s ease, opacity 0.2s ease;
-}
-
-.primary-btn {
-  background: var(--primary);
-  color: #000;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
-}
-
-.primary-btn:hover {
-  transform: scale(1.01) translateY(-1px);
-  filter: brightness(1.05);
-  box-shadow: 0 10px 20px -10px var(--primary);
-}
-
-.primary-btn:active {
-  transform: scale(0.96);
 }
 
 /* Animations */
-@keyframes slideInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
+@keyframes gold-shimmer {
+  0% {
+    background-position: -200% center;
   }
 
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  100% {
+    background-position: 200% center;
   }
 }
 
-.animate-slide-up {
-  animation: slideInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+.text-luxury-gold {
+  background: linear-gradient(90deg, #b8860b, #e5c100, #b8860b);
+  background-size: 200% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gold-shimmer 4s linear infinite;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
+/* Spacing Helpers */
+.luxury-spacing {
+  padding: 1rem;
+}
+
+@media (min-width: 640px) {
+  .luxury-spacing {
+    padding: 2.5rem;
   }
+}
 
-  to {
-    opacity: 1;
+.luxury-gap {
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .luxury-gap {
+    gap: 2rem;
   }
 }
 
-.animate-fade-in {
-  animation: fadeIn 0.4s ease-out forwards;
+/* Existing helpers kept for compatibility or updated */
+.apple-card {
+  @apply luxury-card;
 }
 
-/* Snappy Tab Indicator (Simulated with CSS) */
-.tab-transition {
-  transition: all 0.3s cubic-bezier(0.65, 0, 0.35, 1);
-}
-
-/* Safe Area */
-.pb-safe {
-  padding-bottom: env(safe-area-inset-bottom);
-}
-
-/* Clean scrollbar */
-::-webkit-scrollbar {
-  width: 0px;
-  /* Hide scrollbar for a cleaner mobile feel */
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #333;
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #555;
-}
-
-.custom-scrollbar::-webkit-scrollbar {
-  width: 4px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 2px;
-}
-
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+.glass-panel {
+  @apply bg-luxury-glass;
 }

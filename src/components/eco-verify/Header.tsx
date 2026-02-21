@@ -9,35 +9,38 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ userProfile, onShowFeedback, onShowProfile }) => (
-    <header className="fixed top-0 left-0 right-0 z-50 w-full backdrop-blur-md bg-white/80 dark:bg-black/80 border-b border-neutral-200/50 dark:border-white/5 py-4 px-4 pt-[calc(1rem+env(safe-area-inset-top,0px))]">
-        <div className="max-w-3xl mx-auto flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                    <Leaf className="w-6 h-6 text-white" />
+    <header className="fixed top-0 left-0 right-0 z-50 w-full backdrop-blur-2xl bg-black/40 border-b border-white/5 py-5 px-6 pt-[calc(1.25rem+env(safe-area-inset-top,0px))]">
+        <div className="max-w-4xl mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-3 sm:gap-4 group cursor-pointer">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-emerald-500 flex items-center justify-center shadow-2xl shadow-emerald-500/20 group-hover:scale-110 transition-transform duration-500 relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-tr from-black/20 to-transparent" />
+                    <Leaf className="w-6 h-6 sm:w-7 sm:h-7 text-white relative z-10" />
                 </div>
                 <div>
-                    <h1 className="text-xl font-bold tracking-tight leading-none text-neutral-900 dark:text-white">
-                        EcoVerify
+                    <h1 className="text-lg sm:text-2xl luxury-heading text-white tracking-widest leading-none">
+                        ECOVERIFY
                     </h1>
-
+                    <span className="text-[7px] sm:text-[8px] font-black text-emerald-500 uppercase tracking-[0.3em] sm:tracking-[0.4em] opacity-80">Imperial Ledger</span>
                 </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 sm:gap-3">
                 <button
                     onClick={onShowFeedback}
-                    className="w-10 h-10 rounded-xl bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 flex items-center justify-center text-neutral-500 hover:text-emerald-500 transition-all shadow-sm"
+                    className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-white/5 border border-white/5 flex items-center justify-center text-neutral-400 hover:text-emerald-500 hover:border-emerald-500/20 transition-all duration-500"
                     aria-label="Give Feedback"
                 >
-                    <MessageSquare className="w-5 h-5" />
+                    <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
+                <div className="w-px h-5 sm:h-6 bg-white/5 mx-0.5 sm:mx-1" />
                 <ThemeToggle />
-                <div
+                <button
                     onClick={onShowProfile}
-                    className="w-10 h-10 rounded-xl bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 flex items-center justify-center text-xl cursor-pointer hover:border-emerald-500 transition-all relative overflow-hidden"
+                    className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-white/5 border border-white/5 flex items-center justify-center text-xl sm:text-2xl hover:border-luxury-gold/30 transition-all duration-500 relative overflow-hidden group/avatar"
                 >
-                    {userProfile?.avatar || <User className="w-5 h-5 text-neutral-400" />}
-                </div>
+                    <div className="absolute inset-0 bg-luxury-gold/5 opacity-0 group-hover/avatar:opacity-100 transition-opacity" />
+                    {userProfile?.avatar || <User className="w-4 h-4 sm:w-5 sm:h-5 text-neutral-500" />}
+                </button>
             </div>
         </div>
     </header>

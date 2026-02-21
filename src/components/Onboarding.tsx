@@ -1,34 +1,34 @@
 "use client";
 
 import { useState } from "react";
-import { Leaf, Camera, Trophy, ArrowRight, Check } from "lucide-react";
-
+import { Leaf, Camera, Trophy, ArrowRight, Check, Sparkles, Globe, Zap } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { OnboardingProps } from "@/types";
 
 const SLIDES = [
     {
         id: "welcome",
-        title: "Welcome to Waste Auditor",
-        description: "Join a growing community of recycling champions. Turn your waste into verified impact points.",
-        icon: Leaf,
+        title: "The Luxury of Sustainability",
+        description: "Welcome to an elite league of ecological auditors. Where conservation meets sophisticated verification.",
+        icon: Globe,
         color: "text-emerald-500",
-        bg: "bg-emerald-500/10",
+        accent: "bg-emerald-500/10",
     },
     {
         id: "verify",
-        title: "Scan & Audit",
-        description: "Simply scan your rubbish or recycling and let the AI audit your sustainability.",
+        title: "Elemental Auditing",
+        description: "Our advanced vision system meticulously validates your environmental contributions with precision.",
         icon: Camera,
         color: "text-blue-500",
-        bg: "bg-blue-500/10",
+        accent: "bg-blue-500/10",
     },
     {
         id: "earn",
-        title: "Earn & Compete",
-        description: "Get tiered points: Tins (5), Plastics (20), E-Waste (500). Climb the global leaderboard.",
+        title: "Acurate Prestige",
+        description: "Ascend through the ranks of the Imperial Ledger. Earn exclusive rewards for your environmental mastery.",
         icon: Trophy,
-        color: "text-amber-500",
-        bg: "bg-amber-500/10",
+        color: "text-luxury-gold",
+        accent: "bg-luxury-gold/10",
     },
 ];
 
@@ -48,101 +48,120 @@ export default function Onboarding({ onComplete, totalVerifiedUsers, totalVouche
         setIsExiting(true);
         setTimeout(() => {
             onComplete();
-        }, 500); // 500ms for exit animation
+        }, 800);
     };
 
     const SlideIcon = SLIDES[currentSlide].icon;
 
     return (
-        <div
-            className={`fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md transition-opacity duration-500 ${isExiting ? "opacity-0 pointer-events-none" : "opacity-100"}`}
-        >
-            <div className="w-full max-w-md p-6">
-                <div className="relative overflow-hidden bg-white/95 dark:bg-neutral-900/90 border border-neutral-200 dark:border-white/10 rounded-3xl shadow-2xl p-8 min-h-[480px] flex flex-col">
+        <AnimatePresence>
+            {!isExiting && (
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-xl"
+                >
+                    <div className="w-full max-w-lg p-10">
+                        <motion.div
+                            initial={{ scale: 0.9, y: 20 }}
+                            animate={{ scale: 1, y: 0 }}
+                            className="luxury-card bg-luxury-glass p-12 min-h-[550px] flex flex-col relative overflow-hidden border-white/5"
+                        >
+                            {/* Decorative background flare */}
+                            <motion.div
+                                key={`flare-${currentSlide}`}
+                                initial={{ opacity: 0, scale: 0.5 }}
+                                animate={{ opacity: 0.1, scale: 1.2 }}
+                                transition={{ duration: 1.5 }}
+                                className={`absolute -top-20 -right-20 w-80 h-80 rounded-full blur-[100px] ${SLIDES[currentSlide].accent}`}
+                            />
 
-                    {/* Background Gradients */}
-                    <div className={`absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-${SLIDES[currentSlide].color.split('-')[1]}-500/20 to-transparent blur-3xl -z-10 transition-all duration-700`} />
-                    <div className="absolute bottom-0 left-0 w-48 h-48 bg-emerald-500/10 blur-3xl -z-10" />
-
-                    {/* Skip Button */}
-                    <button
-                        onClick={handleComplete}
-                        className="absolute top-6 right-6 text-xs font-medium text-neutral-500 hover:text-neutral-900 dark:hover:text-white transition-colors uppercase tracking-wider"
-                    >
-                        Skip
-                    </button>
-
-                    {/* Content Container */}
-                    <div className="flex-1 flex flex-col items-center justify-center text-center mt-8">
-                        {/* Icon Circle */}
-                        <div className={`w-24 h-24 rounded-full ${SLIDES[currentSlide].bg} flex items-center justify-center mb-8 ring-1 ring-black/5 dark:ring-white/10 shadow-lg transition-all duration-500 transform`}>
-                            <SlideIcon className={`w-10 h-10 ${SLIDES[currentSlide].color}`} />
-                        </div>
-
-                        {/* Text Content */}
-                        <div className="space-y-4 max-w-[280px]">
-                            <h2 className="text-2xl font-bold text-neutral-900 dark:text-white tracking-tight transition-all duration-300">
-                                {SLIDES[currentSlide].title}
-                            </h2>
-                            <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed transition-all duration-300">
-                                {SLIDES[currentSlide].description}
-                            </p>
-
-                            {/* Social Proof Stats (Only on Welcome Slide) */}
-                            {currentSlide === 0 && (
-                                <div className="mt-8">
-                                    <p className="text-xs font-medium text-emerald-600/70 dark:text-emerald-400/70 bg-emerald-500/5 py-2 px-4 rounded-full inline-block border border-emerald-500/10">
-                                        Over <span className="font-bold">{totalVouchers.toLocaleString()}</span> vouchers awarded globally 🌍
-                                    </p>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Navigation Footer */}
-                    <div className="mt-12 flex flex-col items-center gap-6">
-                        {/* Dots */}
-                        <div className="flex gap-2">
-                            {SLIDES.map((_, idx) => (
-                                <div
-                                    key={idx}
-                                    className={`h-1.5 rounded-full transition-all duration-300 ${idx === currentSlide ? "w-8 bg-neutral-900 dark:bg-white" : "w-1.5 bg-neutral-300 dark:bg-white/20"}`}
-                                />
-                            ))}
-                        </div>
-
-                        <div className="w-full space-y-3">
                             <button
-                                onClick={handleNext}
-                                className="w-full py-4 rounded-xl bg-emerald-600 text-white font-bold text-lg flex items-center justify-center gap-2 hover:bg-emerald-500 active:scale-[0.98] transition-all shadow-lg shadow-emerald-900/20"
+                                onClick={handleComplete}
+                                className="absolute top-8 right-8 text-[10px] font-black text-neutral-500 hover:text-white transition-colors uppercase tracking-[0.3em]"
                             >
-                                {currentSlide === SLIDES.length - 1 ? (
-                                    <>
-                                        Get Started <Check className="w-5 h-5" />
-                                    </>
-                                ) : (
-                                    <>
-                                        Next <ArrowRight className="w-5 h-5" />
-                                    </>
-                                )}
+                                Skip
                             </button>
 
-                            {currentSlide === SLIDES.length - 1 && (
-                                <button
-                                    onClick={() => {
-                                        localStorage.setItem("eco-hide-onboarding", "true");
-                                        handleComplete();
-                                    }}
-                                    className="w-full py-2 text-sm text-neutral-500 hover:text-neutral-900 dark:hover:text-white transition-colors"
-                                >
-                                    Don&apos;t show this again
-                                </button>
-                            )}
-                        </div>
-                    </div>
+                            <div className="flex-1 flex flex-col items-center justify-center text-center mt-10">
+                                <AnimatePresence mode="wait">
+                                    <motion.div
+                                        key={currentSlide}
+                                        initial={{ opacity: 0, x: 20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, x: -20 }}
+                                        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                                        className="flex flex-col items-center"
+                                    >
+                                        <div className="w-24 h-24 rounded-full bg-luxury-glass border border-white/10 flex items-center justify-center mb-10 shadow-2xl relative">
+                                            <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-transparent via-white/5 to-transparent opacity-50" />
+                                            <SlideIcon className={`w-10 h-10 ${SLIDES[currentSlide].color}`} />
+                                            <Sparkles className="absolute -top-2 -right-2 w-6 h-6 text-luxury-gold opacity-40 animate-pulse" />
+                                        </div>
 
-                </div>
-            </div>
-        </div>
+                                        <h2 className="text-4xl luxury-heading text-white mb-6 leading-tight">
+                                            {SLIDES[currentSlide].title}
+                                        </h2>
+                                        <p className="text-neutral-400 font-light leading-relaxed max-w-[320px] text-lg">
+                                            {SLIDES[currentSlide].description}
+                                        </p>
+
+                                        {currentSlide === 0 && (
+                                            <motion.div
+                                                initial={{ opacity: 0, y: 10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: 0.5 }}
+                                                className="mt-10 pt-8 border-t border-white/5 w-full"
+                                            >
+                                                <p className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.3em]">
+                                                    Historical Influence: <span className="text-white">{totalVouchers.toLocaleString()}</span> Archives
+                                                </p>
+                                            </motion.div>
+                                        )}
+                                    </motion.div>
+                                </AnimatePresence>
+                            </div>
+
+                            <div className="mt-16 flex flex-col items-center gap-10">
+                                <div className="flex gap-4">
+                                    {SLIDES.map((_, idx) => (
+                                        <div
+                                            key={idx}
+                                            className={`h-0.5 rounded-full transition-all duration-700 ${idx === currentSlide ? "w-10 bg-emerald-500" : "w-2 bg-white/10"}`}
+                                        />
+                                    ))}
+                                </div>
+
+                                <div className="w-full flex flex-col items-center gap-4">
+                                    <button
+                                        onClick={handleNext}
+                                        className="action-button group w-full max-w-[280px] bg-emerald-600 hover:bg-emerald-500 text-white py-5 rounded-2xl flex items-center justify-center gap-4 transition-all hover:scale-[1.02] shadow-2xl shadow-emerald-900/40 relative overflow-hidden"
+                                    >
+                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                                        <span className="text-sm font-black uppercase tracking-[0.2em]">
+                                            {currentSlide === SLIDES.length - 1 ? "Begin Audit" : "Continue"}
+                                        </span>
+                                        {currentSlide === SLIDES.length - 1 ? <Check className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
+                                    </button>
+
+                                    {currentSlide === SLIDES.length - 1 && (
+                                        <button
+                                            onClick={() => {
+                                                localStorage.setItem("eco-hide-onboarding", "true");
+                                                handleComplete();
+                                            }}
+                                            className="text-[9px] font-black text-neutral-600 hover:text-neutral-400 uppercase tracking-[0.2em] transition-colors"
+                                        >
+                                            Finalize Participation
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                </motion.div>
+            )}
+        </AnimatePresence>
     );
 }

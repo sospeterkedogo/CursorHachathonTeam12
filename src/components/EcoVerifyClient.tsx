@@ -1,7 +1,8 @@
 'use client';
 
 import { useRef, useState, useEffect } from "react";
-import { Loader2, Leaf } from "lucide-react";
+import { Loader2, Leaf, ShieldCheck, Sparkles } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { getUserId } from "@/lib/userId";
 import Onboarding from "./Onboarding";
 import Leaderboard from "./Leaderboard";
@@ -64,7 +65,7 @@ export default function EcoVerifyClient({ initialTotalScore, initialGlobalCO2, i
     scans, userActivity, loadingActivity, fetchUserActivity,
     deleteScan, handleToggleVisibility, submitImage, loading,
     progress, feedback, verified, score, audioUrl, earnedVoucher,
-    lastCapturedImage
+    lastCapturedImage, hasMoreActivity, activityPage
   } = useEcoActions(initialScans, userProfile);
 
   useEffect(() => {
@@ -96,7 +97,6 @@ export default function EcoVerifyClient({ initialTotalScore, initialGlobalCO2, i
 
   const handleVerificationSuccess = (data: any) => {
     if (data.verified || (typeof data.score === "number" && data.score > 0)) {
-      // Optimistic updates
       setGlobalScore(prev => prev + (data.score || 0));
       setGlobalCO2(prev => prev + (data.co2_saved || 0));
       setUserScore(prev => prev + (data.score || 0));
@@ -142,7 +142,11 @@ export default function EcoVerifyClient({ initialTotalScore, initialGlobalCO2, i
   };
 
   return (
-    <div className="w-full pb-20 overflow-x-hidden">
+    <div className="w-full pb-32 overflow-x-hidden min-h-screen selection:bg-luxury-gold/30">
+      {/* Premium Background Elements */}
+      <div className="fixed inset-0 pointer-events-none -z-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-emerald-500/5 via-black to-black" />
+      <div className="fixed top-0 left-0 w-full h-96 bg-gradient-to-b from-emerald-500/10 to-transparent -z-10 blur-3xl opacity-30" />
+
       {showOnboarding && <Onboarding onComplete={() => setShowOnboarding(false)} totalVerifiedUsers={globalVerifiedUsers} totalVouchers={globalVouchersCount} />}
       <FeedbackModal
         isOpen={showFeedbackModal}
@@ -166,95 +170,122 @@ export default function EcoVerifyClient({ initialTotalScore, initialGlobalCO2, i
         }}
       />
 
-      <div className="max-w-3xl mx-auto px-4 pt-[calc(5rem+env(safe-area-inset-top,0px))]">
-        <div className="space-y-4 mb-6">
-          <GlobalBanner globalScore={globalScore} globalCO2={globalCO2} userRank={userRank} />
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-[calc(4rem+env(safe-area-inset-top,0px))] sm:pt-[calc(6rem+env(safe-area-inset-top,0px))]">
+        {/* Dynamic Content Area */}
+        <main className="min-h-[80vh]">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            >
+              {activeTab === "leaderboard" ? (
+                <Leaderboard
+                  entries={leaderboard}
+                  currentUserId={getUserId()}
+                  loading={false}
+                />
+              ) : activeTab === "vouchers" ? (
+                <VoucherList
+                  vouchers={vouchers}
+                  loading={loadingVouchers}
+                  onActivate={handleActivateVoucher}
+                />
+              ) : activeTab === "profile" ? (
+                isMounted ? (
+                  <ProfileView
+                    activity={userActivity}
+                    loading={loadingActivity}
+                    onDelete={(id) => deleteScan(id, undefined, (newScore) => {
+                      if (typeof newScore === 'number') setGlobalScore(newScore);
+                      fetchLeaderboardAndStats();
+                    })}
+                    onToggleVisibility={handleToggleVisibility}
+                    currentUserId={getUserId()}
+                    userProfile={userProfile}
+                    hasMore={hasMoreActivity}
+                    onLoadMore={() => fetchUserActivity(activityPage + 1, true)}
+                    onUpdateProfile={() => setShowProfileModal(true)}
+                    onClearCache={handleClearCache}
+                    onDeleteAccount={handleDeleteAccount}
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-40 opacity-50">
+                    <Loader2 className="w-10 h-10 animate-spin text-emerald-500 mb-6" />
+                    <span className="text-[10px] font-black text-neutral-500 uppercase tracking-[0.4em]">Retrieving Ledger...</span>
+                  </div>
+                )
+              ) : (
+                <div className="space-y-10 sm:space-y-16">
+                  {/* Audit Dashboard Section */}
+                  <div className="space-y-8 sm:space-y-12">
+                    <GlobalBanner globalScore={globalScore} globalCO2={globalCO2} userRank={userRank} />
 
-          {activeTab === "verify" && !showOnboarding && (
-            <div className="grid grid-cols-2 gap-3">
-              <HowItWorks className="h-full" />
-              <GoalCard userScore={userScore} className="h-full" />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <HowItWorks className="h-full" />
+                      <GoalCard userScore={userScore} className="h-full" />
+                    </div>
+                  </div>
+
+                  {/* Verification Core Section */}
+                  <div className="pt-10 border-t border-white/5">
+                    <VerificationSection
+                      loading={loading}
+                      progress={progress}
+                      isPublic={isPublic}
+                      setIsPublic={setIsPublic}
+                      onTriggerFileInput={triggerFileInput}
+                      onShowGallery={() => setShowImageGallery(true)}
+                      verified={verified}
+                      feedback={feedback}
+                      score={score}
+                      earnedVoucher={earnedVoucher}
+                      audioUrl={audioUrl}
+                      audioRef={audioRef}
+                      onViewVouchers={() => setActiveTab("vouchers")}
+                      onCapture={(base64) => submitImage(base64, "camera", handleVerificationSuccess)}
+                      lastCapturedImage={lastCapturedImage}
+                    />
+                  </div>
+
+                  <div className="pt-12 border-t border-white/5">
+                    <div className="flex items-center gap-4 mb-8 sm:mb-12">
+                      <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-luxury-gold" />
+                      <h3 className="text-[10px] sm:text-[11px] font-black text-neutral-500 uppercase tracking-[0.4em]">Live Activity Feed</h3>
+                    </div>
+                    <ActivityFeed
+                      scans={scans}
+                      currentPage={currentPage}
+                      itemsPerPage={ITEMS_PER_PAGE}
+                      isMounted={isMounted}
+                      getUserId={getUserId}
+                      onSetLightboxImage={setLightboxImage}
+                      onSetCurrentPage={setCurrentPage}
+                    />
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </main>
+
+        <footer className="mt-40 py-16 text-center border-t border-white/5">
+          <div className="flex flex-col items-center gap-6 opacity-40 hover:opacity-100 transition-opacity duration-1000">
+            <div className="flex items-center gap-4">
+              <div className="h-px w-8 bg-white/20" />
+              <ShieldCheck className="w-6 h-6 text-emerald-500" />
+              <div className="h-px w-8 bg-white/20" />
             </div>
-          )}
-        </div>
-
-        {activeTab === "leaderboard" ? (
-          <Leaderboard
-            entries={leaderboard}
-            currentUserId={getUserId()}
-            loading={false}
-          />
-        ) : activeTab === "vouchers" ? (
-          <VoucherList
-            vouchers={vouchers}
-            loading={loadingVouchers}
-            onActivate={handleActivateVoucher}
-          />
-        ) : activeTab === "profile" ? (
-          isMounted ? (
-            <ProfileView
-              activity={userActivity}
-              loading={loadingActivity}
-              onDelete={(id) => deleteScan(id, undefined, (newScore) => {
-                if (typeof newScore === 'number') setGlobalScore(newScore);
-                fetchLeaderboardAndStats();
-              })}
-              onToggleVisibility={handleToggleVisibility}
-              currentUserId={getUserId()}
-              userProfile={userProfile}
-              hasMore={true}
-              onLoadMore={() => { }}
-              onUpdateProfile={() => setShowProfileModal(true)}
-              onClearCache={handleClearCache}
-              onDeleteAccount={handleDeleteAccount}
-            />
-          ) : (
-            <div className="flex flex-col items-center justify-center py-20 opacity-50">
-              <Loader2 className="w-8 h-8 animate-spin text-emerald-500 mb-2" />
-              <span className="text-xs font-bold text-neutral-500 uppercase">Loading Profile...</span>
+            <div>
+              <p className="text-[10px] font-black text-white uppercase tracking-[0.5em] mb-4">Imperial Sustainability Index</p>
+              <p className="text-[9px] text-neutral-500 font-medium tracking-widest leading-loose">
+                © 2026 ECOVERIFY • ALL RIGHTS RESERVED <br />
+                CURATED FOR THE PLANET BY PETE & PAVAN
+              </p>
             </div>
-          )
-        ) : (
-          <>
-            <VerificationSection
-              loading={loading}
-              progress={progress}
-              isPublic={isPublic}
-              setIsPublic={setIsPublic}
-              onTriggerFileInput={triggerFileInput}
-              onShowGallery={() => setShowImageGallery(true)}
-              verified={verified}
-              feedback={feedback}
-              score={score}
-              earnedVoucher={earnedVoucher}
-              audioUrl={audioUrl}
-              audioRef={audioRef}
-              onViewVouchers={() => setActiveTab("vouchers")}
-              onCapture={(base64) => submitImage(base64, "camera", handleVerificationSuccess)}
-              lastCapturedImage={lastCapturedImage}
-            />
-
-            <ActivityFeed
-              scans={scans}
-              currentPage={currentPage}
-              itemsPerPage={ITEMS_PER_PAGE}
-              isMounted={isMounted}
-              getUserId={getUserId}
-              onSetLightboxImage={setLightboxImage}
-              onSetCurrentPage={setCurrentPage}
-            />
-          </>
-        )}
-
-        <footer className="mt-16 py-8 text-center border-t border-neutral-200 dark:border-white/5">
-          <div className="flex items-center justify-center gap-2 mb-2 opacity-60">
-            <Leaf className="w-4 h-4 text-emerald-500" />
-            <span className="text-sm font-semibold text-neutral-500">EcoVerify</span>
           </div>
-          <p className="text-xs text-neutral-500">
-            © 2026 EcoVerify. Built for the Planet. <br />
-            Made by Pete and Pavan
-          </p>
         </footer>
       </div>
 

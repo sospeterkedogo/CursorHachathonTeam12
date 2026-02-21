@@ -75,11 +75,14 @@ async function callMiniMaxVision(imageBase64: string): Promise<VisionResult> {
 
   const prompt =
     "You are a Waste Auditor. Your job is to verify recycling or reuse actions. " +
+    "CRITICAL EVALUATION: Critically evaluate the source of this image. Is it a real-life, raw snapshot from a mobile camera, or is it a professional stock photo, a screenshot, or a digital diagram? " +
+    "If it is not a raw, real-life photo of an object in a physical environment, return verified: false and score: 0. " +
+    "Reject any image with watermarks, studio-white backgrounds, perfect marketing lighting, or screenshot UI elements. " +
     "TIERED SCORING RULES: " +
     "1. Tier 1 (Small): Paper, Tins (+5 pts). " +
     "2. Tier 2 (Medium): Plastic bottles, Glass (+20 pts). " +
     "3. Tier 3 (Large): E-waste, Appliances (+500 pts). " +
-    "4. REJECT: General trash not being sorted, greenwashing, or irrelevant images (Score 0). " +
+    "4. REJECT: General trash not being sorted, greenwashing, or non-raw photos (Score 0). " +
     "5. CRITICAL: Do NOT penalize (roast) users for recycling single-use plastics if it is the local norm and they are recycling correctly. Instead, encourage it and provide the appropriate Tier 2 points. " +
     "Calculate estimated CO2 saved in milligrams (mg). " +
     "Return strictly JSON: { verified: boolean, score: number (Points), co2_saved: number (mg CO2), actionType: string, message: string, reasoning: string }.";
@@ -336,8 +339,8 @@ export async function POST(req: NextRequest) {
           const currentCO2 = vision.co2_saved ?? 0;
 
           if (vision.verified && (currentScore > 0 || currentCO2 > 0)) {
-            // Reward high impact with vouchers
-            if (currentScore >= 20 || currentCO2 >= 100) {
+            // Reward high impact with vouchers (Action-based)
+            if (currentScore >= 50 || currentCO2 >= 200) {
               if (currentScore > 0) {
                 voucher = await callMiniMaxVoucherGen(vision.actionType || "waste-audit", currentScore);
               }
@@ -412,6 +415,26 @@ async function completeVerification(scanId: ObjectId, userId: any, username: any
 
         if (dailyVoucherCount < 5) {
           await vouchers.insertOne({ userId, ...voucher, used: false, createdAt: timestamp, expiry: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) });
+        }
+      }
+
+      // MILESTONE VOUCHER: 500 pts - Planet Advocate (15% off)
+      const user = await users.findOne({ userId });
+      if (user && user.totalScore >= 500) {
+        const milestoneVoucherKey = "milestone_500";
+        const existingMilestoneVoucher = await vouchers.findOne({ userId, milestoneKey: milestoneVoucherKey });
+
+        if (!existingMilestoneVoucher) {
+          const milestoneVoucher = {
+            title: "Planet Advocate Reward",
+            description: "You've reached 500 points! Enjoy 15% off eco-friendly goods as a thank you.",
+            code: generateRandomCode(),
+            milestoneKey: milestoneVoucherKey,
+            used: false,
+            createdAt: timestamp,
+            expiry: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) // 1 year expiry
+          };
+          await vouchers.insertOne({ userId, ...milestoneVoucher });
         }
       }
     }

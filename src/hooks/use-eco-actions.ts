@@ -178,11 +178,40 @@ export function useEcoActions(initialScans: Scan[], userProfile: { username: str
 
                 if (confettiPromise) {
                     confettiPromise.then(confetti => {
+                        // Golden Sparkle Effect
+                        const duration = 3 * 1000;
+                        const end = Date.now() + duration;
+
+                        const frame = () => {
+                            confetti({
+                                particleCount: 2,
+                                angle: 60,
+                                spread: 55,
+                                origin: { x: 0 },
+                                colors: ["#d4af37", "#f97316", "#ffffff"]
+                            });
+                            confetti({
+                                particleCount: 2,
+                                angle: 120,
+                                spread: 55,
+                                origin: { x: 1 },
+                                colors: ["#d4af37", "#f97316", "#ffffff"]
+                            });
+
+                            if (Date.now() < end) {
+                                requestAnimationFrame(frame);
+                            }
+                        };
+                        frame();
+
+                        // Main burst
                         confetti({
-                            particleCount: 120,
-                            spread: 70,
-                            origin: { y: 0.7 },
-                            colors: ["#22c55e", "#a3e635", "#bbf7d0"]
+                            particleCount: 150,
+                            spread: 100,
+                            origin: { y: 0.6 },
+                            colors: ["#d4af37", "#e5c100", "#ffffff", "#c0c0c0"],
+                            scalar: 1.2,
+                            gravity: 0.8
                         });
                     }).catch(() => { });
                 }
