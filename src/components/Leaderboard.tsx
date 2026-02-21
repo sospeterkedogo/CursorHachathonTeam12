@@ -42,7 +42,7 @@ export default function Leaderboard({ entries, currentUserId, loading }: Leaderb
     return (
         <div className="space-y-8">
             <div className="flex items-center justify-between px-2">
-                <h3 className="text-[10px] font-black text-neutral-500 uppercase tracking-[0.4em]">Global Imperial Standings</h3>
+                <h3 className="text-[10px] font-black text-neutral-500 uppercase tracking-[0.4em]">Community Leaderboard</h3>
             </div>
 
             <motion.div
@@ -95,11 +95,11 @@ export default function Leaderboard({ entries, currentUserId, loading }: Leaderb
                                         </p>
                                         {rankIcon}
                                         {isCurrentUser && (
-                                            <span className="text-[7px] sm:text-[8px] bg-emerald-500 text-white font-black px-1.5 sm:px-2 py-0.5 rounded-full uppercase tracking-widest shadow-lg shadow-emerald-500/20">Identity</span>
+                                            <span className="text-[7px] sm:text-[8px] bg-emerald-500 text-white font-black px-1.5 sm:px-2 py-0.5 rounded-full uppercase tracking-widest shadow-lg shadow-emerald-500/20">You</span>
                                         )}
                                     </div>
                                     <p className="text-[8px] sm:text-[9px] text-neutral-600 font-black uppercase tracking-[0.3em] mt-0.5 sm:mt-1 shrink-0">
-                                        {rank <= 3 ? "Imperial Auditor" : "Contributor"}
+                                        {rank <= 3 ? "Impact Star" : "Contributor"}
                                     </p>
                                 </div>
 
@@ -107,7 +107,7 @@ export default function Leaderboard({ entries, currentUserId, loading }: Leaderb
                                     <p className="luxury-data text-xl sm:text-2xl text-emerald-500 leading-none mb-1">
                                         {user.totalScore.toLocaleString()}
                                     </p>
-                                    <p className="text-[7px] sm:text-[8px] text-neutral-600 font-black uppercase tracking-widest leading-none">Prestige Points</p>
+                                    <p className="text-[7px] sm:text-[8px] text-neutral-600 font-black uppercase tracking-widest leading-none">Eco Points</p>
                                 </div>
                             </motion.div>
                         );

@@ -32,7 +32,7 @@ export const GlobalBanner: React.FC<GlobalBannerProps> = ({ globalScore, globalC
                         </div>
                         {userRank && (
                             <div className="text-right">
-                                <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-neutral-500 block mb-1">Global Standing</span>
+                                <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-neutral-500 block mb-1">Your Rank</span>
                                 <span className="text-2xl sm:text-3xl luxury-data text-white">#{userRank}</span>
                             </div>
                         )}
@@ -40,7 +40,7 @@ export const GlobalBanner: React.FC<GlobalBannerProps> = ({ globalScore, globalC
 
                     <div className="grid grid-cols-2 gap-6 sm:gap-12">
                         <div className="space-y-1 sm:space-y-2">
-                            <div className="text-3xl sm:text-5xl luxury-data text-white drop-shadow-lg">
+                            <div className="text-3xl sm:text-5xl luxury-data text-white tabular-nums drop-shadow-lg">
                                 {formatCompactNumber(globalCO2)}
                             </div>
                             <div className="flex items-center gap-2">
@@ -51,7 +51,7 @@ export const GlobalBanner: React.FC<GlobalBannerProps> = ({ globalScore, globalC
                             </div>
                         </div>
                         <div className="space-y-1 sm:space-y-2">
-                            <div className="text-3xl sm:text-5xl luxury-data text-luxury-gold drop-shadow-lg">
+                            <div className="text-3xl sm:text-5xl luxury-data text-luxury-gold tabular-nums drop-shadow-lg">
                                 {formatCompactNumber(globalScore)}
                             </div>
                             <div className="flex items-center gap-2">
@@ -148,12 +148,12 @@ export const GoalCard: React.FC<GoalCardProps> = ({ userScore, className = "" })
                     <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2 opacity-60 mb-1">
                             <Trophy className="w-3 h-3 text-luxury-gold" />
-                            <span className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.2em]">Personal Odyssey</span>
+                            <span className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.2em]">Your Progress</span>
                         </div>
-                        <h3 className="text-2xl luxury-heading text-white">{currentMilestone.label}</h3>
+                        <h3 className="text-2xl font-bold luxury-heading text-white">{currentMilestone.label}</h3>
                     </div>
                     <div className="text-right flex flex-col items-end">
-                        <span className="text-[8px] font-black text-neutral-500 uppercase tracking-widest mb-1">Reward</span>
+                        <span className="text-[8px] font-black text-neutral-500 uppercase tracking-widest mb-1">Next Reward</span>
                         <div className="bg-luxury-gold/10 px-4 py-2 rounded-2xl border border-luxury-gold/20">
                             <span className="text-[10px] font-bold text-luxury-gold uppercase tracking-widest">
                                 {currentMilestone.reward}

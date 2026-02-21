@@ -79,9 +79,9 @@ export const VerificationSection: React.FC<VerificationSectionProps> = ({
                         <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-emerald-500/5 flex items-center justify-center border border-emerald-500/10 mb-4 sm:mb-6 mx-auto backdrop-blur-md">
                             <Leaf className="w-8 h-8 sm:w-10 sm:h-10 text-emerald-500" />
                         </div>
-                        <h2 className="text-2xl sm:text-4xl luxury-heading mb-3 font-medium">Waste Auditor</h2>
+                        <h2 className="text-2xl sm:text-4xl luxury-heading mb-3 font-medium">Eco Hero</h2>
                         <p className="text-[12px] sm:text-sm text-neutral-400 max-w-[280px] mx-auto leading-relaxed font-light tracking-wide">
-                            Experience the art of sustainable auditing. Scan your waste or your reusables.
+                            Track your small wins for the planet. Scan your recyclables or reusables to see your impact.
                         </p>
                     </motion.div>
 
@@ -111,7 +111,7 @@ export const VerificationSection: React.FC<VerificationSectionProps> = ({
                                 <Camera className="w-8 h-8 group-hover:scale-110 transition-transform duration-500" />
                             </button>
                             <span className="absolute -bottom-7 text-[10px] font-bold uppercase tracking-[0.3em] text-emerald-500 opacity-80">
-                                {loading ? "Analyzing..." : "Begin Audit"}
+                                {loading ? "Scanning..." : "Snap a photo"}
                             </span>
                         </motion.div>
 

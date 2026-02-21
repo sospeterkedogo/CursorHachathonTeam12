@@ -8,27 +8,27 @@ import { OnboardingProps } from "@/types";
 const SLIDES = [
     {
         id: "welcome",
-        title: "The Luxury of Sustainability",
-        description: "Welcome to an elite league of ecological auditors. Where conservation meets sophisticated verification.",
+        title: "Welcome to EcoVerify",
+        description: "Join our community of planet-friendly people making the world a cleaner place, one action at a time.",
         icon: Globe,
         color: "text-emerald-500",
         accent: "bg-emerald-500/10",
     },
     {
         id: "verify",
-        title: "Elemental Auditing",
-        description: "Our advanced vision system meticulously validates your environmental contributions with precision.",
+        title: "See Your Impact",
+        description: "Our smart scanner helps you track your sustainable choices and see the difference you're making.",
         icon: Camera,
         color: "text-blue-500",
         accent: "bg-blue-500/10",
     },
     {
         id: "earn",
-        title: "Acurate Prestige",
-        description: "Ascend through the ranks of the Imperial Ledger. Earn exclusive rewards for your environmental mastery.",
+        title: "Earn Fun Rewards",
+        description: "Collect eco-points for your small wins and unlock exciting rewards from planet-friendly brands.",
         icon: Trophy,
-        color: "text-luxury-gold",
-        accent: "bg-luxury-gold/10",
+        color: "text-amber-500",
+        accent: "bg-amber-500/10",
     },
 ];
 
@@ -140,7 +140,7 @@ export default function Onboarding({ onComplete, totalVerifiedUsers, totalVouche
                                     >
                                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                                         <span className="text-sm font-black uppercase tracking-[0.2em]">
-                                            {currentSlide === SLIDES.length - 1 ? "Begin Audit" : "Continue"}
+                                            {currentSlide === SLIDES.length - 1 ? "Let's Go!" : "Continue"}
                                         </span>
                                         {currentSlide === SLIDES.length - 1 ? <Check className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
                                     </button>
@@ -153,7 +153,7 @@ export default function Onboarding({ onComplete, totalVerifiedUsers, totalVouche
                                             }}
                                             className="text-[9px] font-black text-neutral-600 hover:text-neutral-400 uppercase tracking-[0.2em] transition-colors"
                                         >
-                                            Finalize Participation
+                                            Done for now
                                         </button>
                                     )}
                                 </div>

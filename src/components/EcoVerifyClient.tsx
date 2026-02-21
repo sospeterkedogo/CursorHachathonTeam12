@@ -30,9 +30,10 @@ import { ProfileView } from "./eco-verify/ProfileView";
 import { ProfileModal } from "./eco-verify/ProfileModal";
 import { GalleryModal } from "./eco-verify/GalleryModal";
 import { Lightbox } from "./eco-verify/Lightbox";
+import { GlobalInsights } from "./eco-verify/GlobalInsights";
 
 export default function EcoVerifyClient({ initialTotalScore, initialGlobalCO2, initialScans, initialLeaderboard, itemOne, itemTwo }: EcoVerifyClientProps) {
-  const [activeTab, setActiveTab] = useState<"verify" | "leaderboard" | "vouchers" | "profile">("verify");
+  const [activeTab, setActiveTab] = useState<"verify" | "leaderboard" | "vouchers" | "profile" | "insights">("verify");
   const [globalScore, setGlobalScore] = useState(initialTotalScore);
   const [globalCO2, setGlobalCO2] = useState(initialGlobalCO2);
   const [userScore, setUserScore] = useState(0); // Personal score 4 goal progress
@@ -167,6 +168,7 @@ export default function EcoVerifyClient({ initialTotalScore, initialGlobalCO2, i
           if (tab === "leaderboard") fetchLeaderboardAndStats();
           if (tab === "vouchers") fetchVouchers();
           if (tab === "profile") fetchUserActivity(0, false);
+          if (tab === "insights") fetchLeaderboardAndStats();
         }}
       />
 
@@ -217,6 +219,12 @@ export default function EcoVerifyClient({ initialTotalScore, initialGlobalCO2, i
                     <span className="text-[10px] font-black text-neutral-500 uppercase tracking-[0.4em]">Retrieving Ledger...</span>
                   </div>
                 )
+              ) : activeTab === "insights" ? (
+                <GlobalInsights
+                  globalScore={globalScore}
+                  globalCO2={globalCO2}
+                  totalVerifiedUsers={globalVerifiedUsers}
+                />
               ) : (
                 <div className="space-y-10 sm:space-y-16">
                   {/* Audit Dashboard Section */}
@@ -252,8 +260,8 @@ export default function EcoVerifyClient({ initialTotalScore, initialGlobalCO2, i
 
                   <div className="pt-12 border-t border-white/5">
                     <div className="flex items-center gap-4 mb-8 sm:mb-12">
-                      <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-luxury-gold" />
-                      <h3 className="text-[10px] sm:text-[11px] font-black text-neutral-500 uppercase tracking-[0.4em]">Live Activity Feed</h3>
+                      <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500" />
+                      <h3 className="text-[10px] sm:text-[11px] font-black text-neutral-500 uppercase tracking-[0.4em]">Community Activity</h3>
                     </div>
                     <ActivityFeed
                       scans={scans}

@@ -72,13 +72,13 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                 </div>
 
                 <h2 className="text-2xl sm:text-3xl luxury-heading text-white mb-2">
-                    {userProfile?.username || "Distinguished Auditor"}
+                    {userProfile?.username || "Eco Friend"}
                 </h2>
 
                 <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-center">
-                    <span className="text-[8px] sm:text-[10px] font-black text-emerald-500 uppercase tracking-[0.2em] sm:tracking-[0.3em]">Elite Status</span>
+                    <span className="text-[8px] sm:text-[10px] font-black text-emerald-400 uppercase tracking-[0.2em] sm:tracking-[0.3em]">Active Member</span>
                     <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-white/10" />
-                    <span className="text-[8px] sm:text-[10px] font-black text-neutral-500 uppercase tracking-[0.2em] sm:tracking-[0.3em]">Imperial Ledger No. {currentUserId.slice(-4)}</span>
+                    <span className="text-[8px] sm:text-[10px] font-black text-neutral-500 uppercase tracking-[0.2em] sm:tracking-[0.3em]">Member ID {currentUserId.slice(-4)}</span>
                 </div>
             </div>
 
@@ -135,13 +135,13 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
 
             <section className="space-y-6">
                 <div className="flex items-center justify-between px-2">
-                    <h3 className="text-[10px] font-black text-neutral-500 uppercase tracking-[0.4em]">Historical Ledger</h3>
+                    <h3 className="text-[10px] font-black text-neutral-500 uppercase tracking-[0.4em]">Your Impact Journey</h3>
                 </div>
 
                 {activity.length === 0 && !loading ? (
                     <div className="luxury-card p-20 text-center border-dashed border-white/10 opacity-40">
-                        <p className="luxury-heading text-neutral-500 text-sm uppercase tracking-[0.2em]">The scroll is empty</p>
-                        <p className="text-[8px] text-neutral-600 mt-4 uppercase tracking-[0.5em]">Initiate an audit to populate history</p>
+                        <p className="luxury-heading text-neutral-500 text-sm uppercase tracking-[0.2em]">Ready to start?</p>
+                        <p className="text-[8px] text-neutral-600 mt-4 uppercase tracking-[0.5em]">Scan your first item to see it here</p>
                     </div>
                 ) : (
                     <motion.div

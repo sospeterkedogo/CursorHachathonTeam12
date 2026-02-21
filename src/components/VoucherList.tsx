@@ -33,8 +33,8 @@ export default function VoucherList({ vouchers, loading, onActivate }: VoucherLi
         return (
             <div className="luxury-card p-20 text-center opacity-40 border-dashed border-white/10">
                 <Ticket className="w-12 h-12 mb-6 mx-auto text-neutral-600" />
-                <p className="luxury-heading text-neutral-500 text-sm uppercase tracking-[0.2em]">Vault is Empty</p>
-                <p className="text-[8px] text-neutral-600 mt-4 uppercase tracking-[0.5em]">Verify actions to unlock imperial rewards</p>
+                <p className="luxury-heading text-neutral-500 text-sm uppercase tracking-[0.2em]">No rewards yet</p>
+                <p className="text-[8px] text-neutral-600 mt-4 uppercase tracking-[0.5em]">Complete actions to unlock exciting local rewards</p>
             </div>
         );
     }
@@ -47,7 +47,7 @@ export default function VoucherList({ vouchers, loading, onActivate }: VoucherLi
             className="space-y-8"
         >
             <div className="flex items-center justify-between px-2">
-                <h3 className="text-[10px] font-black text-neutral-500 uppercase tracking-[0.4em]">Available Imperial Assets</h3>
+                <h3 className="text-[10px] font-black text-neutral-500 uppercase tracking-[0.4em]">Community Rewards</h3>
             </div>
 
             {vouchers.map((voucher, index) => {
@@ -93,11 +93,11 @@ export default function VoucherList({ vouchers, loading, onActivate }: VoucherLi
                                         onClick={() => onActivate && onActivate(voucher._id)}
                                         className="bg-gradient-to-tr from-emerald-600 to-emerald-400 hover:from-emerald-500 hover:to-emerald-300 text-black text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] px-4 sm:px-8 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl transition-all duration-500 shadow-2xl shadow-emerald-500/20 active:scale-95 whitespace-nowrap"
                                     >
-                                        Claim Asset
+                                        Use Now
                                     </button>
                                 ) : (
                                     <span className="text-neutral-500 text-[8px] sm:text-[9px] font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] px-4 sm:px-8 py-2.5 sm:py-3 border border-white/5 rounded-xl sm:rounded-2xl bg-white/5 whitespace-nowrap">
-                                        Archived
+                                        Used
                                     </span>
                                 )}
                             </div>
