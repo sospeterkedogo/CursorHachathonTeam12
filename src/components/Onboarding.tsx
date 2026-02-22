@@ -30,6 +30,14 @@ const SLIDES = [
         color: "text-amber-500",
         accent: "bg-amber-500/10",
     },
+    {
+        id: "profile",
+        title: "Secure Your Identity",
+        description: "Click the profile icon in the top right to choose a premium avatar and unique username to join the elite leaderboard.",
+        icon: Sparkles,
+        color: "text-purple-500",
+        accent: "bg-purple-500/10",
+    },
 ];
 
 export default function Onboarding({ onComplete, totalVerifiedUsers, totalVouchers }: OnboardingProps) {

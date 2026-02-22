@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Loader2, Leaf, ShieldCheck, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getUserId } from "@/lib/userId";
@@ -33,6 +34,7 @@ import { Lightbox } from "./eco-verify/Lightbox";
 import { GlobalInsights } from "./eco-verify/GlobalInsights";
 
 export default function EcoVerifyClient({ initialTotalScore, initialGlobalCO2, initialScans, initialLeaderboard, itemOne, itemTwo }: EcoVerifyClientProps) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<"verify" | "leaderboard" | "vouchers" | "profile" | "insights">("verify");
   const [globalScore, setGlobalScore] = useState(initialTotalScore);
   const [globalCO2, setGlobalCO2] = useState(initialGlobalCO2);
@@ -42,6 +44,7 @@ export default function EcoVerifyClient({ initialTotalScore, initialGlobalCO2, i
   const [globalVouchersCount, setGlobalVouchersCount] = useState(itemTwo);
 
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [isNavigatingToHome, setIsNavigatingToHome] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [isPublic, setIsPublic] = useState(true);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
@@ -76,6 +79,9 @@ export default function EcoVerifyClient({ initialTotalScore, initialGlobalCO2, i
     }
     setIsMounted(true);
     fetchLeaderboardAndStats(); // Fetch updated stats on mount
+
+    // Prefetch landing page for seamless return
+    router.prefetch('/');
   }, []);
 
   const fetchLeaderboardAndStats = async () => {
@@ -144,6 +150,35 @@ export default function EcoVerifyClient({ initialTotalScore, initialGlobalCO2, i
 
   return (
     <div className="w-full pb-32 overflow-x-hidden min-h-screen selection:bg-luxury-gold/30">
+      <AnimatePresence>
+        {isNavigatingToHome && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-xl flex flex-col items-center justify-center gap-6"
+          >
+            <div className="relative">
+              <div className="w-20 h-20 rounded-2xl bg-emerald-500 flex items-center justify-center animate-pulse shadow-2xl shadow-emerald-500/40">
+                <Leaf className="w-10 h-10 text-white" />
+              </div>
+              <div className="absolute -inset-4 border border-emerald-500/20 rounded-3xl animate-[spin_10s_linear_infinite]" />
+            </div>
+            <div className="text-center space-y-2">
+              <p className="text-[10px] font-black text-white uppercase tracking-[0.5em]">Returning to HQ</p>
+              <div className="h-0.5 w-32 bg-white/5 rounded-full overflow-hidden">
+                <motion.div
+                  initial={{ x: "-100%" }}
+                  animate={{ x: "100%" }}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                  className="h-full w-full bg-emerald-500"
+                />
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Premium Background Elements */}
       <div className="fixed inset-0 pointer-events-none -z-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-emerald-500/5 via-black to-black" />
       <div className="fixed top-0 left-0 w-full h-96 bg-gradient-to-b from-emerald-500/10 to-transparent -z-10 blur-3xl opacity-30" />
@@ -159,6 +194,10 @@ export default function EcoVerifyClient({ initialTotalScore, initialGlobalCO2, i
         userProfile={userProfile}
         onShowFeedback={() => setShowFeedbackModal(true)}
         onShowProfile={() => setShowProfileModal(true)}
+        onHomeClick={() => {
+          setIsNavigatingToHome(true);
+          router.push("/");
+        }}
       />
 
       <BottomNav

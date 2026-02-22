@@ -24,11 +24,14 @@ export const GlobalBanner: React.FC<GlobalBannerProps> = ({ globalScore, globalC
 
                 <div className="relative z-10 flex flex-col gap-6 sm:gap-10">
                     <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 sm:gap-3">
-                            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
-                                <Globe className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-500" />
+                        <div className="flex flex-col gap-1 sm:gap-2">
+                            <div className="flex items-center gap-2 sm:gap-3">
+                                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
+                                    <Globe className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-500" />
+                                </div>
+                                <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.3em] text-emerald-500/80">Global Impact</span>
                             </div>
-                            <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.3em] text-emerald-500/80">Global Impact</span>
+
                         </div>
                         {userRank && (
                             <div className="text-right">

@@ -62,7 +62,7 @@ export const ActivityFeed = ({
                 </div>
                 <div className="col-span-4 flex items-center gap-1 sm:gap-2">
                     <User className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-neutral-500" />
-                    <span className="text-[8px] sm:text-[10px] font-black text-neutral-500 uppercase tracking-[0.2em]">Auditor</span>
+                    <span className="text-[8px] sm:text-[10px] font-black text-emerald-500/60 uppercase tracking-[0.2em]">Eco Auditor</span>
                 </div>
                 <div className="col-span-5 text-right flex items-center justify-end gap-1 sm:gap-2">
                     <Zap className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-neutral-500" />
@@ -177,7 +177,7 @@ export const ActivityFeed = ({
                                                             </p>
                                                         </div>
                                                         <div className="space-y-1.5 sm:space-y-2">
-                                                            <p className="text-[8px] sm:text-[9px] font-black text-neutral-500 uppercase tracking-[0.4em] mb-1.5 sm:mb-2">Auditor Narration</p>
+                                                            <p className="text-[8px] sm:text-[9px] font-black text-emerald-500 uppercase tracking-[0.4em] mb-1.5 sm:mb-2">Eco Feedback</p>
                                                             <p className="text-xs sm:text-sm font-light text-neutral-400 italic leading-relaxed border-l-2 border-emerald-500/20 pl-3 sm:pl-4 py-1">
                                                                 "{scan.reasoning || scan.message || "No specific observations were recorded for this audit."}"
                                                             </p>

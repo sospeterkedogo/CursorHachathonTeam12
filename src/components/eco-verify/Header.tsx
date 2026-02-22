@@ -1,17 +1,27 @@
-import React from "react";
 import { Leaf, MessageSquare, User } from "lucide-react";
+import Link from "next/link";
 import { ThemeToggle } from "../ThemeToggle";
 
 interface HeaderProps {
     userProfile: { username: string; avatar: string } | null;
     onShowFeedback: () => void;
     onShowProfile: () => void;
+    onHomeClick?: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ userProfile, onShowFeedback, onShowProfile }) => (
+export const Header: React.FC<HeaderProps> = ({ userProfile, onShowFeedback, onShowProfile, onHomeClick }) => (
     <header className="fixed top-0 left-0 right-0 z-50 w-full backdrop-blur-2xl bg-black/40 border-b border-white/5 py-5 px-6 pt-[calc(1.25rem+env(safe-area-inset-top,0px))]">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
-            <div className="flex items-center gap-3 sm:gap-4 group cursor-pointer">
+            <Link
+                href="/"
+                onClick={(e) => {
+                    if (onHomeClick) {
+                        e.preventDefault();
+                        onHomeClick();
+                    }
+                }}
+                className="flex items-center gap-3 sm:gap-4 group cursor-pointer hover:opacity-80 transition-opacity"
+            >
                 <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-emerald-500 flex items-center justify-center shadow-2xl shadow-emerald-500/20 group-hover:scale-110 transition-transform duration-500 relative overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-tr from-black/20 to-transparent" />
                     <Leaf className="w-6 h-6 sm:w-7 sm:h-7 text-white relative z-10" />
@@ -22,7 +32,7 @@ export const Header: React.FC<HeaderProps> = ({ userProfile, onShowFeedback, onS
                     </h1>
                     <span className="text-[7px] sm:text-[8px] font-black text-emerald-500 uppercase tracking-[0.3em] sm:tracking-[0.4em] opacity-80">Imperial Ledger</span>
                 </div>
-            </div>
+            </Link>
 
             <div className="flex items-center gap-2 sm:gap-3">
                 <button

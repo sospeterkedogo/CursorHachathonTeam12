@@ -4,7 +4,7 @@ export default function PrivacyPolicy() {
     return (
         <div className="min-h-screen bg-neutral-50 dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 p-6 md:p-12">
             <div className="max-w-3xl mx-auto">
-                <a href="/" className="inline-flex items-center gap-2 text-emerald-600 font-bold mb-8 hover:opacity-70 transition-opacity">
+                <a href="/verify" className="inline-flex items-center gap-2 text-emerald-600 font-bold mb-8 hover:opacity-70 transition-opacity">
                     <ArrowLeft className="w-4 h-4" />
                     Back to App
                 </a>

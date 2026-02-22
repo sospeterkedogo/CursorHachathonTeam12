@@ -4,17 +4,17 @@
 
 :root {
   /* Light Mode - Refined */
-  --background: #fdfdfd;
-  --foreground: #0a0a0a;
+  --background: #f8f9fa;
+  --foreground: #1a1a1a;
 
-  --luxury-gold: #d4af37;
-  --luxury-emerald: #064e3b;
+  --luxury-gold: #b8860b;
+  --luxury-emerald: #065f46;
 
-  --card-bg: rgba(255, 255, 255, 0.05);
-  --card-border: rgba(0, 0, 0, 0.08);
+  --card-bg: rgba(0, 0, 0, 0.02);
+  --card-border: rgba(0, 0, 0, 0.06);
 
-  --glass-bg: rgba(255, 255, 255, 0.03);
-  --glass-border: rgba(0, 0, 0, 0.05);
+  --glass-bg: rgba(255, 255, 255, 0.4);
+  --glass-border: rgba(0, 0, 0, 0.08);
 
   --radius-luxury: 24px;
 }
@@ -43,6 +43,29 @@ body {
   overflow-x: hidden;
   overscroll-behavior-y: none;
   touch-action: pan-y;
+}
+
+/* Custom Scrollbar - Slim & Sleek */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--luxury-emerald);
 }
 
 body {

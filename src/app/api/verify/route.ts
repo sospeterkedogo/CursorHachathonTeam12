@@ -74,7 +74,7 @@ async function callMiniMaxVision(imageBase64: string): Promise<VisionResult> {
   }
 
   const prompt =
-    "You are a Waste Auditor. Your job is to verify recycling or reuse actions. " +
+    "You are an Eco-Friendly Auditor. Your job is to verify sustainability actions, recycling, or reuse. " +
     "CRITICAL EVALUATION: Critically evaluate the source of this image. Is it a real-life, raw snapshot from a mobile camera, or is it a professional stock photo, a screenshot, or a digital diagram? " +
     "If it is not a raw, real-life photo of an object in a physical environment, return verified: false and score: 0. " +
     "Reject any image with watermarks, studio-white backgrounds, perfect marketing lighting, or screenshot UI elements. " +

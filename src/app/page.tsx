@@ -1,26 +1,13 @@
 import { getDb } from "@/lib/mongodb";
-import EcoVerifyClient from "@/components/EcoVerifyClient";
+import LandingPage from "@/components/LandingPage";
 
 export const dynamic = 'force-dynamic';
 
-async function getInitialData() {
+async function getLandingData() {
   try {
     const db = await getDb();
-    const scans = db.collection("scans");
 
-    const verifiedScans = await scans
-      .find<{ score?: number | null }>({ verified: true, isPublic: { $ne: false } })
-      .sort({ timestamp: -1 })
-      .limit(50)
-      .toArray();
-
-    const leaderboard = await db.collection("users")
-      .find({ totalScore: { $gt: 0 } })
-      .sort({ totalScore: -1, lastActive: -1 })
-      .limit(50)
-      .project({ username: 1, avatar: 1, totalScore: 1, userId: 1, _id: 0 })
-      .toArray();
-
+    // Global Stats
     const globalPointsAgg = await db.collection("users").aggregate([
       { $group: { _id: null, total: { $sum: "$totalScore" } } }
     ]).toArray();
@@ -31,67 +18,51 @@ async function getInitialData() {
     ]).toArray();
     const totalGlobalCO2 = globalCO2Agg[0]?.total || 0;
 
-    const lastTen = await scans
-      .find<{ image: string; actionType?: string | null; score?: number | null; timestamp?: Date; username?: string; avatar?: string; message?: string }>({
-        verified: true,
-        isPublic: { $ne: false }
-      })
-      .sort({ timestamp: -1 })
-      .limit(10)
-      .toArray();
-
     const totalVerifiedUsers = await db.collection("users").countDocuments({ totalScore: { $gt: 0 } });
     const totalVouchers = await db.collection("vouchers").countDocuments({});
 
+    // Community Proof (Recent verified scans)
+    const communityScans = await db.collection("scans")
+      .find({
+        verified: true,
+        isPublic: { $ne: false },
+        message: {
+          $exists: true,
+          $ne: ""
+        }
+      })
+      .sort({ timestamp: -1 })
+      .limit(12)
+      .toArray();
+
     return {
-      totalScore,
-      totalGlobalCO2,
-      lastTen: lastTen.map((s: any) => ({
-        _id: s._id.toString(),
-        userId: s.userId,
+      stats: {
+        totalScore,
+        totalGlobalCO2,
+        totalVerifiedUsers,
+        totalVouchers
+      },
+      communityScans: communityScans.map(s => ({
+        id: s._id.toString(),
         image: s.image,
-        actionType: s.actionType ?? "eco-action",
-        score: s.score ?? 0,
-        co2_saved: s.co2_saved ?? 0,
-        timestamp: s.timestamp?.toISOString() ?? new Date().toISOString(),
+        actionType: s.actionType,
+        message: s.message,
         username: s.username,
         avatar: s.avatar,
-        message: s.message
-      })),
-      leaderboard,
-      totalVerifiedUsers,
-      totalVouchers
+        score: s.score || 0,
+        co2_saved: s.co2_saved || 0
+      }))
     };
   } catch (error) {
-    console.error("Error fetching initial data:", error);
-    // Return empty data on error so the page still loads
+    console.error("Error fetching landing data:", error);
     return {
-      totalScore: 0,
-      totalGlobalCO2: 0,
-      lastTen: [],
-      leaderboard: [],
-      totalVerifiedUsers: 0,
-      totalVouchers: 0
+      stats: { totalScore: 0, totalGlobalCO2: 0, totalVerifiedUsers: 0, totalVouchers: 0 },
+      communityScans: []
     };
   }
 }
 
 export default async function Page() {
-  const { totalScore, totalGlobalCO2, lastTen, leaderboard, totalVerifiedUsers, totalVouchers } = await getInitialData();
-
-  return (
-    <main className="flex min-h-screen flex-col items-center px-3 py-6 sm:px-4 sm:py-8">
-      <section className="w-full max-w-3xl space-y-6 sm:space-y-8">
-        <EcoVerifyClient
-          initialTotalScore={totalScore}
-          initialGlobalCO2={totalGlobalCO2}
-          initialScans={lastTen}
-          initialLeaderboard={leaderboard as any[]}
-          itemOne={totalVerifiedUsers}
-          itemTwo={totalVouchers}
-        />
-      </section>
-    </main>
-  );
+  const data = await getLandingData();
+  return <LandingPage {...data} />;
 }
-
