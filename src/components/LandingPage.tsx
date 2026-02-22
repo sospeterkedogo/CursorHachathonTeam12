@@ -70,6 +70,18 @@ const FEEDBACK_HISTORY = [
     feedback: "The UI is so simple, I hope it would be luxury. Android and iOS versions?",
     response: "Just made the UI update of your life. Luxury theme deployed. Mobile apps are in development.",
     fixes: ["Luxury 'Imperial' Design System", "Glassmorphism & Gold accents", "Refined mobile-first layout"]
+  },
+  {
+    date: "Sun, 22 Feb 2026",
+    feedback: "Good UI and onboarding. Value prop is unclear what's the long-term use? Also, the system can be gamed with stock photos.",
+    response: "Most valuable feedback yet. Tightening core logic early is a huge win. I've re-done the UI to make goals more visible and addressed the 'gaming' concerns.",
+    fixes: ["Anti-Stock Image Guardrails", "Value Prop UI Overhaul", "Dynamic Goal Visibility"]
+  },
+  {
+    date: "Sun, 22 Feb 2026",
+    feedback: "Great initiative! Clean simple UI. I wish I could see the AI feedback for others on the leaderboard. Love the new voice feature!",
+    response: "Happy to hear the voice feature helps! AI transparency for community posts is a great suggestion for our upcoming Social Layer updates.",
+    fixes: ["AI Feedback Transparency", "Community AI Insights", "Accessibility Voice Polish"]
   }
 ];
 
@@ -203,103 +215,110 @@ export default function LandingPage({ stats, communityScans }: LandingPageProps)
       <div className={`fixed top-0 left-0 w-full h-screen bg-gradient-to-b from-emerald-500/5 to-transparent -z-10 blur-3xl opacity-30`} />
 
       {/* Hero Section */}
-      <section className="relative min-h-screen flex flex-col items-center justify-center px-6 py-24 text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="max-w-4xl space-y-8"
-        >
-          <h1 className="text-5xl md:text-7xl lg:text-8xl luxury-heading tracking-tight leading-tight px-4 pb-2">
-            Sustainability <br />
-            <span className="text-luxury-gold italic inline-block pr-8">Redefined</span>
-          </h1>
+      <section className="relative min-h-[85vh] flex items-center justify-center pt-24 pb-16 px-6 overflow-hidden">
+        {/* Background Gradients */}
+        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-emerald-500/[0.03] blur-[150px] rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
 
-          <div className="space-y-4">
-            <p className={`text-lg md:text-xl ${isDark ? 'text-neutral-400' : 'text-neutral-500'} max-w-2xl mx-auto font-light tracking-wide leading-relaxed`}>
-              Stop hoping you're making a difference. <span className="text-emerald-500 font-medium">Start knowing you are.</span>
-            </p>
-          </div>
+        <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-10 lg:gap-8 items-center relative z-10">
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8 }}
+            className="space-y-8 text-left"
+          >
+            <div className="space-y-5">
+              <h1 className="text-5xl md:text-6xl lg:text-7xl xl:text-8xl luxury-heading tracking-tight leading-[1] pb-2">
+                Sustainability <br />
+                <span className="text-luxury-gold italic pr-4">Redefined</span>.
+              </h1>
 
+              <p className={`text-lg md:text-xl lg:text-2xl ${isDark ? 'text-neutral-400' : 'text-neutral-500'} max-w-xl font-light tracking-wide leading-relaxed`}>
+                Stop hoping you're making a difference. <br />
+                <span className="text-emerald-500 font-medium">Start knowing you are.</span>
+              </p>
 
-
-          <div className="flex flex-col items-center gap-6 pt-8">
-            <button
-              onClick={handleTryNow}
-              disabled={isNavigating}
-              onMouseEnter={() => setCtaHovered(true)}
-              onMouseLeave={() => setCtaHovered(false)}
-              className="group relative px-10 py-5 rounded-2xl bg-emerald-500 text-black font-bold text-lg overflow-hidden transition-all duration-500 hover:scale-105 active:scale-95 shadow-2xl shadow-emerald-500/20 disabled:opacity-70"
-            >
-              <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
-              <span className="relative z-10 flex items-center gap-3">
-                {isNavigating ? (
-                  <>Experience the App <Loader2 className="w-5 h-5 animate-spin" /></>
-                ) : (
-                  <>Experience the App <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" /></>
-                )}
-              </span>
-            </button>
-            <p className="text-[10px] text-neutral-500 uppercase tracking-[0.4em] font-black flex items-center gap-4">
-              <span>Action</span>
-              <span className="w-1 h-1 rounded-full bg-emerald-500" />
-              <span>Proof</span>
-              <span className="w-1 h-1 rounded-full bg-emerald-500" />
-              <span>Impact</span>
-            </p>
-            <p className="text-[9px] text-neutral-600 uppercase tracking-[0.3em] font-medium pt-2">
-              No Sign-up Required • Verified by AI
-            </p>
-          </div>
-        </motion.div>
-
-        {/* Floating Mobile Tease */}
-        <div className="absolute bottom-12 left-1/2 -translate-x-1/2 flex items-center gap-4 py-3 px-6 luxury-card border-white/5 animate-bounce">
-          <Smartphone className="w-4 h-4 text-emerald-500" />
-          <span className="text-[10px] font-black uppercase tracking-widest text-neutral-300">Android & iOS coming soon</span>
-        </div>
-      </section>
-
-      {/* Dynamic Milestones Section */}
-      <section className={`max-w-6xl mx-auto px-6 py-20 border-y ${isDark ? 'border-white/5 bg-white/[0.01]' : 'border-black/5 bg-black/[0.01]'}`}>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
-          <div className="text-center space-y-2">
-            <div className="text-2xl md:text-4xl luxury-data text-luxury-gold">{(stats?.totalScore || 0).toLocaleString()}</div>
-            <div className="text-[9px] font-black text-neutral-500 uppercase tracking-widest">Imperial Points</div>
-          </div>
-          <div className="text-center space-y-2">
-            <div className="text-2xl md:text-4xl luxury-data text-emerald-500">{(stats?.totalGlobalCO2 || 0).toFixed(2)}kg</div>
-            <div className="text-[9px] font-black text-neutral-500 uppercase tracking-widest">CO2 Extinguished</div>
-          </div>
-          <div className="text-center space-y-2">
-            <div className={`text-2xl md:text-4xl luxury-data ${isDark ? 'text-white' : 'text-neutral-900'}`}>{(stats?.totalVerifiedUsers || 0).toLocaleString()}</div>
-            <div className="text-[9px] font-black text-neutral-500 uppercase tracking-widest">Elite Contributors</div>
-          </div>
-          <div className="text-center space-y-2">
-            <div className="text-2xl md:text-4xl luxury-data text-purple-400">{(stats?.totalVouchers || 0).toLocaleString()}</div>
-            <div className="text-[9px] font-black text-neutral-500 uppercase tracking-widest">Vouchers Issued</div>
-          </div>
-        </div>
-
-        {/* Global Goal Progress bar */}
-        <div className="mt-16 max-w-2xl mx-auto space-y-4">
-          <div className="flex justify-between items-end">
-            <div className="space-y-1 text-left">
-              <p className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">Global Road to 1M</p>
-              <p className={`text-xs ${isDark ? 'text-neutral-400' : 'text-neutral-500'} font-light`}>Join the community in reaching our 2027 milestone.</p>
+              <p className={`text-sm md:text-base ${isDark ? 'text-neutral-500' : 'text-neutral-400'} max-w-md font-light leading-relaxed`}>
+                The world's first AI-Verified ledger for personal impact.
+                Snap your actions, prove your impact.
+              </p>
             </div>
-            <div className={`text-[10px] luxury-data ${isDark ? 'text-white' : 'text-neutral-900'}`}>
-              {(((stats?.totalVerifiedUsers || 0) / 1000000) * 100).toFixed(4)}%
+
+            <div className="flex flex-col sm:flex-row items-center gap-6 pt-4">
+              <button
+                onClick={handleTryNow}
+                disabled={isNavigating}
+                className="group relative w-full sm:w-auto px-10 py-5 rounded-2xl bg-emerald-500 text-black font-bold text-lg overflow-hidden transition-all duration-500 hover:scale-105 active:scale-95 shadow-2xl shadow-emerald-500/20 disabled:opacity-70"
+              >
+                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
+                <span className="relative z-10 flex items-center justify-center gap-3">
+                  {isNavigating ? (
+                    <>Processing... <Loader2 className="w-5 h-5 animate-spin" /></>
+                  ) : (
+                    <>Start Your First Audit <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" /></>
+                  )}
+                </span>
+              </button>
+
+              <button
+                onClick={() => document.getElementById('mission')?.scrollIntoView({ behavior: 'smooth' })}
+                className={`w-full sm:w-auto px-10 py-5 rounded-2xl luxury-card transition-all duration-300 ${isDark ? 'hover:bg-white/5' : 'hover:bg-black/5'} font-bold text-lg text-center`}
+              >
+                The Mission
+              </button>
             </div>
-          </div>
-          <div className={`h-1 w-full ${isDark ? 'bg-white/5' : 'bg-black/5'} rounded-full overflow-hidden`}>
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${Math.max(2, ((stats?.totalVerifiedUsers || 0) / 1000000) * 100)}%` }}
-              transition={{ duration: 2, ease: "easeOut" }}
-              className="h-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"
-            />
-          </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, x: 30 }}
+            animate={{ opacity: 1, scale: 1, x: 0 }}
+            transition={{ duration: 1, delay: 0.2 }}
+            className="relative flex justify-center lg:justify-end"
+          >
+            {/* Reduced Scale Visual: App Preview */}
+            <div className={`relative z-10 luxury-card p-2.5 rounded-[2.5rem] shadow-[0_0_80px_rgba(16,185,129,0.08)] ${isDark ? 'bg-black/40' : 'bg-white/40'} max-w-[280px] md:max-w-[320px]`}>
+              <div className="rounded-[2.1rem] overflow-hidden aspect-[9/19] relative group">
+                <img
+                  src="/screenshots/IMG_3349.PNG"
+                  alt="EcoVerify App UI"
+                  className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
+              </div>
+
+              {/* Floating Verification Badge - Reduced size */}
+              <motion.div
+                animate={{ y: [0, -8, 0] }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute -right-6 top-1/4 p-3 luxury-card bg-black/90 backdrop-blur-md border-emerald-500/30 flex items-center gap-2.5 shadow-2xl"
+              >
+                <div className="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                </div>
+                <div>
+                  <p className="text-[7px] font-black text-neutral-500 uppercase tracking-widest">Verified</p>
+                  <p className="text-[9px] font-bold text-white">Capture Logged</p>
+                </div>
+              </motion.div>
+
+              {/* Floating Points Badge - Reduced size */}
+              <motion.div
+                animate={{ y: [0, 8, 0] }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+                className="absolute -left-6 bottom-1/4 p-3 luxury-card bg-black/90 backdrop-blur-md border-luxury-gold/30 flex items-center gap-2.5 shadow-2xl"
+              >
+                <div className="w-6 h-6 rounded-full bg-luxury-gold/20 flex items-center justify-center">
+                  <Sparkles className="w-3.5 h-3.5 text-luxury-gold" />
+                </div>
+                <div>
+                  <p className="text-[7px] font-black text-neutral-500 uppercase tracking-widest">Rewards</p>
+                  <p className="text-[9px] font-bold text-luxury-gold">+250 Pts</p>
+                </div>
+              </motion.div>
+            </div>
+
+            {/* Subtle Background Glow */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-emerald-500/5 blur-[80px] -z-10 rounded-full" />
+          </motion.div>
         </div>
       </section>
 
@@ -311,10 +330,7 @@ export default function LandingPage({ stats, communityScans }: LandingPageProps)
               <h2 className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.4em] flex items-center gap-3">
                 <Target className="w-4 h-4" /> The Mission
               </h2>
-              <h3 className="text-4xl md:text-5xl luxury-heading leading-tight">Auditing the Planet, <br /> One Snap at a Time.</h3>
-              <p className={`${isDark ? 'text-neutral-400' : 'text-neutral-500'} font-light leading-relaxed max-w-xl`}>
-                EcoVerify is a sophisticated AI-powered sustainability ledger. We believe environmental action should be as rewarding as it is impactful. Our goal is to verify **1 Million** eco-actions by 2027, creating a global standard for personal sustainability auditing.
-              </p>
+              EcoVerify is an environmental ledger for the circular age. We believe environmental action should be as rewarding as it is impactful. Our goal is to verify **1 Million** eco-actions by 2027, creating a global standard for personal sustainability auditing.
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
@@ -346,43 +362,6 @@ export default function LandingPage({ stats, communityScans }: LandingPageProps)
               />
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* Use Cases Section */}
-      <section className={`max-w-6xl mx-auto px-6 py-32 border-t ${isDark ? 'border-white/5' : 'border-black/5'}`}>
-        <div className="text-center mb-20 space-y-4">
-          <h2 className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.4em]">Audit Anywhere</h2>
-          <h3 className="text-4xl luxury-heading">Where can I use EcoVerify?</h3>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {USE_CASES.map((useCase, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              className={`luxury-card p-8 group transition-colors ${isDark ? 'border-white/5 hover:bg-emerald-500/5' : 'border-black/5 hover:bg-emerald-500/5'}`}
-            >
-              <div className={`w-12 h-12 rounded-xl ${isDark ? 'bg-white/5' : 'bg-black/5'} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
-                <useCase.icon className="w-6 h-6 text-emerald-500" />
-              </div>
-              <h4 className="text-sm font-black uppercase tracking-widest mb-4">{useCase.title}</h4>
-              <p className={`text-xs ${isDark ? 'text-neutral-500' : 'text-neutral-400'} leading-relaxed font-light mb-6`}>
-                {useCase.desc}
-              </p>
-              <div className="text-[10px] luxury-data text-luxury-gold uppercase tracking-[0.2em]">
-                {useCase.impact}
-              </div>
-            </motion.div>
-          ))}
-        </div>
-        <div className="mt-16 text-center">
-          <p className={`text-xs ${isDark ? 'text-neutral-600' : 'text-neutral-400'} italic font-light`}>
-            "Works perfectly at school, at work, in corporate buildings, cafes, or even while traveling."
-          </p>
         </div>
       </section>
 
@@ -427,6 +406,49 @@ export default function LandingPage({ stats, communityScans }: LandingPageProps)
                 <p className={`text-xs ${isDark ? 'text-neutral-500' : 'text-neutral-400'} leading-relaxed font-light relative z-10 group-hover:text-white transition-colors`}>{item.desc}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Dynamic Milestones Section */}
+      <section className={`max-w-6xl mx-auto px-6 py-32 border-y ${isDark ? 'border-white/5 bg-white/[0.01]' : 'border-black/5 bg-black/[0.01]'}`}>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
+          <div className="text-center space-y-2">
+            <div className="text-2xl md:text-4xl luxury-data text-luxury-gold">{(stats?.totalScore || 0).toLocaleString()}</div>
+            <div className="text-[9px] font-black text-neutral-500 uppercase tracking-widest">Imperial Points</div>
+          </div>
+          <div className="text-center space-y-2">
+            <div className="text-2xl md:text-4xl luxury-data text-emerald-500">{(stats?.totalGlobalCO2 || 0).toFixed(2)}kg</div>
+            <div className="text-[9px] font-black text-neutral-500 uppercase tracking-widest">CO2 Extinguished</div>
+          </div>
+          <div className="text-center space-y-2">
+            <div className={`text-2xl md:text-4xl luxury-data ${isDark ? 'text-white' : 'text-neutral-900'}`}>{(stats?.totalVerifiedUsers || 0).toLocaleString()}</div>
+            <div className="text-[9px] font-black text-neutral-500 uppercase tracking-widest">Elite Contributors</div>
+          </div>
+          <div className="text-center space-y-2">
+            <div className="text-2xl md:text-4xl luxury-data text-purple-400">{(stats?.totalVouchers || 0).toLocaleString()}</div>
+            <div className="text-[9px] font-black text-neutral-500 uppercase tracking-widest">Vouchers Issued</div>
+          </div>
+        </div>
+
+        {/* Global Goal Progress bar */}
+        <div className="mt-16 max-w-2xl mx-auto space-y-4">
+          <div className="flex justify-between items-end">
+            <div className="space-y-1 text-left">
+              <p className="text-[9px] font-black text-emerald-500 uppercase tracking-[0.4em]">Global Road to 1M</p>
+              <p className={`text-xs ${isDark ? 'text-neutral-400' : 'text-neutral-500'} font-light italic leading-relaxed`}>Participate in the global transition toward a circular era.</p>
+            </div>
+            <div className={`text-[10px] luxury-data ${isDark ? 'text-white' : 'text-neutral-900'}`}>
+              {(((stats?.totalVerifiedUsers || 0) / 1000000) * 100).toFixed(4)}%
+            </div>
+          </div>
+          <div className={`h-1 w-full ${isDark ? 'bg-white/5' : 'bg-black/5'} rounded-full overflow-hidden`}>
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${Math.max(2, ((stats?.totalVerifiedUsers || 0) / 1000000) * 100)}%` }}
+              transition={{ duration: 2, ease: "easeOut" }}
+              className="h-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"
+            />
           </div>
         </div>
       </section>
@@ -482,59 +504,158 @@ export default function LandingPage({ stats, communityScans }: LandingPageProps)
         </section>
       )}
 
-      {/* Imperial Health Section */}
-      <section id="health" className={`max-w-6xl mx-auto px-6 py-32 border-t ${isDark ? 'border-white/5' : 'border-black/5'} relative overflow-hidden`}>
-        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-emerald-500/5 blur-[150px] -z-10" />
+      {/* Use Cases Section */}
+      <section className={`max-w-6xl mx-auto px-6 py-32 border-t ${isDark ? 'border-white/5' : 'border-black/5'}`}>
+        <div className="text-center mb-20 space-y-4">
+          <h2 className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.4em]">Audit Anywhere</h2>
+          <h3 className="text-4xl luxury-heading">Where can I use EcoVerify?</h3>
+        </div>
 
-        <div className="flex flex-col lg:flex-row-reverse items-center gap-20">
-          <div className="lg:w-1/2 space-y-8">
-            <div className="space-y-4">
-              <h2 className={`text-[10px] font-black text-emerald-500 uppercase tracking-[0.4em] flex items-center gap-3`}>
-                <Zap className="w-4 h-4" /> Imperial Health
-              </h2>
-              <h3 className="text-4xl md:text-5xl luxury-heading leading-tight italic">Passive Impact. <br /> Total Privacy.</h3>
-              <p className={`${isDark ? 'text-neutral-400' : 'text-neutral-500'} font-light leading-relaxed`}>
-                The upcoming Imperial Mobile app integrates directly with your existing fitness ecosystem.
-                Automatically audit your daily activity and earn rewards for low-carbon transportation.
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {USE_CASES.map((useCase, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1 }}
+              className={`luxury-card p-8 group transition-colors ${isDark ? 'border-white/5 hover:bg-emerald-500/5' : 'border-black/5 hover:bg-emerald-500/5'}`}
+            >
+              <div className={`w-12 h-12 rounded-xl ${isDark ? 'bg-white/5' : 'bg-black/5'} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
+                <useCase.icon className="w-6 h-6 text-emerald-500" />
+              </div>
+              <h4 className="text-sm font-black uppercase tracking-widest mb-4">{useCase.title}</h4>
+              <p className={`text-xs ${isDark ? 'text-neutral-500' : 'text-neutral-400'} leading-relaxed font-light mb-6`}>
+                {useCase.desc}
               </p>
-            </div>
+              <div className="text-[10px] luxury-data text-luxury-gold uppercase tracking-[0.2em]">
+                {useCase.impact}
+              </div>
+            </motion.div>
+          ))}
+        </div>
+        <div className="mt-16 text-center">
+          <p className={`text-xs ${isDark ? 'text-neutral-600' : 'text-neutral-400'} italic font-light`}>
+            "Works perfectly at school, at work, in corporate buildings, cafes, or even while traveling."
+          </p>
+        </div>
+      </section>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-              <div className="space-y-3">
-                <div className={`w-10 h-10 rounded-lg ${isDark ? 'bg-white/5' : 'bg-black/5'} flex items-center justify-center`}>
-                  <Smartphone className="w-5 h-5 text-emerald-500" />
-                </div>
-                <h4 className="text-xs font-black uppercase tracking-widest">Global Ecosystem</h4>
-                <p className={`text-[10px] ${isDark ? 'text-neutral-500' : 'text-neutral-400'} font-light leading-relaxed`}>Connect Google Fit, Apple Health, Fitbit, and Garmin effortlessly.</p>
-              </div>
-              <div className="space-y-3">
-                <div className={`w-10 h-10 rounded-lg ${isDark ? 'bg-white/5' : 'bg-black/5'} flex items-center justify-center`}>
-                  <Timer className="w-5 h-5 text-luxury-gold" />
-                </div>
-                <h4 className="text-xs font-black uppercase tracking-widest">Passive Milestones</h4>
-                <p className={`text-[10px] ${isDark ? 'text-neutral-500' : 'text-neutral-400'} font-light leading-relaxed`}>Earn **+50 Imperial Points** automatically for every 6,000 steps walked daily.</p>
-              </div>
-            </div>
+      {/* Digital Experience Section */}
+      <section className={`max-w-7xl mx-auto px-6 py-32 border-t ${isDark ? 'border-white/5' : 'border-black/5'} relative overflow-hidden`}>
+        <div className="absolute right-0 top-0 w-[600px] h-[600px] bg-emerald-500/5 blur-[150px] rounded-full pointer-events-none" />
 
-            <div className={`p-6 luxury-card ${isDark ? 'border-emerald-500/10 bg-emerald-500/5' : 'border-emerald-500/20 bg-emerald-500/10'} flex items-center gap-4`}>
-              <div className="w-12 h-12 rounded-full border border-emerald-500/30 flex items-center justify-center shrink-0">
-                <Zap className="w-6 h-6 text-emerald-500 animate-pulse" />
+        <div className="text-center mb-20 space-y-4 relative z-10">
+          <h2 className={`text-[10px] font-black ${isDark ? 'text-emerald-500' : 'text-emerald-600'} uppercase tracking-[0.4em]`}>Digital Artifacts</h2>
+          <h3 className="text-4xl md:text-5xl luxury-heading">The <span className="text-luxury-gold">Experience</span></h3>
+          <p className={`max-w-2xl mx-auto text-sm ${isDark ? 'text-neutral-500' : 'text-neutral-400'} font-light leading-relaxed`}>
+            Built for speed. Designed for precision. An interface that makes tracking every gram of CO2 effortless.
+            Capture, verify, and log impact instantly with our high-performance mobile UI.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 relative z-10">
+          {[
+            {
+              title: "Verified Auditing",
+              desc: "Snap, verify, and log impact in seconds with our high-performance mobile UI.",
+              src: "/screenshots/IMG_3349.PNG",
+              tag: "Mobile Native"
+            },
+            {
+              title: "Global Ledger",
+              desc: "Real-time visibility into collective gains and imperial milestones.",
+              src: "/screenshots/Untitled.png",
+              tag: "Imperial Core"
+            },
+            {
+              title: "Community Scaling",
+              desc: "Compete with elite auditors on the decentralized global leaderboard.",
+              src: "/screenshots/Untitled1.png",
+              tag: "Social Layer"
+            }
+          ].map((item, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, scale: 0.95 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1 }}
+              className="space-y-6 group"
+            >
+              <div className={`luxury-card p-2 aspect-[4/5] overflow-hidden ${isDark ? 'bg-white/[0.02]' : 'bg-black/[0.02]'} relative`}>
+                <div className="absolute inset-0 bg-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none" />
+                <img
+                  src={item.src}
+                  alt={item.title}
+                  className="w-full h-full object-cover rounded-lg grayscale group-hover:grayscale-0 transition-all duration-1000"
+                />
+
               </div>
-              <p className="text-[11px] font-medium tracking-wide uppercase italic">Runs in the background. Audits while you live. Zero effort sustainability.</p>
+              <div className="space-y-2 px-2">
+                <h4 className="text-xs font-black uppercase tracking-widest text-white group-hover:text-emerald-500 transition-colors">{item.title}</h4>
+                <p className={`text-[10px] ${isDark ? 'text-neutral-500' : 'text-neutral-400'} font-light leading-relaxed`}>{item.desc}</p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        <div className="mt-24 flex justify-center">
+          <div className={`inline-flex items-center gap-8 py-4 px-8 luxury-card ${isDark ? 'bg-white/[0.02]' : 'bg-black/[0.02]'}`}>
+            <div className="flex items-center gap-3">
+              <Monitor className="w-4 h-4 text-neutral-500" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Desktop Optimized</span>
+            </div>
+            <div className="w-px h-4 bg-white/10" />
+            <div className="flex items-center gap-3">
+              <Smartphone className="w-4 h-4 text-neutral-500" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-neutral-500">iOS & Android Ready</span>
             </div>
           </div>
+        </div>
+      </section>
 
-          <div className="lg:w-1/2 w-full">
-            <div className={`luxury-card ${isDark ? 'border-white/5 bg-black/40' : 'border-black/5 bg-white/40'} p-2 relative overflow-hidden group shadow-2xl transition-all duration-700`}>
-              <div className="absolute inset-0 bg-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none" />
-              <img
-                src="/screenshots/Untitled2.png"
-                alt="Imperial Profile"
-                className="w-full h-auto rounded-lg grayscale group-hover:grayscale-0 transition-all duration-700 opacity-60 group-hover:opacity-100"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 pointer-events-none" />
+      {/* The Reward Network Section */}
+      <section className={`max-w-6xl mx-auto px-6 py-32 border-t ${isDark ? 'border-white/5 bg-white/[0.01]' : 'border-black/5 bg-black/[0.01]'} relative overflow-hidden`}>
+        <div className="absolute inset-0 bg-emerald-500/[0.02] blur-[150px] pointer-events-none" />
+        <div className="text-center space-y-6 relative z-10 mb-20">
+          <h2 className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.4em]">The Digital Handshake</h2>
+          <h3 className="text-4xl md:text-5xl luxury-heading italic">The Reward <span className="text-luxury-gold">Network</span></h3>
+          <p className={`max-w-2xl mx-auto text-sm ${isDark ? 'text-neutral-500' : 'text-neutral-400'} font-light leading-relaxed`}>
+            We are working with global leaders and local heroes to bridge the gap between action and impact.
+            Earning real-world value for real-world change.
+          </p>
+        </div>
 
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
+          <div className={`luxury-card p-10 space-y-6 ${isDark ? 'bg-white/[0.02]' : 'bg-black/[0.01]'}`}>
+            <div className={`w-12 h-12 rounded-xl ${isDark ? 'bg-white/5' : 'bg-black/5'} flex items-center justify-center`}>
+              <Building2 className="w-6 h-6 text-emerald-500" />
             </div>
+            <h4 className="text-sm font-black uppercase tracking-widest text-white">Global Retailers</h4>
+            <p className={`text-xs ${isDark ? 'text-neutral-500' : 'text-neutral-400'} leading-relaxed font-light`}>
+              Securing integrations with platforms like **Amazon** and **M&S** for universal digital vouchers.
+            </p>
+          </div>
+
+          <div className={`luxury-card p-10 space-y-6 ${isDark ? 'bg-emerald-500/[0.03]' : 'bg-emerald-500/[0.01]'} border-emerald-500/20 shadow-emerald-500/5`}>
+            <div className={`w-12 h-12 rounded-xl ${isDark ? 'bg-emerald-500/10' : 'bg-emerald-500/5'} flex items-center justify-center`}>
+              <Coins className="w-6 h-6 text-luxury-gold" />
+            </div>
+            <h4 className="text-sm font-black uppercase tracking-widest text-white">Daily Essentials</h4>
+            <p className={`text-xs ${isDark ? 'text-neutral-500' : 'text-neutral-400'} leading-relaxed font-light`}>
+              Negotiating with major grocery stores and locations to turn your eco-points into daily savings.
+            </p>
+          </div>
+
+          <div className={`luxury-card p-10 space-y-6 ${isDark ? 'bg-white/[0.02]' : 'bg-black/[0.01]'}`}>
+            <div className={`w-12 h-12 rounded-xl ${isDark ? 'bg-white/5' : 'bg-black/5'} flex items-center justify-center`}>
+              <Briefcase className="w-6 h-6 text-purple-400" />
+            </div>
+            <h4 className="text-sm font-black uppercase tracking-widest text-white">Brand Ecosystem</h4>
+            <p className={`text-xs ${isDark ? 'text-neutral-500' : 'text-neutral-400'} leading-relaxed font-light`}>
+              A growing list of huge retailers committed to rewarding zero-knowledge verified impact.
+            </p>
           </div>
         </div>
       </section>
@@ -620,7 +741,7 @@ export default function LandingPage({ stats, communityScans }: LandingPageProps)
                 <h4 className="text-xl luxury-heading">No More Guesswork</h4>
               </div>
               <p className={`text-sm ${isDark ? 'text-neutral-400' : 'text-neutral-500'} font-light leading-relaxed`}>
-                Sustainability has relied on the "Honor System" for too long. But the planet doesn't run on good feelings—it runs on the cold, hard math of carbon.
+                Sustainability has relied on good intentions for too long. But the planet doesn't run on good feelings—it runs on the cold, hard math of carbon.
               </p>
               <p className={`text-sm ${isDark ? 'text-neutral-400' : 'text-neutral-500'} font-light leading-relaxed italic border-l border-emerald-500/30 pl-4`}>
                 If we can’t prove the impact, it didn't happen.
@@ -630,7 +751,7 @@ export default function LandingPage({ stats, communityScans }: LandingPageProps)
             <div className={`luxury-card p-10 space-y-8 ${isDark ? 'bg-emerald-500/[0.03]' : 'bg-emerald-500/[0.01]'} border-emerald-500/20`}>
               <div className="space-y-4">
                 <span className="text-4xl luxury-data text-emerald-500/20">02</span>
-                <h4 className="text-xl luxury-heading">The Math of Impact</h4>
+                <h4 className="text-xl luxury-heading">The Logic of Action</h4>
               </div>
               <p className={`text-sm ${isDark ? 'text-neutral-400' : 'text-neutral-500'} font-light leading-relaxed`}>
                 Environmental action should be as clear as a bank statement. We use AI to turn physical effort into digital proof. Total clarity. Zero doubt.
@@ -639,7 +760,7 @@ export default function LandingPage({ stats, communityScans }: LandingPageProps)
                 V<sub>impact</sub> = ∑ (A<sub>i</sub> × C<sub>i</sub>) · Φ
               </div>
               <div className="space-y-2">
-                <p className="text-[9px] font-black uppercase tracking-widest text-neutral-500">Φ = Verification Coefficient</p>
+                <p className="text-[9px] font-black uppercase tracking-widest text-neutral-500">Φ = Verification Logic</p>
                 <p className="text-[8px] text-neutral-600 uppercase tracking-widest">Ensures zero-knowledge proof of genuine action.</p>
               </div>
             </div>
@@ -722,128 +843,67 @@ export default function LandingPage({ stats, communityScans }: LandingPageProps)
         </div>
       </section>
 
-      {/* The Reward Network Section */}
-      <section className={`max-w-6xl mx-auto px-6 py-32 border-t ${isDark ? 'border-white/5 bg-white/[0.01]' : 'border-black/5 bg-black/[0.01]'} relative overflow-hidden`}>
-        <div className="absolute inset-0 bg-emerald-500/[0.02] blur-[150px] pointer-events-none" />
-        <div className="text-center space-y-6 relative z-10 mb-20">
-          <h2 className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.4em]">The Digital Handshake</h2>
-          <h3 className="text-4xl md:text-5xl luxury-heading italic">The Reward <span className="text-luxury-gold">Network</span></h3>
-          <p className={`max-w-2xl mx-auto text-sm ${isDark ? 'text-neutral-500' : 'text-neutral-400'} font-light leading-relaxed`}>
-            We are working with global leaders and local heroes to bridge the gap between action and impact.
-            Earning real-world value for real-world change.
-          </p>
-        </div>
+      {/* Imperial Health Section */}
+      <section id="health" className={`max-w-6xl mx-auto px-6 py-32 border-t ${isDark ? 'border-white/5' : 'border-black/5'} relative overflow-hidden`}>
+        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-emerald-500/5 blur-[150px] -z-10" />
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
-          <div className={`luxury-card p-10 space-y-6 ${isDark ? 'bg-white/[0.02]' : 'bg-black/[0.01]'}`}>
-            <div className={`w-12 h-12 rounded-xl ${isDark ? 'bg-white/5' : 'bg-black/5'} flex items-center justify-center`}>
-              <Building2 className="w-6 h-6 text-emerald-500" />
+        <div className="flex flex-col lg:flex-row-reverse items-center gap-20">
+          <div className="lg:w-1/2 space-y-8">
+            <div className="space-y-4">
+              <h2 className={`text-[10px] font-black text-emerald-500 uppercase tracking-[0.4em] flex items-center gap-3`}>
+                <Zap className="w-4 h-4" /> Imperial Health
+              </h2>
+              <h3 className="text-4xl md:text-5xl luxury-heading leading-tight italic">Passive Impact. <br /> Total Privacy.</h3>
+              <p className={`${isDark ? 'text-neutral-400' : 'text-neutral-500'} font-light leading-relaxed`}>
+                The upcoming Imperial Mobile app integrates directly with your existing fitness ecosystem.
+                Automatically audit your daily activity and earn rewards for low-carbon transportation.
+              </p>
             </div>
-            <h4 className="text-sm font-black uppercase tracking-widest text-white">Global Retailers</h4>
-            <p className={`text-xs ${isDark ? 'text-neutral-500' : 'text-neutral-400'} leading-relaxed font-light`}>
-              Securing integrations with platforms like **Amazon** and **M&S** for universal digital vouchers.
-            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+              <div className="space-y-3">
+                <div className={`w-10 h-10 rounded-lg ${isDark ? 'bg-white/5' : 'bg-black/5'} flex items-center justify-center`}>
+                  <Smartphone className="w-5 h-5 text-emerald-500" />
+                </div>
+                <h4 className="text-xs font-black uppercase tracking-widest">Global Ecosystem</h4>
+                <p className={`text-[10px] ${isDark ? 'text-neutral-500' : 'text-neutral-400'} font-light leading-relaxed`}>Connect Google Fit, Apple Health, Fitbit, and Garmin effortlessly.</p>
+              </div>
+              <div className="space-y-3">
+                <div className={`w-10 h-10 rounded-lg ${isDark ? 'bg-white/5' : 'bg-black/5'} flex items-center justify-center`}>
+                  <Timer className="w-5 h-5 text-luxury-gold" />
+                </div>
+                <h4 className="text-xs font-black uppercase tracking-widest">Passive Milestones</h4>
+                <p className={`text-[10px] ${isDark ? 'text-neutral-500' : 'text-neutral-400'} font-light leading-relaxed`}>Earn **+50 Imperial Points** automatically for every 6,000 steps walked daily.</p>
+              </div>
+            </div>
+
+            <div className={`p-6 luxury-card ${isDark ? 'border-emerald-500/10 bg-emerald-500/5' : 'border-emerald-500/20 bg-emerald-500/10'} flex items-center gap-4`}>
+              <div className="w-12 h-12 rounded-full border border-emerald-500/30 flex items-center justify-center shrink-0">
+                <Zap className="w-6 h-6 text-emerald-500 animate-pulse" />
+              </div>
+              <p className="text-[11px] font-medium tracking-wide uppercase italic">Runs in the background. Audits while you live. Zero effort sustainability.</p>
+            </div>
           </div>
 
-          <div className={`luxury-card p-10 space-y-6 ${isDark ? 'bg-emerald-500/[0.03]' : 'bg-emerald-500/[0.01]'} border-emerald-500/20 shadow-emerald-500/5`}>
-            <div className={`w-12 h-12 rounded-xl ${isDark ? 'bg-emerald-500/10' : 'bg-emerald-500/5'} flex items-center justify-center`}>
-              <Coins className="w-6 h-6 text-luxury-gold" />
-            </div>
-            <h4 className="text-sm font-black uppercase tracking-widest text-white">Daily Essentials</h4>
-            <p className={`text-xs ${isDark ? 'text-neutral-500' : 'text-neutral-400'} leading-relaxed font-light`}>
-              Negotiating with major grocery stores and locations to turn your eco-points into daily savings.
-            </p>
-          </div>
+          <div className="lg:w-1/2 w-full">
+            <div className={`luxury-card ${isDark ? 'border-white/5 bg-black/40' : 'border-black/5 bg-white/40'} p-2 relative overflow-hidden group shadow-2xl transition-all duration-700`}>
+              <div className="absolute inset-0 bg-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none" />
+              <img
+                src="/screenshots/Untitled2.png"
+                alt="Imperial Profile"
+                className="w-full h-auto rounded-lg grayscale group-hover:grayscale-0 transition-all duration-700 opacity-60 group-hover:opacity-100"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 pointer-events-none" />
 
-          <div className={`luxury-card p-10 space-y-6 ${isDark ? 'bg-white/[0.02]' : 'bg-black/[0.01]'}`}>
-            <div className={`w-12 h-12 rounded-xl ${isDark ? 'bg-white/5' : 'bg-black/5'} flex items-center justify-center`}>
-              <Briefcase className="w-6 h-6 text-purple-400" />
             </div>
-            <h4 className="text-sm font-black uppercase tracking-widest text-white">Brand Ecosystem</h4>
-            <p className={`text-xs ${isDark ? 'text-neutral-500' : 'text-neutral-400'} leading-relaxed font-light`}>
-              A growing list of huge retailers committed to rewarding zero-knowledge verified impact.
-            </p>
           </div>
         </div>
       </section>
 
 
-      {/* Digital Experience Section */}
-      <section className={`max-w-7xl mx-auto px-6 py-32 border-t ${isDark ? 'border-white/5' : 'border-black/5'} relative overflow-hidden`}>
-        <div className="absolute right-0 top-0 w-[600px] h-[600px] bg-emerald-500/5 blur-[150px] rounded-full pointer-events-none" />
-
-        <div className="text-center mb-20 space-y-4 relative z-10">
-          <h2 className={`text-[10px] font-black ${isDark ? 'text-emerald-500' : 'text-emerald-600'} uppercase tracking-[0.4em]`}>Digital Artifacts</h2>
-          <h3 className="text-4xl md:text-5xl luxury-heading">The <span className="text-luxury-gold">Experience</span></h3>
-          <p className={`max-w-2xl mx-auto text-sm ${isDark ? 'text-neutral-500' : 'text-neutral-400'} font-light leading-relaxed`}>
-            A meticulously crafted interface designed for the next generation of eco-auditors.
-            Native speed, high-fidelity visuals, and deep metric transparency.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 relative z-10">
-          {[
-            {
-              title: "Verified Auditing",
-              desc: "Snap, verify, and log impact in seconds with our high-performance mobile UI.",
-              src: "/screenshots/IMG_3349.PNG",
-              tag: "Mobile Native"
-            },
-            {
-              title: "Global Ledger",
-              desc: "Real-time visibility into collective gains and imperial milestones.",
-              src: "/screenshots/Untitled.png",
-              tag: "Imperial Core"
-            },
-            {
-              title: "Community Scaling",
-              desc: "Compete with elite auditors on the decentralized global leaderboard.",
-              src: "/screenshots/Untitled1.png",
-              tag: "Social Layer"
-            }
-          ].map((item, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              className="space-y-6 group"
-            >
-              <div className={`luxury-card p-2 aspect-[4/5] overflow-hidden ${isDark ? 'bg-white/[0.02]' : 'bg-black/[0.02]'} relative`}>
-                <div className="absolute inset-0 bg-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none" />
-                <img
-                  src={item.src}
-                  alt={item.title}
-                  className="w-full h-full object-cover rounded-lg grayscale group-hover:grayscale-0 transition-all duration-1000"
-                />
-
-              </div>
-              <div className="space-y-2 px-2">
-                <h4 className="text-xs font-black uppercase tracking-widest text-white group-hover:text-emerald-500 transition-colors">{item.title}</h4>
-                <p className={`text-[10px] ${isDark ? 'text-neutral-500' : 'text-neutral-400'} font-light leading-relaxed`}>{item.desc}</p>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-
-        <div className="mt-24 flex justify-center">
-          <div className={`inline-flex items-center gap-8 py-4 px-8 luxury-card ${isDark ? 'bg-white/[0.02]' : 'bg-black/[0.02]'}`}>
-            <div className="flex items-center gap-3">
-              <Monitor className="w-4 h-4 text-neutral-500" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Desktop Optimized</span>
-            </div>
-            <div className="w-px h-4 bg-white/10" />
-            <div className="flex items-center gap-3">
-              <Smartphone className="w-4 h-4 text-neutral-500" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-neutral-500">iOS & Android Ready</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className={`max-w-6xl mx-auto px-6 py-32 border-t ${isDark ? 'border-white/5' : 'border-black/5'}`}>
-        <div className={`luxury-card ${isDark ? 'bg-white/[0.02] border-white/5' : 'bg-black/[0.02] border-black/5'} p-12 md:p-20 text-center relative overflow-hidden`}>
+      <section className={`max-w-6xl mx-auto px-6 py-32 border-t ${isDark ? 'border-white/5' : 'border-black/5'} relative overflow-hidden`}>
+        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-emerald-500/[0.03] blur-[150px] pointer-events-none" />
+        <div className={`luxury-card ${isDark ? 'bg-white/[0.02] border-white/5' : 'bg-black/[0.02] border-black/5'} p-12 md:p-20 text-center relative overflow-hidden shadow-2xl`}>
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-20 bg-gradient-to-b from-emerald-500 to-transparent" />
 
           <div className="max-w-2xl mx-auto space-y-8 relative z-10">

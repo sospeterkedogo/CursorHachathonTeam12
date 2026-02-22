@@ -184,8 +184,8 @@ export const GoalCard: React.FC<GoalCardProps> = ({ userScore, className = "" })
             <div className="mt-8 pt-6 border-t border-white/5">
                 <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-[0.2em] leading-relaxed">
                     {currentMilestone.limit - userScore > 0
-                        ? `Magnificent effort. Acquire ${currentMilestone.limit - userScore} more points to unlock the next level.`
-                        : "You have achieved environmental transcendence. 🏛️"}
+                        ? `Good work. You're ${currentMilestone.limit - userScore} points away from the next level.`
+                        : "You have reached the highest level of impact. 🏛️"}
                 </p>
             </div>
         </motion.div>
