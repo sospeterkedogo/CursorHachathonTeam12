@@ -9,7 +9,7 @@ interface GlobalInsightsProps {
     totalVerifiedUsers: number;
 }
 
-export const GlobalInsights: React.FC<GlobalInsightsProps> = ({ globalScore, globalCO2, totalVerifiedUsers }) => {
+export default function GlobalInsights({ globalScore, globalCO2, totalVerifiedUsers }: GlobalInsightsProps) {
     const milestones = [
         {
             limit: 5000,
@@ -181,4 +181,4 @@ export const GlobalInsights: React.FC<GlobalInsightsProps> = ({ globalScore, glo
             </div>
         </div>
     );
-};
+}

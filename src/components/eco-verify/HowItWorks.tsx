@@ -1,7 +1,7 @@
 import React from 'react';
 import { Camera, Sparkles, Trophy, Info, ShieldCheck } from 'lucide-react';
 
-export const HowItWorks = ({ className = "" }: { className?: string }) => {
+export default function HowItWorks({ className = "" }: { className?: string }) {
     return (
         <div className={`luxury-card p-4 sm:p-6 bg-luxury-glass border-white/5 relative overflow-hidden group ${className}`}>
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500/0 via-emerald-500/20 to-emerald-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />

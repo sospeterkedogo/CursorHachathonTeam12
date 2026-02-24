@@ -1,7 +1,11 @@
 import React, { useState } from "react";
 import { Camera, Image as ImageIcon, Leaf, X, UploadCloud, ArrowRight, Trophy } from "lucide-react";
-import { CameraPreview } from "./CameraPreview";
+import dynamic from "next/dynamic";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
+
+const CameraPreview = dynamic(() => import("./CameraPreview").then(mod => mod.CameraPreview), { ssr: false });
+const AudioPlayer = dynamic(() => import("./AudioPlayer").then(mod => mod.AudioPlayer), { ssr: false });
 
 interface VerificationSectionProps {
     loading: boolean;
@@ -21,7 +25,7 @@ interface VerificationSectionProps {
     lastCapturedImage?: string | null;
 }
 
-export const VerificationSection: React.FC<VerificationSectionProps> = ({
+export default function VerificationSection({
     loading,
     progress,
     isPublic,
@@ -37,7 +41,7 @@ export const VerificationSection: React.FC<VerificationSectionProps> = ({
     onViewVouchers,
     onCapture,
     lastCapturedImage
-}) => {
+}: VerificationSectionProps) {
     const [showCamera, setShowCamera] = useState(false);
     const [isDesktop, setIsDesktop] = useState(false);
 
@@ -88,9 +92,11 @@ export const VerificationSection: React.FC<VerificationSectionProps> = ({
                     {isDesktop && (
                         <motion.div variants={itemVariants} className="mb-10 p-6 bg-luxury-glass rounded-3xl border border-white/5 flex flex-col items-center gap-4">
                             <div className="w-40 h-40 bg-white dark:bg-neutral-900 rounded-2xl flex items-center justify-center relative shadow-2xl overflow-hidden border border-white/10">
-                                <img
+                                <Image
                                     src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${typeof window !== 'undefined' ? window.location.href : ''}`}
                                     alt="QR Code"
+                                    width={150}
+                                    height={150}
                                     className="w-32 h-32 opacity-90"
                                 />
                             </div>
@@ -164,9 +170,10 @@ export const VerificationSection: React.FC<VerificationSectionProps> = ({
                         >
                             {lastCapturedImage && (
                                 <div className="absolute inset-0 -z-10 opacity-20">
-                                    <img
+                                    <Image
                                         src={lastCapturedImage.startsWith('data:') ? lastCapturedImage : `data:image/jpeg;base64,${lastCapturedImage}`}
                                         alt="Preview"
+                                        fill
                                         className="w-full h-full object-cover grayscale"
                                     />
                                 </div>
@@ -257,9 +264,7 @@ export const VerificationSection: React.FC<VerificationSectionProps> = ({
                         )}
 
                         {audioUrl && (
-                            <div className="mt-4 bg-neutral-900/50 rounded-2xl p-4 border border-white/5">
-                                <audio ref={audioRef} src={audioUrl || undefined} controls className="w-full h-8 opacity-40 grayscale invert contrast-200" />
-                            </div>
+                            <AudioPlayer audioUrl={audioUrl} audioRef={audioRef} />
                         )}
                     </motion.div>
                 )}

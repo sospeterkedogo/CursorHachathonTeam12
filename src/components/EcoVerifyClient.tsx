@@ -6,10 +6,8 @@ import { Loader2, Leaf, ShieldCheck, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getUserId } from "@/lib/userId";
 import Onboarding from "./Onboarding";
-import Leaderboard from "./Leaderboard";
-import VoucherList from "./VoucherList";
-import FeedbackModal from "./FeedbackModal";
 
+import dynamic from "next/dynamic";
 import { EcoVerifyClientProps } from "@/types";
 import { STORED_IMAGES } from "@/constants";
 import * as api from "@/lib/api";
@@ -23,15 +21,25 @@ import { useEcoActions } from "@/hooks/use-eco-actions";
 import { Header } from "./eco-verify/Header";
 import { BottomNav } from "./eco-verify/BottomNav";
 import { GlobalBanner, GoalCard } from "./eco-verify/ImpactSummary";
-
-import { HowItWorks } from "./eco-verify/HowItWorks";
-import { VerificationSection } from "./eco-verify/VerificationSection";
-import { ActivityFeed } from "./eco-verify/ActivityFeed";
-import { ProfileView } from "./eco-verify/ProfileView";
+const HowItWorks = dynamic(() => import("./eco-verify/HowItWorks"));
+const VerificationSection = dynamic(() => import("./eco-verify/VerificationSection"));
 import { ProfileModal } from "./eco-verify/ProfileModal";
 import { GalleryModal } from "./eco-verify/GalleryModal";
 import { Lightbox } from "./eco-verify/Lightbox";
-import { GlobalInsights } from "./eco-verify/GlobalInsights";
+import FeedbackModal from "./FeedbackModal";
+
+// Lazy-loaded components for performance
+const Leaderboard = dynamic(() => import("./Leaderboard"), {
+  loading: () => <div className="py-20 flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-emerald-500" /></div>
+});
+const VoucherList = dynamic(() => import("./VoucherList"), {
+  loading: () => <div className="py-20 flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-purple-500" /></div>
+});
+const ActivityFeed = dynamic(() => import("./eco-verify/ActivityFeed"));
+const ProfileView = dynamic(() => import("./eco-verify/ProfileView"), {
+  loading: () => <div className="py-20 flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-emerald-500" /></div>
+});
+const GlobalInsights = dynamic(() => import("./eco-verify/GlobalInsights"));
 
 export default function EcoVerifyClient({ initialTotalScore, initialGlobalCO2, initialScans, initialLeaderboard, itemOne, itemTwo }: EcoVerifyClientProps) {
   const router = useRouter();

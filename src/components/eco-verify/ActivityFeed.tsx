@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Image from "next/image";
 import { formatCO2 } from "@/lib/format";
 import { ChevronUp, ChevronDown, User, Calendar, Zap } from "lucide-react";
 import { Scan } from "@/types";
@@ -14,7 +15,7 @@ interface ActivityFeedProps {
     onSetCurrentPage: React.Dispatch<React.SetStateAction<number>>;
 }
 
-export const ActivityFeed = ({
+export default function ActivityFeed({
     scans,
     currentPage,
     itemsPerPage,
@@ -22,7 +23,7 @@ export const ActivityFeed = ({
     getUserId,
     onSetLightboxImage,
     onSetCurrentPage
-}: ActivityFeedProps) => {
+}: ActivityFeedProps) {
     const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
     const toggleExpand = (id: string) => {
@@ -134,9 +135,7 @@ export const ActivityFeed = ({
                                                 {formatCO2(co2)}
                                             </div>
                                         </div>
-                                        <div className="flex flex-col items-center justify-center w-6 sm:w-8">
-                                            {isExpanded ? <ChevronUp className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-500" /> : <ChevronDown className="w-3 h-3 sm:w-4 sm:h-4 text-neutral-500 opacity-20 group-hover/row:opacity-100 transition-all" />}
-                                        </div>
+                                        {isExpanded ? <ChevronUp className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-500" /> : <ChevronDown className="w-3 h-3 sm:w-4 sm:h-4 text-neutral-500 opacity-20 group-hover/row:opacity-100 transition-all" />}
                                     </div>
                                 </div>
 
@@ -159,11 +158,12 @@ export const ActivityFeed = ({
                                                             onSetLightboxImage(scan.image);
                                                         }}
                                                     >
-                                                        <img
+                                                        <Image
                                                             src={scan.image && scan.image.length > 200
                                                                 ? (scan.image.startsWith('data:') ? scan.image : `data:image/jpeg;base64,${scan.image}`)
                                                                 : `https://ui-avatars.com/api/?name=Eco&background=random`}
                                                             alt="Audit Proof"
+                                                            fill
                                                             className="w-full h-full object-cover grayscale group-hover/img:grayscale-0 transition-all duration-700"
                                                         />
                                                         <div className="absolute inset-0 bg-emerald-500/20 opacity-0 group-hover/img:opacity-100 transition-opacity" />

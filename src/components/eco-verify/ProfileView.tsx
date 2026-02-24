@@ -17,7 +17,7 @@ interface ProfileViewProps {
     onDeleteAccount: () => void;
 }
 
-export const ProfileView: React.FC<ProfileViewProps> = ({
+export default function ProfileView({
     activity,
     loading,
     onDelete,
@@ -29,7 +29,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
     onUpdateProfile,
     onClearCache,
     onDeleteAccount
-}) => {
+}: ProfileViewProps) {
     const [showSettings, setShowSettings] = useState(false);
 
     const containerVariants = {
@@ -237,4 +237,4 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             </section>
         </div>
     );
-};
+}
