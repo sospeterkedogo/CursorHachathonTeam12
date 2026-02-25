@@ -4,6 +4,7 @@ import { formatCO2 } from "@/lib/format";
 import { ChevronUp, ChevronDown, User, Calendar, Zap } from "lucide-react";
 import { Scan } from "@/types";
 import { motion, AnimatePresence } from "framer-motion";
+import { EcoOrb } from "./EcoOrb";
 
 interface ActivityFeedProps {
     scans: Scan[];
@@ -111,8 +112,8 @@ export default function ActivityFeed({
 
                                     {/* User */}
                                     <div className="col-span-4 flex items-center gap-2 sm:gap-4">
-                                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-luxury-glass flex items-center justify-center text-sm sm:text-lg border border-white/10 shadow-inner">
-                                            {scan.avatar || "👤"}
+                                        <div className="flex-shrink-0">
+                                            <EcoOrb id={scan.avatar || "emerald"} size="md" />
                                         </div>
                                         <div className="flex flex-col min-w-0">
                                             <span className="text-[10px] sm:text-sm font-bold text-white tracking-tight truncate">

@@ -8,15 +8,20 @@ import { useState } from "react";
 
 interface HeroSectionProps {
     isDark: boolean;
+    onTryNow?: () => void;
 }
 
-export default function HeroSection({ isDark }: HeroSectionProps) {
+export default function HeroSection({ isDark, onTryNow }: HeroSectionProps) {
     const router = useRouter();
     const [isNavigating, setIsNavigating] = useState(false);
 
     const handleTryNow = () => {
-        setIsNavigating(true);
-        router.push('/verify');
+        if (onTryNow) {
+            onTryNow();
+        } else {
+            setIsNavigating(true);
+            router.push('/verify');
+        }
     };
 
     return (
@@ -32,19 +37,14 @@ export default function HeroSection({ isDark }: HeroSectionProps) {
                     className="space-y-8 text-left"
                 >
                     <div className="space-y-5">
-                        <h1 className="text-5xl md:text-6xl lg:text-7xl xl:text-8xl luxury-heading tracking-tight leading-[1] pb-2">
-                            Sustainability <br />
-                            <span className="text-luxury-gold italic pr-4">Redefined</span>.
+                        <h1 className="text-5xl md:text-6xl lg:text-7xl luxury-heading tracking-tight leading-[1.1] pb-2">
+                            Snap. Analyze.   <br />
+                            <span className="text-luxury-gold italic pr-4">Verify.</span>
                         </h1>
 
                         <p className="text-lg md:text-xl lg:text-2xl text-neutral-500 dark:text-neutral-400 max-w-xl font-light tracking-wide leading-relaxed">
-                            Stop hoping you're making a difference. <br />
-                            <span className="text-emerald-500 font-medium">Start knowing you are.</span>
-                        </p>
-
-                        <p className="text-sm md:text-base text-neutral-400 dark:text-neutral-500 max-w-md font-light leading-relaxed">
-                            The world's first AI-Verified ledger for personal impact.
-                            Snap your actions, prove your impact.
+                            Stop guessing if it's eco-friendly. <br />
+                            <span className="text-emerald-500 font-medium">Let our AI auditor give you the facts and the rewards.</span>
                         </p>
                     </div>
 
@@ -59,7 +59,7 @@ export default function HeroSection({ isDark }: HeroSectionProps) {
                                 {isNavigating ? (
                                     <>Entering Audit Suite... <Loader2 className="w-5 h-5 animate-spin" /></>
                                 ) : (
-                                    <>Start Your First Audit <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" /></>
+                                    <>Check an Item <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" /></>
                                 )}
                             </span>
                         </button>

@@ -17,7 +17,7 @@ export default function MilestonesSection({ stats }: MilestonesSectionProps) {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
                 <div className="text-center space-y-2">
                     <div className="text-2xl md:text-4xl luxury-data text-luxury-gold">{(stats?.totalScore || 0).toLocaleString()}</div>
-                    <div className="text-[9px] font-black text-neutral-500 uppercase tracking-widest">Imperial Points</div>
+                    <div className="text-[9px] font-black text-neutral-500 uppercase tracking-widest">Reward Credits</div>
                 </div>
                 <div className="text-center space-y-2">
                     <div className="text-2xl md:text-4xl luxury-data text-emerald-500">{(stats?.totalGlobalCO2 || 0).toFixed(2)}kg</div>

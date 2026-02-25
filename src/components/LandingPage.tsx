@@ -10,6 +10,8 @@ import { ThemeToggle } from "./landing/ThemeToggle";
 
 // Lazy-loaded components for performance
 const MissionSection = dynamic(() => import("./landing/MissionSection"));
+const WhatYouGetSection = dynamic(() => import("./landing/WhatYouGetSection"));
+const ExampleGallery = dynamic(() => import("./landing/ExampleGallery"));
 const GettingStartedSection = dynamic(() => import("./landing/GettingStartedSection"));
 const MilestonesSection = dynamic(() => import("./landing/MilestonesSection"));
 const CommunityEvidenceSection = dynamic(() => import("./landing/CommunityEvidenceSection"), { ssr: false });
@@ -25,6 +27,10 @@ const CountdownSection = dynamic(() => import("./landing/CountdownSection"), { s
 const FeedbackSection = dynamic(() => import("./landing/FeedbackSection"), { ssr: false });
 const CollaborationSection = dynamic(() => import("./landing/CollaborationSection"));
 const Footer = dynamic(() => import("./landing/Footer"));
+
+// Hooks
+import { useUserProfile } from "@/hooks/use-user-profile";
+import { QuickOnboardingModal } from "./landing/QuickOnboardingModal";
 
 interface LandingPageProps {
   stats: {
@@ -49,6 +55,12 @@ export default function LandingPage({ stats, communityScans }: LandingPageProps)
   const router = useRouter();
   const [isDark, setIsDark] = useState(true);
 
+  const {
+    userProfile, setShowProfileModal, showProfileModal,
+    inputUsername, setInputUsername, selectedAvatar, setSelectedAvatar,
+    isCheckingUsername, usernameAvailable, saveProfile
+  } = useUserProfile();
+
   useEffect(() => {
     if (isDark) {
       document.documentElement.classList.add('dark');
@@ -60,7 +72,20 @@ export default function LandingPage({ stats, communityScans }: LandingPageProps)
   }, [isDark, router]);
 
   const handleTryNow = () => {
-    router.push('/verify');
+    if (!userProfile) {
+      setShowProfileModal(true);
+    } else {
+      router.push('/verify');
+    }
+  };
+
+  const handleOnboardingComplete = async () => {
+    try {
+      await saveProfile();
+      router.push('/verify');
+    } catch (e) {
+      console.error("Onboarding failed", e);
+    }
   };
 
   return (
@@ -71,14 +96,35 @@ export default function LandingPage({ stats, communityScans }: LandingPageProps)
       <div className="fixed inset-0 pointer-events-none -z-10 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-emerald-500/5 via-white to-white dark:from-emerald-500/10 dark:via-black dark:to-black" />
       <div className="fixed top-0 left-0 w-full h-screen bg-gradient-to-b from-emerald-500/5 to-transparent -z-10 blur-3xl opacity-30" />
 
+      {/* Onboarding Identity Prompt */}
+      <QuickOnboardingModal
+        isOpen={showProfileModal}
+        inputUsername={inputUsername}
+        setInputUsername={setInputUsername}
+        selectedAvatar={selectedAvatar}
+        setSelectedAvatar={setSelectedAvatar}
+        isCheckingUsername={isCheckingUsername}
+        usernameAvailable={usernameAvailable}
+        onGenerateRandomName={() => {
+          const adjectives = ["Eco", "Green", "Earth", "Bio", "Nature"];
+          const nouns = ["Hero", "Guardian", "Friend", "Warrior", "Spirit"];
+          const randomName = `${adjectives[Math.floor(Math.random() * adjectives.length)]}${nouns[Math.floor(Math.random() * nouns.length)]}${Math.floor(Math.random() * 99)}`;
+          setInputUsername(randomName);
+        }}
+        onSaveProfile={handleOnboardingComplete}
+        onClose={() => setShowProfileModal(false)}
+      />
+
       {/* Page Sections */}
-      <HeroSection isDark={isDark} />
+      <HeroSection isDark={isDark} onTryNow={handleTryNow} />
 
       <main>
+        <WhatYouGetSection />
         <MissionSection />
         <GettingStartedSection handleTryNow={handleTryNow} />
         <MilestonesSection stats={stats} />
         <CommunityEvidenceSection communityScans={communityScans} />
+        <ExampleGallery />
         <UseCasesSection />
         <ExperienceSection />
         <RewardNetworkSection />

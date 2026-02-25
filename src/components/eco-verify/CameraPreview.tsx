@@ -15,9 +15,16 @@ export const CameraPreview: React.FC<CameraPreviewProps> = ({ onCapture, onClose
     const [error, setError] = useState<string | null>(null);
     const [isCameraReady, setIsCameraReady] = useState(false);
     const [showSplash, setShowSplash] = useState(true);
+    const [isPreFlight, setIsPreFlight] = useState(false);
 
     useEffect(() => {
         if (showSplash) return;
+
+        // Pre-flight check simulation
+        setIsPreFlight(true);
+        const preFlightTimer = setTimeout(() => {
+            setIsPreFlight(false);
+        }, 2000);
 
         async function startCamera() {
             try {
@@ -38,6 +45,7 @@ export const CameraPreview: React.FC<CameraPreviewProps> = ({ onCapture, onClose
         startCamera();
 
         return () => {
+            clearTimeout(preFlightTimer);
             if (stream) {
                 stream.getTracks().forEach(track => track.stop());
             }
@@ -152,10 +160,10 @@ export const CameraPreview: React.FC<CameraPreviewProps> = ({ onCapture, onClose
                             autoPlay
                             playsInline
                             onLoadedMetadata={() => setIsCameraReady(true)}
-                            className="absolute inset-0 w-full h-full object-cover"
+                            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${isPreFlight ? 'opacity-0' : 'opacity-100'}`}
                         />
 
-                        {/* Scanner Frame Overlay */}
+                        {/* Pre-flight / Scanner Frame Overlay */}
                         <div className="absolute inset-0 border-[2px] border-emerald-500/30 m-8 rounded-2xl pointer-events-none">
                             <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-emerald-500 rounded-tl-lg" />
                             <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-emerald-500 rounded-tr-lg" />
@@ -166,7 +174,22 @@ export const CameraPreview: React.FC<CameraPreviewProps> = ({ onCapture, onClose
                             <div className="absolute left-0 right-0 top-0 h-1 bg-emerald-500 shadow-[0_0_15px_#10b981] animate-scan-line-camera opacity-50" />
                         </div>
 
-                        {!isCameraReady && (
+                        {isPreFlight && (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm z-20">
+                                <div className="space-y-4 text-center">
+                                    <div className="flex justify-center">
+                                        <div className="p-3 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 animate-pulse">
+                                            <ShieldCheck className="w-8 h-8 text-emerald-500" />
+                                        </div>
+                                    </div>
+                                    <p className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.4em] animate-pulse">
+                                        Encrypted verification in progress...
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+
+                        {!isCameraReady && !isPreFlight && (
                             <div className="absolute inset-0 flex items-center justify-center bg-black/50">
                                 <RefreshCw className="w-8 h-8 text-emerald-500 animate-spin" />
                             </div>

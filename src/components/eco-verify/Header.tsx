@@ -1,6 +1,7 @@
 import { Leaf, MessageSquare, User } from "lucide-react";
 import Link from "next/link";
 import { ThemeToggle } from "../ThemeToggle";
+import { EcoOrb } from "./EcoOrb";
 
 interface HeaderProps {
     userProfile: { username: string; avatar: string } | null;
@@ -46,10 +47,9 @@ export const Header: React.FC<HeaderProps> = ({ userProfile, onShowFeedback, onS
                 <ThemeToggle />
                 <button
                     onClick={onShowProfile}
-                    className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-white/5 border border-white/5 flex items-center justify-center text-xl sm:text-2xl hover:border-luxury-gold/30 transition-all duration-500 relative overflow-hidden group/avatar"
+                    className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl sm:rounded-3xl flex items-center justify-center transition-all duration-500 hover:scale-110 active:scale-90 relative"
                 >
-                    <div className="absolute inset-0 bg-luxury-gold/5 opacity-0 group-hover/avatar:opacity-100 transition-opacity" />
-                    {userProfile?.avatar || <User className="w-4 h-4 sm:w-5 sm:h-5 text-neutral-500" />}
+                    <EcoOrb id={userProfile?.avatar || "sapphire"} size="md" className="shadow-none" />
                 </button>
             </div>
         </div>

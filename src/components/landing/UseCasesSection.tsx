@@ -21,11 +21,11 @@ export default function UseCasesSection() {
                         transition={{ delay: i * 0.1 }}
                         className="luxury-card p-8 group transition-colors border-black/5 dark:border-white/5 hover:bg-emerald-500/5 dark:hover:bg-emerald-500/5"
                     >
-                        <div className="w-12 h-12 rounded-xl bg-black/5 dark:bg-white/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                            <useCase.icon className="w-6 h-6 text-emerald-500" />
+                        <div className="w-14 h-14 rounded-2xl bg-white dark:bg-white/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-xl border border-black/5 dark:border-white/10">
+                            <useCase.icon className={`w-6 h-6 ${useCase.color} filter drop-shadow-[0_0_8px_rgba(16,185,129,0.3)] saturate-150`} />
                         </div>
                         <h4 className="text-sm font-black uppercase tracking-widest mb-4">{useCase.title}</h4>
-                        <p className="text-xs text-neutral-400 dark:text-neutral-500 leading-relaxed font-light mb-6">
+                        <p className="text-xs text-slate-500 dark:text-neutral-500 leading-relaxed font-light mb-6">
                             {useCase.desc}
                         </p>
                         <div className="text-[10px] luxury-data text-luxury-gold uppercase tracking-[0.2em]">
@@ -35,7 +35,7 @@ export default function UseCasesSection() {
                 ))}
             </div>
             <div className="mt-16 text-center">
-                <p className="text-xs text-neutral-400 dark:text-neutral-600 italic font-light">
+                <p className="text-xs text-slate-500 dark:text-neutral-600 italic font-light">
                     "Works perfectly at school, at work, in corporate buildings, cafes, or even while traveling."
                 </p>
             </div>

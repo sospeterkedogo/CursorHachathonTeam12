@@ -12,9 +12,9 @@ export default function ExperienceSection() {
             <div className="text-center mb-20 space-y-4 relative z-10">
                 <h2 className="text-[10px] font-black text-emerald-600 dark:text-emerald-500 uppercase tracking-[0.4em]">Digital Artifacts</h2>
                 <h3 className="text-4xl md:text-5xl luxury-heading">The <span className="text-luxury-gold">Experience</span></h3>
-                <p className="max-w-2xl mx-auto text-sm text-neutral-400 dark:text-neutral-500 font-light leading-relaxed">
+                <p className="max-w-2xl mx-auto text-sm text-slate-500 dark:text-neutral-500 font-light leading-relaxed">
                     Built for speed. Designed for precision. An interface that makes tracking every gram of CO2 effortless.
-                    Capture, verify, and log impact instantly with our high-performance mobile UI.
+                    <span className="block mt-2 text-slate-700 dark:text-neutral-300 font-bold uppercase tracking-wider">Capture, Analyze, Ascend.</span>
                 </p>
             </div>
 

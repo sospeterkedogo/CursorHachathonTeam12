@@ -5,7 +5,11 @@ import {
     Home,
     PlusCircle,
     Camera,
-    Trophy
+    Trophy,
+    ShoppingBag,
+    Package,
+    User,
+    Ticket
 } from "lucide-react";
 
 export const FEEDBACK_HISTORY = [
@@ -44,10 +48,10 @@ export const CAREER_ROLES = [
 ];
 
 export const USE_CASES = [
-    { icon: Coffee, title: "Cafes & Dining", desc: "Verify compostable cups or plant-based choices while eating out.", impact: "+12 Points" },
-    { icon: GraduationCap, title: "Schools & Campus", desc: "Audit recycling habits in dorms or lecture halls.", impact: "+15 Points" },
-    { icon: Building2, title: "Corporate Offices", desc: "Track sustainable paper use and energy-saving actions.", impact: "+20 Points" },
-    { icon: Home, title: "At Home", desc: "Easily categorize waste into the right bin and log daily composting or energy audits.", impact: "+10 Points" }
+    { icon: ShoppingBag, color: "text-blue-500", title: "Grocery Shopping", desc: "Verify sustainable packaging, local produce, and plastic-free choices in-store.", impact: "+18 Points" },
+    { icon: Package, color: "text-amber-500", title: "Online Packaging", desc: "Audit the recyclability of your Amazon or online delivery boxes and paddings.", impact: "+12 Points" },
+    { icon: Coffee, color: "text-emerald-500", title: "Cafes & Dining", desc: "Verify compostable cups or plant-based choices while eating out.", impact: "+12 Points" },
+    { icon: Home, color: "text-purple-500", title: "At Home", desc: "Easily categorize waste into the right bin and log daily composting or energy audits.", impact: "+10 Points" }
 ];
 
 export const GETTING_STARTED = [
@@ -55,18 +59,21 @@ export const GETTING_STARTED = [
         step: "01",
         title: "Secure Your Identity",
         desc: "Choose an avatar and save your username to join the EcoVerify community.",
-        icon: PlusCircle
+        icon: User,
+        color: "text-emerald-500"
     },
     {
         step: "02",
         title: "Eco-Audit Scan",
         desc: "Snap any green action. Our AI analyzes the ecological impact in real-time.",
-        icon: Camera
+        icon: Camera,
+        color: "text-blue-500"
     },
     {
         step: "03",
         title: "Imperial Rewards",
         desc: "Earn points and CO2 credits. Redeem for vouchers from elite eco-partners including upcoming major retailers like M&S and Amazon.",
-        icon: Trophy
+        icon: Ticket,
+        color: "text-luxury-gold"
     }
 ];

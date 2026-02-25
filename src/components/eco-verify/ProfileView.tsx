@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Settings, User, ChevronRight, RotateCcw, Trash2, AlertTriangle, Loader2, X as CloseIcon, ShieldCheck } from "lucide-react";
+import { EcoOrb } from "./EcoOrb";
 import { Scan } from "@/types";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -63,8 +64,8 @@ export default function ProfileView({
                 </button>
 
                 <div className="relative">
-                    <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-luxury-glass border-2 border-luxury-gold/30 flex items-center justify-center text-4xl sm:text-5xl mb-4 sm:mb-6 shadow-2xl relative z-10">
-                        {userProfile?.avatar || "👤"}
+                    <div className="mb-4 sm:mb-6 shadow-2xl relative z-10 transition-transform duration-700 hover:scale-110">
+                        <EcoOrb id={userProfile?.avatar || "sapphire"} size="xl" />
                     </div>
                     <div className="absolute -bottom-1 -right-1 bg-emerald-500 rounded-full p-1 sm:p-1.5 border-2 border-black z-20">
                         <ShieldCheck className="w-3 h-3 sm:w-4 sm:h-4 text-white" />

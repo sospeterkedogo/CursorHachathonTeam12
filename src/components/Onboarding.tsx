@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Leaf, Camera, Trophy, ArrowRight, Check, Sparkles, Globe, Zap } from "lucide-react";
+import { Leaf, Camera, Trophy, ArrowRight, Check, Sparkles, Globe, Zap, ShoppingBag, User } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { OnboardingProps } from "@/types";
 
@@ -16,9 +16,9 @@ const SLIDES = [
     },
     {
         id: "verify",
-        title: "See Your Impact",
-        description: "Our smart scanner helps you track your sustainable choices and see the difference you're making.",
-        icon: Camera,
+        title: "Audit Your Shopping",
+        description: "From grocery hauls to online delivery packaging, our AI scanner verifies your impact instantly.",
+        icon: ShoppingBag,
         color: "text-blue-500",
         accent: "bg-blue-500/10",
     },
@@ -34,7 +34,7 @@ const SLIDES = [
         id: "profile",
         title: "Secure Your Identity",
         description: "Click the profile icon in the top right to choose a premium avatar and unique username to join the elite leaderboard.",
-        icon: Sparkles,
+        icon: User,
         color: "text-purple-500",
         accent: "bg-purple-500/10",
     },
@@ -58,6 +58,7 @@ export default function Onboarding({ onComplete, totalVerifiedUsers, totalVouche
             onComplete();
         }, 800);
     };
+
 
     const SlideIcon = SLIDES[currentSlide].icon;
 
@@ -104,7 +105,7 @@ export default function Onboarding({ onComplete, totalVerifiedUsers, totalVouche
                                     >
                                         <div className="w-24 h-24 rounded-full bg-luxury-glass border border-white/10 flex items-center justify-center mb-10 shadow-2xl relative">
                                             <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-transparent via-white/5 to-transparent opacity-50" />
-                                            <SlideIcon className={`w-10 h-10 ${SLIDES[currentSlide].color}`} />
+                                            <SlideIcon className={`w-10 h-10 ${SLIDES[currentSlide].color} filter drop-shadow-[0_0_12px_rgba(255,255,255,0.2)]`} />
                                             <Sparkles className="absolute -top-2 -right-2 w-6 h-6 text-luxury-gold opacity-40 animate-pulse" />
                                         </div>
 

@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { getUserId } from "@/lib/userId";
 import { fetchPersonalStats } from "@/lib/api";
+import { motion } from "framer-motion";
 
 import { formatCO2, formatPoints } from "@/lib/format";
 
@@ -130,7 +131,7 @@ export default function PersonalScore() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3 mb-6">
         {/* Actions Count */}
         <div className="bg-white/5 rounded-xl sm:rounded-2xl p-4 border border-white/5 flex flex-col justify-between">
           <p className="text-[8px] sm:text-[9px] uppercase tracking-[0.2em] text-neutral-500 font-black mb-1.5 sm:mb-2">
@@ -149,6 +150,29 @@ export default function PersonalScore() {
           <p className="text-lg sm:text-xl luxury-data text-neutral-200">
             {stats.averageScore}
           </p>
+        </div>
+      </div>
+
+      {/* Voucher Progress Bar */}
+      <div className="bg-purple-500/5 rounded-2xl p-6 border border-purple-500/20 space-y-4">
+        <div className="flex justify-between items-end">
+          <div className="space-y-1">
+            <p className="text-[8px] sm:text-[10px] font-black text-purple-400 uppercase tracking-[0.3em]">Voucher Progress</p>
+            <p className="text-xs text-neutral-400 font-medium italic">
+              You are {Math.max(0, 10 - (stats.totalActions % 10))} scans away from a 15% discount at <span className="text-purple-400">Waitrose</span>.
+            </p>
+          </div>
+          <div className="text-xs luxury-data text-purple-400">
+            {(stats.totalActions % 10) * 10}%
+          </div>
+        </div>
+        <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: `${(stats.totalActions % 10) * 10}%` }}
+            transition={{ duration: 1.5, ease: "easeOut" }}
+            className="h-full bg-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.5)]"
+          />
         </div>
       </div>
 

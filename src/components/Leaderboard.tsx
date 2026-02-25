@@ -3,6 +3,7 @@
 import { Trophy, Medal, User, Loader2, Sparkles, Star } from "lucide-react";
 import { motion } from "framer-motion";
 import { LeaderboardProps } from "@/types";
+import { EcoOrb } from "./eco-verify/EcoOrb";
 
 export default function Leaderboard({ entries, currentUserId, loading }: LeaderboardProps) {
     const containerVariants = {
@@ -83,9 +84,8 @@ export default function Leaderboard({ entries, currentUserId, loading }: Leaderb
                                     {rank}
                                 </div>
 
-                                <div className="flex-shrink-0 w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-neutral-900 flex items-center justify-center text-lg sm:text-2xl overflow-hidden border border-white/10 shadow-2xl relative group">
-                                    {user.avatar || <User className="w-5 h-5 sm:w-6 sm:h-6 text-neutral-700" />}
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                <div className="flex-shrink-0">
+                                    <EcoOrb id={user.avatar || (index === 0 ? "emerald" : index === 1 ? "silver" : index === 2 ? "amber" : "sapphire")} size="lg" />
                                 </div>
 
                                 <div className="flex-1 min-w-0">
