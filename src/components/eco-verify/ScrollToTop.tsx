@@ -9,14 +9,15 @@ export const ScrollToTop = () => {
 
     useEffect(() => {
         const toggleVisibility = () => {
-            if (window.scrollY > 400) {
+            const scrollY = window.scrollY || document.documentElement.scrollTop;
+            if (scrollY > 400) {
                 setIsVisible(true);
             } else {
                 setIsVisible(false);
             }
         };
 
-        window.addEventListener('scroll', toggleVisibility);
+        window.addEventListener('scroll', toggleVisibility, { passive: true });
         return () => window.removeEventListener('scroll', toggleVisibility);
     }, []);
 

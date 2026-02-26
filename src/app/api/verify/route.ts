@@ -60,7 +60,7 @@ async function fetchWithTimeout(resource: string, options: RequestInit & { timeo
   return response;
 }
 
-async function callMiniMaxVision(imageBase64: string): Promise<VisionResult> {
+async function callMiniMaxVision(imageBase64: string, historicalContext: string): Promise<VisionResult> {
   const apiKey = process.env.MINIMAX_API_KEY;
   if (!apiKey) {
     console.warn("MINIMAX_API_KEY not set. Using random fallback.");
@@ -83,9 +83,17 @@ async function callMiniMaxVision(imageBase64: string): Promise<VisionResult> {
     "2. Tier 2 (Medium): Plastic bottles, Glass (+20 pts). " +
     "3. Tier 3 (Large): E-waste, Appliances (+500 pts). " +
     "4. REJECT: General trash not being sorted, greenwashing, or non-raw photos (Score 0). " +
-    "5. CRITICAL: Do NOT penalize (roast) users for recycling single-use plastics if it is the local norm and they are recycling correctly. Instead, encourage it and provide the appropriate Tier 2 points. " +
-    "Calculate estimated CO2 saved in milligrams (mg). " +
-    "Return strictly JSON: { verified: boolean, score: number (Points), co2_saved: number (mg CO2), actionType: string, message: string, reasoning: string }.";
+    "ADDICTIVE FEEDBACK PROTOCOL: " +
+    "You must NOT be judgmental or simply 'roast' the user. Your feedback must be 'addictive' and narrative-driven. " +
+    "Read this Historical Context about the user: " + historicalContext + ". " +
+    "Compare their current action to this history. Use phrases like 'You've reduced this by X% this week!' or 'You are leveling up from Consumer to Restorer!' " +
+    "Always end your 'reasoning' with a specific 'Next-Step Tip' suggesting a sustainable brand switch (e.g., 'Switch to [Brand Name] to hit your next milestone'). " +
+    "Life Cycle Assessment (LCA) Scoring Parameters: " +
+    "Assess the item and provide the following for the LCA formula: " +
+    "1. c_saved_grams: Estimated CO2 in grams diverted from a landfill. " +
+    "2. c_avg_grams: Average carbon cost of producing that item in grams. " +
+    "3. material_complexity: A multiplier (e.g., 1.5 for difficult-to-recycle items like tetrapaks, 1.0 for aluminum/standard plastics). " +
+    "Return strictly JSON: { verified: boolean, c_saved_grams: number, c_avg_grams: number, material_complexity: number, actionType: string, message: string, reasoning: string }.";
 
   try {
     // Ensure image has exactly one prefix
@@ -105,7 +113,7 @@ async function callMiniMaxVision(imageBase64: string): Promise<VisionResult> {
         messages: [
           {
             role: "system",
-            content: "You are an eco-sustainability vision assistant. Always reply with strictly valid JSON."
+            content: "You are an encouraging, narrative-driven eco-sustainability vision assistant. Always reply with strictly valid JSON."
           },
           {
             role: "user",
@@ -145,16 +153,29 @@ async function callMiniMaxVision(imageBase64: string): Promise<VisionResult> {
 
     const parsed = JSON.parse(content);
 
-    // Enforce 0 score for non-verified actions while providing fallbacks for missing AI scores.
+    // LCA Scoring Logic
     if (parsed.verified === false) {
       parsed.score = 0;
       parsed.co2_saved = 0;
-    } else if (typeof parsed.score !== "number") {
-      // Fallback for CO2 estimation if AI fails to provide a number but verifies it
-      parsed.score = Math.floor(Math.random() * 500) + 100; // 100-600mg CO2
-      parsed.co2_saved = parsed.score;
     } else {
-      parsed.co2_saved = parsed.score;
+      const cSaved = typeof parsed.c_saved_grams === "number" ? parsed.c_saved_grams : (Math.floor(Math.random() * 50) + 10);
+      const cAvg = typeof parsed.c_avg_grams === "number" && parsed.c_avg_grams > 0 ? parsed.c_avg_grams : cSaved; // fallback to 1:1 if 0
+      const complexity = typeof parsed.material_complexity === "number" ? parsed.material_complexity : 1.0;
+
+      const userTier = 1.0; // Default User_Tier for now
+
+      // Calculate Score: S = (Csaved / Cavg) * Material_Complexity * User_Tier * BaseMultiplier
+      // BaseMultiplier scales the ratio to a reasonable point value (e.g., 100)
+      const basePoints = 100;
+      let calculatedScore = Math.floor((cSaved / cAvg) * complexity * userTier * basePoints);
+
+      // Prevent crazy high or low scores
+      if (calculatedScore < 5) calculatedScore = 5;
+      if (calculatedScore > 1000) calculatedScore = 1000;
+
+      parsed.score = calculatedScore;
+      // Store co2_saved in milligrams as expected by the rest of the app (1 gram = 1000 mg)
+      parsed.co2_saved = cSaved * 1000;
     }
 
     // Default reasoning if missing
@@ -315,6 +336,18 @@ export async function POST(req: NextRequest) {
         let voucher = null;
         let audioUrl = null;
 
+        // Fetch User Context for Addictive Feedback Prompt
+        let historicalContext = "First-time user. Encourage them to start their journey from Consumer to Restorer.";
+        if (userId && userId !== "anon") {
+          const existingScans = await db.collection("scans").find({ userId }).sort({ timestamp: -1 }).limit(10).toArray();
+          const userDoc = await db.collection("users").findOne({ userId });
+          if (existingScans.length > 0) {
+            const previousAction = existingScans.find(s => s.verified)?.actionType || "general waste";
+            const totalEcoPoints = userDoc?.totalScore || 0;
+            historicalContext = `This user has ${totalEcoPoints} Eco Points and their recent verified action was: ${previousAction}. They are currently on their journey towards the 'Restorer' level. Keep pushing them to improve compared to their last action.`;
+          }
+        }
+
         if (simulated) {
           const simulatedScore = Math.floor(Math.random() * 91) + 10;
           vision = { verified: true, score: simulatedScore, actionType: "simulated-action", message: "Simulated Success!" };
@@ -326,7 +359,7 @@ export async function POST(req: NextRequest) {
           };
         } else if (finalImage) {
           // Only process vision if there's an image
-          vision = await callMiniMaxVision(finalImage);
+          vision = await callMiniMaxVision(finalImage, historicalContext);
           audioUrl = await callMiniMaxT2A(vision.message);
 
           // Force 0 POINTS for gallery uploads, but keep CO2 and verification

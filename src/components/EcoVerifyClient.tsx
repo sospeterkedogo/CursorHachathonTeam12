@@ -21,6 +21,7 @@ import { useEcoActions } from "@/hooks/use-eco-actions";
 import { Header } from "./eco-verify/Header";
 import { BottomNav } from "./eco-verify/BottomNav";
 import { GlobalBanner, GoalCard } from "./eco-verify/ImpactSummary";
+import { WeeklyImpactSummary } from "./eco-verify/WeeklyImpactSummary";
 const HowItWorks = dynamic(() => import("./eco-verify/HowItWorks"));
 const VerificationSection = dynamic(() => import("./eco-verify/VerificationSection"));
 import { ProfileModal } from "./eco-verify/ProfileModal";
@@ -39,7 +40,7 @@ const ActivityFeed = dynamic(() => import("./eco-verify/ActivityFeed"));
 const ProfileView = dynamic(() => import("./eco-verify/ProfileView"), {
   loading: () => <div className="py-20 flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-emerald-500" /></div>
 });
-const GlobalInsights = dynamic(() => import("./eco-verify/GlobalInsights"));
+import GlobalInsights from "./eco-verify/GlobalInsights";
 
 export default function EcoVerifyClient({ initialTotalScore, initialGlobalCO2, initialScans, initialLeaderboard, itemOne, itemTwo }: EcoVerifyClientProps) {
   const router = useRouter();
@@ -50,6 +51,8 @@ export default function EcoVerifyClient({ initialTotalScore, initialGlobalCO2, i
   const [leaderboard, setLeaderboard] = useState(initialLeaderboard);
   const [globalVerifiedUsers, setGlobalVerifiedUsers] = useState(itemOne);
   const [globalVouchersCount, setGlobalVouchersCount] = useState(itemTwo);
+  const [weeklyTrend, setWeeklyTrend] = useState<any[]>([]);
+  const [nextBestAction, setNextBestAction] = useState<any>(null);
 
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [isNavigatingToHome, setIsNavigatingToHome] = useState(false);
@@ -104,6 +107,15 @@ export default function EcoVerifyClient({ initialTotalScore, initialGlobalCO2, i
       // Update Global Stats
       if (typeof data.totalGlobalPoints === 'number') setGlobalScore(data.totalGlobalPoints);
       if (typeof data.totalGlobalCO2 === 'number') setGlobalCO2(data.totalGlobalCO2);
+
+      // Fetch Personal Stats for Weekly Trend and NBA
+      try {
+        const statsData = await api.fetchPersonalStats(getUserId());
+        if (statsData.weeklyTrend) setWeeklyTrend(statsData.weeklyTrend);
+        if (statsData.nextBestAction) setNextBestAction(statsData.nextBestAction);
+      } catch (err) {
+        console.error("Failed to fetch personal detailed stats", err);
+      }
 
     } catch (e) {
       console.error("Failed to fetch leaderboard/stats", e);
@@ -271,19 +283,13 @@ export default function EcoVerifyClient({ initialTotalScore, initialGlobalCO2, i
                   globalScore={globalScore}
                   globalCO2={globalCO2}
                   totalVerifiedUsers={globalVerifiedUsers}
+                  weeklyTrend={weeklyTrend}
+                  nextBestAction={nextBestAction}
+                  userRank={userRank}
+                  userScore={userScore}
                 />
               ) : (
                 <div className="space-y-10 sm:space-y-16">
-                  {/* Audit Dashboard Section */}
-                  <div className="space-y-8 sm:space-y-12">
-                    <GlobalBanner globalScore={globalScore} globalCO2={globalCO2} userRank={userRank} />
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <HowItWorks className="h-full" />
-                      <GoalCard userScore={userScore} className="h-full" />
-                    </div>
-                  </div>
-
                   {/* Verification Core Section */}
                   <div className="pt-10 border-t border-white/5">
                     <VerificationSection

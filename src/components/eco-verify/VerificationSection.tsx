@@ -77,66 +77,48 @@ export default function VerificationSection({
             variants={containerVariants}
             className="w-full"
         >
-            <div className="luxury-card relative overflow-hidden mb-8 group p-6 sm:p-10">
-                <div className="flex flex-col items-center justify-center min-h-[300px] sm:min-h-[350px] relative z-10 text-center">
-                    <motion.div variants={itemVariants} className="mb-6 sm:mb-8 relative">
+            <div className="luxury-card relative overflow-hidden mb-8 group p-6 sm:p-10 flex flex-col mt-4">
+                <div className="flex flex-col items-center justify-start h-full relative z-10 text-center flex-1">
+                    <motion.div variants={itemVariants} className="mb-12 sm:mb-16 relative">
                         <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-emerald-500/5 flex items-center justify-center border border-emerald-500/10 mb-4 sm:mb-6 mx-auto backdrop-blur-md">
                             <Leaf className="w-8 h-8 sm:w-10 sm:h-10 text-emerald-500" />
                         </div>
                         <h2 className="text-2xl sm:text-4xl luxury-heading mb-3 font-medium">Eco Hero</h2>
-                        <p className="text-[12px] sm:text-sm text-neutral-400 max-w-[280px] mx-auto leading-relaxed font-light tracking-wide">
+                        <p className="text-[12px] sm:text-sm text-neutral-200 max-w-[280px] mx-auto leading-relaxed font-light tracking-wide">
                             Track your small wins for the planet. Scan your recyclables or reusables to see your impact.
                         </p>
                     </motion.div>
 
-                    {isDesktop && (
-                        <motion.div variants={itemVariants} className="mb-10 p-6 bg-luxury-glass rounded-3xl border border-white/5 flex flex-col items-center gap-4">
-                            <div className="w-40 h-40 bg-white dark:bg-neutral-900 rounded-2xl flex items-center justify-center relative shadow-2xl overflow-hidden border border-white/10">
-                                <Image
-                                    src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${typeof window !== 'undefined' ? window.location.href : ''}`}
-                                    alt="QR Code"
-                                    width={150}
-                                    height={150}
-                                    className="w-32 h-32 opacity-90"
-                                />
-                            </div>
-                            <div className="flex flex-col items-center">
-                                <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-[0.2em] mb-1">Mobile Access</span>
-                                <p className="text-[10px] text-neutral-500 font-medium">Scan to verify with your camera</p>
-                            </div>
-                        </motion.div>
-                    )}
-
-                    <div className="w-full max-w-[400px] flex flex-col items-center">
-                        <motion.div variants={itemVariants} className="action-orb-container mb-10">
+                    <div className="w-full max-w-[500px] flex flex-col items-center mt-4">
+                        <motion.div variants={itemVariants} className="action-orb-container mb-12">
                             <button
                                 onClick={() => setShowCamera(true)}
                                 disabled={loading}
-                                className="action-orb group"
+                                className="action-orb group transform scale-125 shadow-2xl shadow-emerald-500/20"
                             >
-                                <Camera className="w-8 h-8 group-hover:scale-110 transition-transform duration-500" />
+                                <Camera className="w-10 h-10 group-hover:scale-110 transition-transform duration-500" />
                             </button>
-                            <span className="absolute -bottom-7 text-[10px] font-bold uppercase tracking-[0.3em] text-emerald-500 opacity-80">
+                            <span className="absolute -bottom-10 text-xs font-black uppercase tracking-[0.4em] text-emerald-400 opacity-100">
                                 {loading ? "Scanning..." : "Snap a photo"}
                             </span>
                         </motion.div>
 
-                        <motion.div variants={itemVariants} className="grid grid-cols-2 gap-6 w-full mt-4">
+                        <motion.div variants={itemVariants} className="grid grid-cols-2 gap-4 sm:gap-6 w-full mt-8">
                             <button
                                 onClick={onTriggerFileInput}
                                 disabled={loading}
-                                className="bg-luxury-glass hover:bg-white/5 text-neutral-900 dark:text-white rounded-2xl py-4 flex flex-col items-center justify-center gap-2 text-xs font-bold transition-all active:scale-95 border border-white/5"
+                                className="bg-luxury-glass hover:bg-white/5 text-neutral-900 dark:text-white rounded-2xl py-4 sm:py-5 flex flex-col items-center justify-center gap-2 text-xs font-bold transition-all active:scale-95 border border-white/5"
                             >
-                                <UploadCloud className="w-5 h-5 text-blue-400" />
+                                <UploadCloud className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400" />
                                 <span className="uppercase tracking-[0.1em] opacity-70">Upload</span>
                             </button>
 
                             <button
                                 onClick={onShowGallery}
                                 disabled={loading}
-                                className="bg-luxury-glass hover:bg-white/5 text-neutral-900 dark:text-white rounded-2xl py-4 flex flex-col items-center justify-center gap-2 text-xs font-bold transition-all active:scale-95 border border-white/5"
+                                className="bg-luxury-glass hover:bg-white/5 text-neutral-900 dark:text-white rounded-2xl py-4 sm:py-5 flex flex-col items-center justify-center gap-2 text-xs font-bold transition-all active:scale-95 border border-white/5"
                             >
-                                <ImageIcon className="w-5 h-5 text-purple-400" />
+                                <ImageIcon className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400" />
                                 <span className="uppercase tracking-[0.1em] opacity-70">Gallery</span>
                             </button>
                         </motion.div>
@@ -155,7 +137,7 @@ export default function VerificationSection({
                                     <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-all duration-500 shadow-xl ${isPublic ? 'translate-x-6' : 'translate-x-0'}`} />
                                 </div>
                             </div>
-                            <span className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest group-hover:text-neutral-300 transition-colors">Global Sharing</span>
+                            <span className="text-[10px] text-neutral-300 font-bold uppercase tracking-widest group-hover:text-white transition-colors">Global Sharing</span>
                         </label>
                     </motion.div>
                 </div>
@@ -200,7 +182,7 @@ export default function VerificationSection({
                                 </div>
                             </div>
                             <h3 className="text-2xl luxury-heading text-white mb-2">Auditing Waste</h3>
-                            <p className="text-[10px] uppercase tracking-[0.4em] text-neutral-500 font-bold">Refining Impact Data</p>
+                            <p className="text-[10px] uppercase tracking-[0.4em] text-neutral-300 font-bold">Refining Impact Data</p>
                         </motion.div>
                     )}
                 </AnimatePresence>
@@ -222,12 +204,12 @@ export default function VerificationSection({
                                     <h4 className={`text-2xl luxury-heading mb-2 ${verified ? 'text-emerald-500' : 'text-red-500'}`}>
                                         {verified ? "Verification Success" : "Audit Incomplete"}
                                     </h4>
-                                    {feedback && <p className="text-sm text-neutral-400 leading-relaxed font-light">{feedback}</p>}
+                                    {feedback && <p className="text-sm text-neutral-200 leading-relaxed font-light">{feedback}</p>}
                                 </div>
                             </div>
                             {verified && typeof score === "number" && (
                                 <div className="bg-luxury-glass px-8 py-5 rounded-3xl border border-white/5 text-center min-w-[150px]">
-                                    <span className="text-[10px] uppercase text-neutral-500 font-black tracking-widest block mb-1">Impact Gained</span>
+                                    <span className="text-[10px] uppercase text-neutral-300 font-black tracking-widest block mb-1">Impact Gained</span>
                                     <span className="text-3xl luxury-data text-emerald-500">+{score}</span>
                                 </div>
                             )}
@@ -244,7 +226,7 @@ export default function VerificationSection({
                                 </div>
                                 <span className="text-[10px] uppercase tracking-[0.4em] text-purple-500 font-black mb-3 block">Privileged Access</span>
                                 <h4 className="text-3xl luxury-heading text-white mb-2">{earnedVoucher.title}</h4>
-                                <p className="text-sm text-neutral-400 mb-8 font-light max-w-md">{earnedVoucher.description}</p>
+                                <p className="text-sm text-neutral-200 mb-8 font-light max-w-md">{earnedVoucher.description}</p>
 
                                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
                                     <div className="flex-1 bg-black/40 backdrop-blur-xl rounded-2xl px-6 py-4 border border-white/5 flex items-center justify-between">

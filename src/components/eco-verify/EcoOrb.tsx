@@ -31,11 +31,11 @@ export const EcoOrb: React.FC<EcoOrbProps> = ({ id, size = 'md', className = '' 
             {/* Rim Lighting (Discord Style) */}
             <div className="absolute inset-0 rounded-full border-[1.5px] border-white/20" />
 
-            {/* Discord-Style Character Avatar */}
-            <div className="absolute inset-0 flex items-center justify-center p-1.5 overflow-hidden">
+            {/* Metaverse-Style Character Avatar */}
+            <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
                 <img
-                    src={`https://api.dicebear.com/9.x/lorelei/svg?seed=${orb.id}&backgroundColor=transparent`}
-                    className="w-full h-full object-contain filter drop-shadow-[0_8px_15px_rgba(0,0,0,0.5)] transform scale-110 translate-y-[2px]"
+                    src={`https://api.dicebear.com/9.x/micah/svg?seed=${orb.id}&backgroundColor=transparent&baseColor=f9c9b6`}
+                    className="w-full h-full object-contain filter drop-shadow-[0_8px_15px_rgba(0,0,0,0.6)] transform scale-125 translate-y-[10%]"
                     alt={orb.label}
                     loading="lazy"
                 />
