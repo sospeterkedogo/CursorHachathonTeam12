@@ -38,8 +38,8 @@ export default function HeroSection({ isDark, onTryNow }: HeroSectionProps) {
                 >
                     <div className="space-y-5">
                         <h1 className="text-5xl md:text-6xl lg:text-7xl luxury-heading tracking-tight leading-[1.1] pb-2">
-                            Snap. Analyze.   <br />
-                            <span className="text-luxury-gold italic pr-4">Verify.</span>
+                            Sustainability <br />
+                            <span className="text-luxury-gold italic pr-4">Redefined.</span>
                         </h1>
 
                         <p className="text-lg md:text-xl lg:text-2xl text-neutral-500 dark:text-neutral-400 max-w-xl font-light tracking-wide leading-relaxed">
